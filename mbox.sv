@@ -1,4 +1,4 @@
-`timescale 1ns/1ns
+`timescale 1ns/1ps
 `include "ebox.svh"
 module mbox(input bit mboxClk,
             input bit CROBAR,

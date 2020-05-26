@@ -1,4 +1,4 @@
-`timescale 1ns/1ns
+`timescale 1ns/1ps
 module mc10179(input bit [0:3] G,
                input bit [0:3] P,
                input bit CIN,

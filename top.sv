@@ -1,4 +1,4 @@
-`timescale 1ns/1ns
+`timescale 1ns/1ps
 `include "ebox.svh"
 
 module top;
@@ -35,6 +35,7 @@ module top;
   iCRM CRM();
   iCSH CSH();
   iCTL CTL();
+  iDTE DTE();
   iEDP EDP();
   iIR IR();
   iMBC MBC();
@@ -62,18 +63,16 @@ module top;
   ebox ebox0(.*);
   mbox mbox0(.SBUS(SBUS.mbox), .*);
   memory memory0(.SBUS(SBUS.memory), .*);
-
-`ifdef KL10PV_TB
-  kl10pv_tb kl10pv_tb0(.*);
-`endif
+  dte dte0(.*);
 
   // Mux for EBUS data lines
-  always_comb unique case (1)
+  always_comb unique case (1'b1)
               default: EBUS.data = '0;
               APR.EBUSdriver.driving:        EBUS.data = APR.EBUSdriver.data;
               CON.EBUSdriver.driving:        EBUS.data = CON.EBUSdriver.data;
               CRA.EBUSdriver.driving:        EBUS.data = CRA.EBUSdriver.data;
               CTL.EBUSdriver.driving:        EBUS.data = CTL.EBUSdriver.data;
+              DTE.EBUSdriver.driving:        EBUS.data = DTE.EBUSdriver.data;
               EDP.EBUSdriver.driving:        EBUS.data = EDP.EBUSdriver.data;
               IR.EBUSdriver.driving:         EBUS.data =  IR.EBUSdriver.data;
               MBZ.EBUSdriver.driving:        EBUS.data = MBZ.EBUSdriver.data;
@@ -82,8 +81,5 @@ module top;
               SCD.EBUSdriver.driving:        EBUS.data = SCD.EBUSdriver.data;
               SHM.EBUSdriver.driving:        EBUS.data = SHM.EBUSdriver.data;
               VMA.EBUSdriver.driving:        EBUS.data = VMA.EBUSdriver.data;
-`ifdef KL10PV_TB
-              kl10pv_tb0.EBUSdriver.driving: EBUS.data = kl10pv_tb0.EBUSdriver.data;
-`endif
               endcase
 endmodule

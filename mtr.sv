@@ -1,4 +1,4 @@
-`timescale 1ns/1ns
+`timescale 1ns/1ps
 `include "ebox.svh"
 // M8538 MTR
 module mtr(iCHC CHC,
@@ -183,11 +183,15 @@ module mtr(iCHC CHC,
   always_ff @(posedge INTERVAL_CLK) if ((CONO_TIM | RESET) & (mtrEBUS[22] & RESET)) INTERVAL_DONE <= 0;
                                     else INTERVAL_DONE <= INTERVAL_DONE | e42q6 | INTERVAL_MATCH;
 
-  always @(posedge TIME_CLK | RESET_PLSD, posedge RESET_TIME) if (RESET_TIME) CLR_TIME <= 1;
-                                                              else CLR_TIME <= RESET;
+  bit clk1;
+  assign clk1 = TIME_CLK | RESET_PLSD;
+  always @(posedge clk1, posedge RESET_TIME) if (RESET_TIME) CLR_TIME <= 1;
+                                             else CLR_TIME <= RESET;
 
-  always @(posedge PERF_CNT_CLK | RESET_PLSD, posedge RESET_PERF) if (RESET_PERF) CLR_PERF_CNT <= 1;
-                                                                  else CLR_PERF_CNT <= RESET;
+  bit clk2;
+  assign clk2 = PERF_CNT_CLK | RESET_PLSD;
+  always @(posedge clk2, posedge RESET_PERF) if (RESET_PERF) CLR_PERF_CNT <= 1;
+                                             else CLR_PERF_CNT <= RESET;
 
 
   // MTR4 p.327
@@ -264,10 +268,12 @@ module mtr(iCHC CHC,
           .q(e66Q));
 
   bit [2:3] unusedE71;
-  UCR4 e71(.CIN(1'b1),
+  UCR4 e71(.RESET(1'b0),
+           .CIN(1'b1),
            .SEL({e66Q | |CHAN_BUSY[0:1], e66Q | RESET}),
            .CLK(MBOX.CH_T1),
            .D({4{e66Q}}),
+           .COUT(),
            .Q({CHAN_BUSY, unusedE71}));
 
 

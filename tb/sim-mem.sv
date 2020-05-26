@@ -1,4 +1,4 @@
-`timescale 1ns/1ns
+`timescale 1ns/1ps
 module sim_mem 
   #(parameter SIZE=0,
     parameter WIDTH=0,

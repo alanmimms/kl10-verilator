@@ -48,12 +48,11 @@ module kl10pv_tb(iAPR APR,
 
   assign clk = masterClk;
   assign EXTERNAL_CLK = masterClk;
-  assign clk30 = masterClk;
+//  assign clk30 = masterClk;
   assign clk31 = masterClk;     // XXX for now
 
-  // 62MHz clock source
-  initial masterClk <= 0;
-  always #(1000.0/31.0/2.0) masterClk = ~masterClk; // 31MHz master clock
+  // 30MHz clock source
+  assign masterClk = clk30;
 
   initial $readmemh("../../../../images/DRAM.mem", ebox0.ir0.dram.mem);
   initial $readmemh("../../../../images/CRAM.mem", ebox0.crm0.cram.mem);

@@ -1,5 +1,5 @@
 // XXX need to review this against schematics
-`timescale 1ns/1ns
+`timescale 1ns/1ps
 `include "ebox.svh"
 
 // M8543 CTL

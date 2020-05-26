@@ -1,5 +1,5 @@
 // 04-25-2020: Manually compared with schematics (and found a few problems).
-`timescale 1ns/1ns
+`timescale 1ns/1ps
 `include "ebox.svh"
 
 module csh(iAPR APR,

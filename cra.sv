@@ -1,5 +1,5 @@
 // Schematic review 2020-05-21 CRA1, CRA2
-`timescale 1ns/1ns
+`timescale 1ns/1ps
 `include "ebox.svh"
 
 // M8541 CRA

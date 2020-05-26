@@ -1,7 +1,7 @@
 // TODO: Should the lack ACKN pulse last until START releases? (For
 // back-to-back cycles on the same phase I don't know that it will
 // actually release.)
-`timescale 1ns/1ns
+`timescale 1ns/1ps
 `include "ebox.svh"
 
 // This module pretends to be a MB20 core memory. The A phase is

@@ -1,4 +1,4 @@
-`timescale 1ns/1ns
+`timescale 1ns/1ps
 // Quad 1-of-2 mux
 module mux4x2
   (input bit SEL,

@@ -1,5 +1,5 @@
 // Schematic review: MB01, MB02, MB03, MB04, MB05
-`timescale 1ns/1ns
+`timescale 1ns/1ps
 `include "ebox.svh"
 // M8517 MB0 memory buffer board
 // Note all three instances of MB0 are modeled in this module

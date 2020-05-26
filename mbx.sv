@@ -1,5 +1,5 @@
 // 2020-04-27: Schematic review done: MBX1, MBX2, MBX3, MBX4, MBX5, MBX6.
-`timescale 1ns/1ns
+`timescale 1ns/1ps
 `include "ebox.svh"
 // M8529 MBX memory control logic
 module mbx(iAPR APR,

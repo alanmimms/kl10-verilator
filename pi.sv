@@ -1,4 +1,4 @@
-`timescale 1ns/1ns
+`timescale 1ns/1ps
 `include "ebox.svh"
 
 // M8532 PIC
@@ -162,7 +162,8 @@ module pi(iAPR APR,
            .Q({TRAN_REC, ignoredE3}));
 
   bit e10COUT;
-  UCR4 e10(.CIN(~(TIM[5] & ~TRAN_REC)),
+  UCR4 e10(.RESET(1'b0),
+           .CIN(~(TIM[5] & ~TRAN_REC)),
            .SEL({~(TIMER_DONE | EBUS_RETURN | CYC_START), 1'b0}),
            .D({TIM[1] | TIM[2] | TIM[6],
                TIM[2] | TIM[6] | CYC_START | TIM[3],
@@ -172,7 +173,8 @@ module pi(iAPR APR,
            .COUT(e10COUT),
            .Q());
 
-  UCR4 e15(.CIN(e10COUT),
+  UCR4 e15(.RESET(1'b0),
+           .CIN(e10COUT),
            .SEL({~(TIMER_DONE | EBUS_RETURN | CYC_START), 1'b0}),
            .D({2'b00, TIM[7], ~TIM[1]}),
            .CLK(clk),
@@ -298,7 +300,8 @@ module pi(iAPR APR,
   always_ff @(posedge e1Q[0] or posedge e6SET) if (e6SET) e6q14 <= 1;
                                                else e6q14 <= 0;
 
-  UCR4  e1(.CIN(~TIM[2]),
+  UCR4  e1(.RESET(1'b0),
+           .CIN(~TIM[2]),
            .SEL({EBUS.demand & ~TRAN_REC, 1'b0}),
            .D(4'b0000),
            .CLK(~MTR._1_MHZ),

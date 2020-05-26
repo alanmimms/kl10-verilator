@@ -1,4 +1,4 @@
-`timescale 1ns/100ps
+`timescale 1ns/1ps
 `include "ebox.svh"
 
 // M8526 CLK
@@ -132,18 +132,13 @@ module clk(input bit clk,
                                      +--- MTR, CLK_OUT, PIC, PMA, CHX, CSH
    */
 
-  always @(e56q2 & MAIN_SOURCE) GATED <= #5 (e56q2 & MAIN_SOURCE);
-  always @(~GATED) EBUS_CLK_SOURCE <= #20 ~GATED;
-
-  // Note inversion here
-  always @(~GATED) SOURCE_DELAYED <= #93.7 ~GATED;
-
-  always @((~CLK.ERROR_STOP | DESKEW_CLK) & (SOURCE_DELAYED | DESKEW_CLK))
-    CLK_ON = #3 ((~CLK.ERROR_STOP | DESKEW_CLK) & (SOURCE_DELAYED | DESKEW_CLK));
-
-  always @(CLK_ON) ODD <= #(2.25 + 7.75) CLK_ON;
-  always @(~CLK_ON) MBOX <= #(2.65 + 2.25) CLK_ON;
-  always @(MBOX) CLK_OUT <= #(3 + 2.25) MBOX;
+  assign GATED = e56q2 & MAIN_SOURCE;
+  assign EBUS_CLK_SOURCE = ~GATED;
+  assign SOURCE_DELAYED = ~GATED;
+  assign CLK_ON = (~CLK.ERROR_STOP | DESKEW_CLK) & (SOURCE_DELAYED | DESKEW_CLK);
+  assign ODD = CLK_ON;
+  assign MBOX = CLK_ON;
+  assign CLK_OUT = MBOX;
 
   assign CLK.CCL = CLK_OUT | DIAG_CHANNEL_CLK_STOP;
   assign CLK.CRC = CLK_OUT | DIAG_CHANNEL_CLK_STOP;
@@ -266,7 +261,7 @@ module clk(input bit clk,
   end
 
   bit e66SRFF;
-  always_ff @(posedge ~CLK.FUNC_SET_RESET,
+  always_ff @(negedge CLK.FUNC_SET_RESET,
               posedge CLK.FUNC_CLR_RESET,
               posedge CROBAR)
   begin
@@ -295,7 +290,7 @@ module clk(input bit clk,
 //  assign CLK_OUT = MBOX;
 
   // 125ns is a guess for round trip delay of clock signal across backplane.
-  always @(CLK_OUT) CLK_DELAYED <= #125 CLK_OUT;
+  always @(CLK_OUT) CLK_DELAYED <= CLK_OUT;
 
   assign MBOX_CLK = CLK_DELAYED;
 
@@ -312,7 +307,8 @@ module clk(input bit clk,
   bit e52COUT;
   assign CLK.EBUS_RESET = e52Count[0];
 
-  UCR4 e52(.CIN(1'b1),            // Always count
+  UCR4 e52(.RESET(1'b0),
+           .CIN(1'b1),            // Always count
            .SEL({1'b0, ~e52COUT | CROBAR | CON.CONO_200000}),
            .CLK(CLK.MHZ16_FREE),
            .D('0),
@@ -417,7 +413,8 @@ module clk(input bit clk,
   bit [0:3] e25Count;
   bit e25COUT;
   // NOTE: Active-low schematic symbol
-  UCR4 e25(.CIN(1'b1),
+  UCR4 e25(.RESET(1'b0),
+           .CIN(1'b1),
            .SEL({~EBOX_CLK_EN, 1'b0}),
            .CLK(MBOX_CLK),
            .D('0),
@@ -482,15 +479,15 @@ module clk(input bit clk,
 
   const real e12SRtoClockDLY = 1.75 + 2.25;
 
-  always @(e12SR[0]) CLK.CRM <= #e12SRtoClockDLY e12SR[0];
-  always @(e12SR[0]) CLK.CRA <= #e12SRtoClockDLY e12SR[0];
-  always @(CTL.DIAG_CLK_EDP | e12SR[1]) CLK.EDP <= #e12SRtoClockDLY CTL.DIAG_CLK_EDP | e12SR[1];
-  always @(e12SR[2]) CLK.APR <= #e12SRtoClockDLY e12SR[2];
-  always @(e12SR[2]) CLK.CON <= #e12SRtoClockDLY e12SR[2];
-  always @(e12SR[2]) CLK.VMA <= #e12SRtoClockDLY e12SR[2];
-  always @(e12SR[2]) CLK.MCL <= #e12SRtoClockDLY e12SR[2];
-  always @(e12SR[2]) CLK.IR  <= #e12SRtoClockDLY e12SR[2];
-  always @(e12SR[2]) CLK.SCD <= #e12SRtoClockDLY e12SR[2];
+  always @(e12SR[0]) CLK.CRM <= e12SR[0];
+  always @(e12SR[0]) CLK.CRA <= e12SR[0];
+  assign CLK.EDP = CTL.DIAG_CLK_EDP | e12SR[1];
+  always @(e12SR[2]) CLK.APR <= e12SR[2];
+  always @(e12SR[2]) CLK.CON <= e12SR[2];
+  always @(e12SR[2]) CLK.VMA <= e12SR[2];
+  always @(e12SR[2]) CLK.MCL <= e12SR[2];
+  always @(e12SR[2]) CLK.IR  <= e12SR[2];
+  always @(e12SR[2]) CLK.SCD <= e12SR[2];
 
   assign EBOX_SOURCE = e12SR[3];
 
@@ -620,7 +617,8 @@ module clk(input bit clk,
   assign BURST_CNTeq0 = burstCounter == '0;
 
   // NOTE: Active-low schematic symbol
-  UCR4 e15(.CIN(burstLSBcarry),
+  UCR4 e15(.RESET(1'b0),
+           .CIN(burstLSBcarry),
            .SEL(~{BURST | CLK.FUNC_043, CLK.FUNC_043}),
            .D(EBUS.data[32:35]),
            .COUT(),

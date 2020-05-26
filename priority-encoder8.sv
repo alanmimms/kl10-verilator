@@ -1,4 +1,4 @@
-`timescale 1ns/1ns
+`timescale 1ns/1ps
 
 module priority_encoder8
   (input bit [0:7] d,

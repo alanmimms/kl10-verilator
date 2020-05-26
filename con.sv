@@ -1,5 +1,5 @@
 // schematic review: CON1, CON2, CON3, CON4, CON5.
-`timescale 1ns/1ns
+`timescale 1ns/1ps
 `include "ebox.svh"
 
 // M8525 CON
@@ -403,7 +403,7 @@ module con(iAPR APR,
            .CLK(clk),
            .Q({CON.EBOX_HALTED, unusedE49, CON.PCplus1_INH, SPEC8}));
 
-  always_ff @(posedge clk iff CON.COND_EBUS_STATE | CON.RESET) begin
+  always_ff @(posedge clk) if (CON.COND_EBUS_STATE | CON.RESET) begin
     CON.UCODE_STATE1 <= (CRAM.MAGIC[2] | CRAM.MAGIC[1]) &
                         (CON.UCODE_STATE1 | CRAM.MAGIC[1]);
     CON.UCODE_STATE3 <= (CRAM.MAGIC[4] | CRAM.MAGIC[3]) &
