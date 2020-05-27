@@ -72,6 +72,18 @@ module top(input CROBAR, input clk);
   assign EXTERNAL_CLK = clk;
   assign clk30 = clk;
   assign clk31 = clk;
+
+  initial $readmemh("images/DRAM.mem", ebox0.ir0.dram.mem);
+  initial $readmemh("images/CRAM.mem", ebox0.crm0.cram.mem);
+
+  initial begin
+    // Initialize our memories
+    // Based on KLINIT.L20 $ZERAC subroutine.
+    // Zero all ACs, including the ones in block #7 (microcode's ACs).
+    // For now, MBOX memory is zero too.
+    for (int a = 0; a < $size(ebox0.edp0.fm.mem); ++a) ebox0.edp0.fm.mem[a] = '0;
+    for (int a = 0; a < $size(memory0.mem); ++a) memory0.mem[a] = '0;
+  end
 `endif
 
   ebox ebox0(.*);
