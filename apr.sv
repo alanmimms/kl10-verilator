@@ -28,7 +28,7 @@ module apr(iAPR APR,
   assign clk = CLK.APR;
   assign RESET = CLK.MR_RESET;
   assign DIAG = CTL.DIAG[4:6];
-  assign DS = ~DIAG & CTL.DIAG_READ_FUNC_11x;
+  assign DS = ~DIAG & {3{CTL.DIAG_READ_FUNC_11x}};
   assign READ_110_117 = CTL.DIAG_READ_FUNC_11x;
 
   bit SBUS_ERR_IN, SBUS_ERR_IN_EN;

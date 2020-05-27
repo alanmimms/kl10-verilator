@@ -349,7 +349,7 @@ module mbz(iAPR APR,
   always_ff @(posedge clk) CH_REG_HOLD <= ~MBOX.CH_T2;
   always_ff @(posedge clk) {CH_BUF_00to17_PAR, CH_BUF_18to35_PAR} = chBufParRAM[CH_BUF_ADR];
 
-  always_ff @(MBOX.CH_BUF_WR) if (MBOX.CH_BUF_WR)
+  always_ff @(posedge MBOX.CH_BUF_WR)
     chBufParRAM[CH_BUF_ADR] <= {CH_BUF_IN_00to17_PAR, CH_BUF_IN_18to35_PAR};
 
   mux2x4 e50(.EN(MBOX.MEM_TO_C_EN),

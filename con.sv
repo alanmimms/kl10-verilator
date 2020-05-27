@@ -229,21 +229,21 @@ module con(iAPR APR,
               .q(e39Q));
 */
 
-  always_comb begin
-    DIAG_CLR_RUN = 0;
-    DIAG_SET_RUN = 0;
-    DIAG_CONTINUE = 0;
-    DIAG_IR_STROBE = 0;
-    DIAG_DRAM_STROBE = 0;
-
-    case({CTL.DIAG_CTL_FUNC_01x, EBUS.ds[4:6]})
-    4'b1000: DIAG_CLR_RUN = 1;
-    4'b1001: DIAG_SET_RUN = 1;
-    4'b1010: DIAG_CONTINUE = 1;
-    4'b1100: DIAG_IR_STROBE = 1;
-    4'b1101: DIAG_DRAM_STROBE = 1;
-    endcase
-  end
+  always_comb if (CTL.DIAG_CTL_FUNC_01x) case (EBUS.ds[4:6])
+                                         3'b000: DIAG_CLR_RUN = 1;
+                                         3'b001: DIAG_SET_RUN = 1;
+                                         3'b010: DIAG_CONTINUE = 1;
+                                         3'b100: DIAG_IR_STROBE = 1;
+                                         3'b101: DIAG_DRAM_STROBE = 1;
+                                         default: ;
+                                         endcase
+              else begin
+                DIAG_CLR_RUN = 0;
+                DIAG_SET_RUN = 0;
+                DIAG_CONTINUE = 0;
+                DIAG_IR_STROBE = 0;
+                DIAG_DRAM_STROBE = 0;
+              end
 
   bit e19Q, e27Q;
   mux e19(.sel(CRAM.COND[3:5]),

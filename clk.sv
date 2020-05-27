@@ -202,7 +202,6 @@ module clk(input bit clk,
   always @(posedge GATED, posedge CLK.FUNC_CLR_RESET) begin
 
     if (CLK.FUNC_CLR_RESET) begin
-      CLK.SBUS_CLK <= 0;
       e70q15 <= 0;
       e70q2 <= 0;
     end else begin
@@ -290,7 +289,7 @@ module clk(input bit clk,
 //  assign CLK_OUT = MBOX;
 
   // 125ns is a guess for round trip delay of clock signal across backplane.
-  always @(CLK_OUT) CLK_DELAYED <= CLK_OUT;
+  assign CLK_DELAYED = CLK_OUT;
 
   assign MBOX_CLK = CLK_DELAYED;
 
@@ -477,17 +476,15 @@ module clk(input bit clk,
   assign EBOX_SRC_EN = CLK.SYNC & e17q3;
   assign EBOX_CLK_EN = EBOX_SRC_EN | CLK._1777_EN;
 
-  const real e12SRtoClockDLY = 1.75 + 2.25;
-
-  always @(e12SR[0]) CLK.CRM <= e12SR[0];
-  always @(e12SR[0]) CLK.CRA <= e12SR[0];
+  assign CLK.CRM = e12SR[0];
+  assign CLK.CRA = e12SR[0];
   assign CLK.EDP = CTL.DIAG_CLK_EDP | e12SR[1];
-  always @(e12SR[2]) CLK.APR <= e12SR[2];
-  always @(e12SR[2]) CLK.CON <= e12SR[2];
-  always @(e12SR[2]) CLK.VMA <= e12SR[2];
-  always @(e12SR[2]) CLK.MCL <= e12SR[2];
-  always @(e12SR[2]) CLK.IR  <= e12SR[2];
-  always @(e12SR[2]) CLK.SCD <= e12SR[2];
+  assign CLK.APR = e12SR[2];
+  assign CLK.CON = e12SR[2];
+  assign CLK.VMA = e12SR[2];
+  assign CLK.MCL = e12SR[2];
+  assign CLK.IR  = e12SR[2];
+  assign CLK.SCD = e12SR[2];
 
   assign EBOX_SOURCE = e12SR[3];
 
@@ -561,52 +558,52 @@ module clk(input bit clk,
       CLK.EBUSdriver.data = '0;
 
       case (EBUS.ds[4:6])
-      3'b000: CLK.EBUSdriver.data = {CLK.EBUS_CLK,
-                                     CLK.SBUS_CLK,
-                                     CLK.INSTR_1777,
-                                     burstCounter,
-                                     burstCounter[0:1]};
-      3'b001: CLK.EBUSdriver.data = burstCounter[2:7];
-      3'b010: CLK.EBUSdriver.data = {CLK.ERROR_STOP,
-                                     ~CLK.GO,
-                                     CLK.EBOX_REQ,
-                                     CLK.SYNC,
-                                     CLK.PAGE_FAIL_EN,
-                                     CLK.FORCE_1777};
-      3'b011: CLK.EBUSdriver.data = {CLK.DRAM_PAR_ERR,
-                                     ~BURST,
-                                     CLK.MB_XFER,
-                                     ~EBOX_CLK,
-                                     CLK.PAGE_ERROR,
-                                     CLK._1777_EN};
-      3'b100: CLK.EBUSdriver.data = {CLK.CRAM_PAR_ERR,
-                                     ~EBOX_SS,
-                                     CLK.SOURCE_SEL[0],
-                                     EBOX_SOURCE,
-                                     ~FM_PAR_CHECK,
-                                     CLK.MBOX_CYCLE_DIS};
-      3'b101: CLK.EBUSdriver.data = {CLK.FM_PAR_ERR,
-                                     SHM.AR_PAR_ODD,
-                                     CLK.SOURCE_SEL[0],
-                                     EBOX_CRM_DIS,
-                                     ~CRAM_PAR_CHECK,
-                                     ~MBOX_RESP_SIM};
-      3'b110: CLK.EBUSdriver.data = {CLK.FS_ERROR,
-                                     SHM.ARX_PAR_ODD,
-                                     CLK.RATE_SEL[0],
-                                     EBOX_EDP_DIS,
-                                     ~DRAM_PAR_CHECK,
-                                     ~AR_ARX_PAR_CHECK};
-      3'b111: CLK.EBUSdriver.data = {~CLK.ERROR,
-                                     CLK.PAGE_FAIL,
-                                     CLK.RATE_SEL[1],
-                                     EBOX_CTL_DIS,
-                                     ~FS_CHECK,
-                                     ~CLK.ERR_STOP_EN};
+      3'b000: CLK.EBUSdriver.data[30:35] = {CLK.EBUS_CLK,
+                                            CLK.SBUS_CLK,
+                                            CLK.INSTR_1777,
+                                            BURST_CNTeq0,
+                                            burstCounter[0:1]};
+      3'b001: CLK.EBUSdriver.data[30:35] = burstCounter[2:7];
+      3'b010: CLK.EBUSdriver.data[30:35] = {CLK.ERROR_STOP,
+                                            ~CLK.GO,
+                                            CLK.EBOX_REQ,
+                                            CLK.SYNC,
+                                            CLK.PAGE_FAIL_EN,
+                                            CLK.FORCE_1777};
+      3'b011: CLK.EBUSdriver.data[30:35] = {CLK.DRAM_PAR_ERR,
+                                            ~BURST,
+                                            CLK.MB_XFER,
+                                            ~EBOX_CLK,
+                                            CLK.PAGE_ERROR,
+                                            CLK._1777_EN};
+      3'b100: CLK.EBUSdriver.data[30:35] = {CLK.CRAM_PAR_ERR,
+                                            ~EBOX_SS,
+                                            CLK.SOURCE_SEL[0],
+                                            EBOX_SOURCE,
+                                            ~FM_PAR_CHECK,
+                                            CLK.MBOX_CYCLE_DIS};
+      3'b101: CLK.EBUSdriver.data[30:35] = {CLK.FM_PAR_ERR,
+                                            SHM.AR_PAR_ODD,
+                                            CLK.SOURCE_SEL[0],
+                                            EBOX_CRM_DIS,
+                                            ~CRAM_PAR_CHECK,
+                                            ~MBOX_RESP_SIM};
+      3'b110: CLK.EBUSdriver.data[30:35] = {CLK.FS_ERROR,
+                                            SHM.ARX_PAR_ODD,
+                                            CLK.RATE_SEL[0],
+                                            EBOX_EDP_DIS,
+                                            ~DRAM_PAR_CHECK,
+                                            ~AR_ARX_PAR_CHECK};
+      3'b111: CLK.EBUSdriver.data[30:35] = {~CLK.ERROR,
+                                            CLK.PAGE_FAIL,
+                                            CLK.RATE_SEL[1],
+                                            EBOX_CTL_DIS,
+                                            ~FS_CHECK,
+                                            ~CLK.ERR_STOP_EN};
       endcase
     end else begin
       CLK.EBUSdriver.driving = 0;
-      CLK.EBUSdriver.data[30:35] = 'z;
+      CLK.EBUSdriver.data[30:35] = '0;
     end
   end
 

@@ -58,7 +58,7 @@ module edp(iAPR APR,
     // (driven by SCD and VMA, respectively).
     // The low half comes from this
     // wirewrapped strapping.
-    3'b000: ARM = {EDP.ARMM_SCD, 5'b0, EDP.ARMM_VMA, hwOptions};
+    3'b000: ARM = {EDP.ARMM_SCD, 4'b0, EDP.ARMM_VMA, hwOptions};
     3'b001: ARM = MBOX.CACHE_DATA[0:35];
     3'b010: ARM = EDP.AD[0:35];
     3'b011: ARM = EBUS.data[0:35];
@@ -160,9 +160,6 @@ module edp(iAPR APR,
 
   assign EDP.AD_CRY[-1:35] = AD_CRY[-1:35];
 
-  bit [2:5] adOp;
-  assign adOp = CRAM.AD;
-
   // AD
   generate
     for (n = 0; n < 36; n += 6) begin : ADaluE1E2
@@ -175,7 +172,7 @@ module edp(iAPR APR,
 
       mc10181 e1(.M(AD_BOOL),
 //                 .S(CRAM.AD[2:5]),
-                 .S(adOp),
+                 .S(CRAM.AD[2:5]),
                  .A({{3{ADA[n+0]}}, ADA[n+1]}),
                  .B(ADB[n-2:n+1]),
                  .CIN(AD_CRY[n+2]),
@@ -187,7 +184,7 @@ module edp(iAPR APR,
 
       mc10181 e2(.M(AD_BOOL),
 //                 .S(CRAM.AD[2:5]),
-                 .S(adOp),
+                 .S(CRAM.AD[2:5]),
                  .A(ADA[n+2:n+5]),
                  .B(ADB[n+2:n+5]),
                  .CIN(AD_CRY[n+6]), // Assigned AD_CRY_36 to AD_CRY[36] so this works
@@ -204,7 +201,7 @@ module edp(iAPR APR,
       bit unusedE3, unusedE4;
 
       mc10181 e3(.M(AD_BOOL),
-                 .S(adOp),
+                 .S(CRAM.AD[2:5]),
                  .A({ADXA[n+0], ADXA[n+0], ADXA[n+1:n+2]}),
                  .B({ADXB[n+0], ADXB[n+0], ADXB[n+1:n+2]}),
                  .CIN(ADX_CRY[n+3]),
@@ -213,7 +210,7 @@ module edp(iAPR APR,
                  .CP(ADX_CP[n+0]),
                  .COUT());
       mc10181 e4(.M(AD_BOOL),
-                 .S(adOp),
+                 .S(CRAM.AD[2:5]),
                  .A({ADXA[n+3], ADXA[n+3], ADXA[n+4:n+5]}),
                  .B({ADXB[n+3], ADXB[n+3], ADXB[n+4:n+5]}),
                  .CIN(ADX_CRY[n+6]), // Assigned ADX_CRY_36 to ADX_CRY[36] so this works
@@ -310,10 +307,10 @@ module edp(iAPR APR,
     ADB = '0;
 
     unique case(CRAM.ADB)
-    2'b00: ADB[0:35] = {{2{EDP.FM[0]}}, EDP.FM[0:35]};
-    2'b01: ADB[0:35] = {{2{EDP.BR[0]}}, EDP.BR[1:35], EDP.BRX[0]};
-    2'b10: ADB[0:35] = {{2{EDP.BR[0]}}, EDP.BR[0:35]};
-    2'b11: ADB[0:35] = {EDP.AR[0:35], EDP.ARX[0:1]};
+    2'b00: ADB[-2:35] = {{2{EDP.FM[0]}}, EDP.FM[0:35]};
+    2'b01: ADB[-2:35] = {{2{EDP.BR[0]}}, EDP.BR[1:35], EDP.BRX[0]};
+    2'b10: ADB[-2:35] = {{2{EDP.BR[0]}}, EDP.BR[0:35]};
+    2'b11: ADB[-2:35] = {{2{EDP.AR[2]}}, EDP.AR[2:35], EDP.ARX[0:1]};
     endcase
   end
   
@@ -338,16 +335,13 @@ module edp(iAPR APR,
   end
 
   // ADA mux E16,E18
-  always_comb begin
-    ADA = '0;
-
-    unique case (CRAM.ADA)
-    2'b00: ADA = EDP.AR[0:35];
-    2'b01: ADA = EDP.ARX[0:35];
-    2'b10: ADA = EDP.MQ[0:35];
-    2'b11: ADA = VMA.HELD_OR_PC[0:35];
-    endcase
-  end
+  always_comb if (CRAM.ADA[0]) ADA = '0;
+              else unique case (CRAM.ADA[1:2])
+                   2'b00: ADA = EDP.AR[0:35];
+                   2'b01: ADA = EDP.ARX[0:35];
+                   2'b10: ADA = EDP.MQ[0:35];
+                   2'b11: ADA = VMA.HELD_OR_PC[0:35];
+                   endcase
 
   // ADXA mux E17,E5
   assign ADXA[0:35] = ADA_EN ? EDP.ARX[0:35] : '0;
@@ -371,15 +365,15 @@ module edp(iAPR APR,
 
   always_comb if (EDP.EBUSdriver.driving)
     unique case ((CTL.AD_TO_EBUS_L | CTL.AD_TO_EBUS_R) ? 3'b111 : CTL.DIAG[4:6])
-    default: ebusR <= '0;
-    3'b000: ebusR <= EDP.AR;
-    3'b001: ebusR <= EDP.BR;
-    3'b010: ebusR <= EDP.MQ;
-    3'b011: ebusR <= EDP.FM;
-    3'b100: ebusR <= EDP.BRX;
-    3'b101: ebusR <= EDP.ARX;
-    3'b110: ebusR <= EDP.ADX[0:35];
-    3'b111: ebusR <= EDP.AD[0:35];
+    default: ebusR = '0;
+    3'b000: ebusR = EDP.AR;
+    3'b001: ebusR = EDP.BR;
+    3'b010: ebusR = EDP.MQ;
+    3'b011: ebusR = EDP.FM;
+    3'b100: ebusR = EDP.BRX;
+    3'b101: ebusR = EDP.ARX;
+    3'b110: ebusR = EDP.ADX[0:35];
+    3'b111: ebusR = EDP.AD[0:35];
     endcase
 
   // FM. No static at all!

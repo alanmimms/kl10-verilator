@@ -104,9 +104,9 @@ module ctl(iAPR APR,
   assign CTL.ADX_CRY_36 = ~CTL.PI_CYCLE_SAVE_FLAGS &&
                           ((CRAM.AD & `adCARRY) !== 0) ^ (EDP.AR[0] & CTL.SPEC_XCRY_AR0);
 
-  assign CTL.REG_CTL[0:2] = CRAM.MAGIC[0:2] & CTL.COND_REG_CTL;
+  assign CTL.REG_CTL[0:2] = CRAM.MAGIC[0:2] & {3{CTL.COND_REG_CTL}};
   assign CTL.COND_AR_EXP = CRAM.MAGIC[5] & CTL.COND_REG_CTL;
-  assign CTL.REG_CTL[7:8] = CRAM.MAGIC[7:8] & CTL.COND_REG_CTL;
+  assign CTL.REG_CTL[7:8] = CRAM.MAGIC[7:8] & {2{CTL.COND_REG_CTL}};
 
   bit e12q15;
   assign e12q15 = ((~APR.CLK & e12q15) | ((CTL.SPEC_LOAD_PC | CTL.DISP_NICOND) & ~CLK.SBR_CALL));
@@ -246,7 +246,7 @@ module ctl(iAPR APR,
     // operations.
   assign CTL.CONSOLE_CONTROL = EBUS.ds[0] | EBUS.ds[1];
   assign CTL.DS = CTL.CONSOLE_CONTROL ? EBUS.ds : CRAM.MAGIC[2:8];
-  assign CTL.DIAG = CTL.DS[4:6];
+  assign CTL.DIAG[4:6] = CTL.DS[4:6];
 
   assign CTL.AD_TO_EBUS_L = CTL.CONSOLE_CONTROL &
                             (APR.CONO_OR_DATAO |
@@ -263,11 +263,12 @@ module ctl(iAPR APR,
                               CTL.CONSOLE_CONTROL & CTL.EBUS_T_TO_E_EN;
   assign CTL.EBUS_PARITY_OUT = SHM.AR_PAR_ODD | CTL.AD_TO_EBUS_L;
 
+  // E37
   always_ff @(posedge CTL.DIAG_LD_FUNC_076) begin
     MBOX.DIAG_MEM_RESET <= EBUS.data[24];
     CTL.DIAG_CHANNEL_CLK_STOP <= EBUS.data[25];
     CTL.DIAG_LD_EBUS_REG <= EBUS.data[26];
     CTL.DIAG_FORCE_EXTEND <= EBUS.data[27];
-    CTL.DIAG[4] <= EBUS.data[28];
+//    CTL.DIAG_DIAG[4] <= EBUS.data[28];        // NOT USED ANYWHERE
   end
 endmodule // ctl

@@ -26,8 +26,8 @@ module ir(iIR IR,
 
 
   initial begin
-    IR.IR <= '0;
-    IR.AC <= '0;
+    IR.IR = '0;
+    IR.AC = '0;
   end
   
 
@@ -128,37 +128,36 @@ module ir(iIR IR,
   bit dramLoadJcommon, dramLoadJeven, dramLoadJodd;
   bit enJRST5, enJRST6, enJRST7;
 
-  always_comb if (CTL.DIAG_LOAD_FUNC_06x) begin
-    dramLoadXYeven = 3'b000;
-    dramLoadXYodd = 3'b001;
-    dramLoadJcommon = 3'b010;
-    dramLoadJeven = 3'b011;
-    dramLoadJodd = 3'b100;
-    enJRST5 = 3'b101;
-    enJRST6 = 3'b110;
-    enJRST7 = 3'b111;
-  end else begin
-    dramLoadXYeven = 0;
-    dramLoadXYodd = 0;
-    dramLoadJcommon = 0;
-    dramLoadJeven = 0;
-    dramLoadJodd = 0;
-    enJRST5 = 0;
-    enJRST6 = 0;
-    enJRST7 = 0;
-  end
+  always_comb if (CTL.DIAG_LOAD_FUNC_06x) case (DIAG)
+                                          3'b000: dramLoadXYeven = 1'b1;
+                                          3'b001: dramLoadXYodd = 1'b1;
+                                          3'b010: dramLoadJcommon = 1'b1;
+                                          3'b011: dramLoadJeven = 1'b1;
+                                          3'b100: dramLoadJodd = 1'b1;
+                                          3'b101: enIO_JRST = enIO_JRST & ;
+                                          3'b110: ;
+                                          3'b111: ;
+                                          endcase else begin
+                                            dramLoadXYeven = 0;
+                                            dramLoadXYodd = 0;
+                                            dramLoadJcommon = 0;
+                                            dramLoadJeven = 0;
+                                            dramLoadJodd = 0;
+                                            enJRST5 = 0;
+                                            enJRST6 = 0;
+                                            enJRST7 = 0;
+                                          end
 
   assign enIO_JRST = enJRST5 & (~enJRST7 | enIO_JRST);
   assign enAC = enJRST6 & (~enJRST7 | enAC);
 
-  // p.130 E67 priority encoder
-  assign IR.NORM = EDP.AD[0] ? 3'b001 :
-                   |EDP.AD[0:5] || EDP.AD[6] ? 3'b010 :
-                   EDP.AD[7] ? 3'b011 :
-                   EDP.AD[8] ? 3'b100 :
-                   EDP.AD[9] ? 3'b101 :
-                   EDP.AD[10] ? 3'b110 :
-                   |EDP.AD[6:35];
+  priority_encoder8 e67(.d({1'b0,
+                            EDP.AD[0],
+                            EDP.AD[6] | (|EDP.AD[0:5]),
+                            EDP.AD[7:10],
+                            |EDP.AD}),
+                        .any(),
+                        .q(IR.NORM));
 
   assign IR.DRAM_ODD_PARITY = ^{IR.DRAM_A,
                                 IR.DRAM_B,
@@ -184,7 +183,7 @@ module ir(iIR IR,
                                                                   EDP.AD_CRY[24], EDP.AD_CRY[36],
                                                                   EDP.ADX_CRY[12], EDP.ADX_CRY[24]};
                                endcase
-    else IR.EBUSdriver.data = 'z;
+    else IR.EBUSdriver.data = '0;
 
   // Look-ahead carry functions have been moved from IR to EDP.
 endmodule // ir
