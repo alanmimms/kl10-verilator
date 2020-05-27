@@ -1,3 +1,4 @@
+// XXX This needs to be manually checked against the schematics.
 `timescale 1ns/1ps
 `include "ebox.svh"
 
@@ -24,12 +25,8 @@ module ir(iIR IR,
   bit IR_CLK;
   assign IR_CLK = CLK.IR;
 
-
-  initial begin
-    IR.IR = '0;
-    IR.AC = '0;
-  end
-  
+  bit dramLoadXYeven, dramLoadXYodd, EN_IO_JRST, EN_AC;
+  bit dramLoadJcommon, dramLoadJeven, dramLoadJodd;
 
 `ifdef KL10PV_TB
   sim_mem
@@ -124,33 +121,23 @@ module ir(iIR IR,
                                } ^ IR.DRAM_B[0];
 
   // p.130 E57 and friends
-  bit dramLoadXYeven, dramLoadXYodd;
-  bit dramLoadJcommon, dramLoadJeven, dramLoadJodd;
-  bit enJRST5, enJRST6, enJRST7;
+  bit [0:7] e57Q;
+  // This is modeled as one-hot active high unlike the MC10161.
+  always_comb if (CTL.DIAG_LOAD_FUNC_06x) case (DIAG[4:6])
+                                          3'b000: e57Q = 8'b10000000;
+                                          3'b001: e57Q = 8'b01000000;
+                                          3'b010: e57Q = 8'b00100000;
+                                          3'b011: e57Q = 8'b00010000;
+                                          3'b100: e57Q = 8'b00001000;
+                                          3'b101: e57Q = 8'b00000100;
+                                          3'b110: e57Q = 8'b00000010;
+                                          3'b111: e57Q = 8'b00000001;
+                                          endcase
+              else e57Q = 8'b0;
 
-  always_comb if (CTL.DIAG_LOAD_FUNC_06x) case (DIAG)
-                                          3'b000: dramLoadXYeven = 1'b1;
-                                          3'b001: dramLoadXYodd = 1'b1;
-                                          3'b010: dramLoadJcommon = 1'b1;
-                                          3'b011: dramLoadJeven = 1'b1;
-                                          3'b100: dramLoadJodd = 1'b1;
-                                          3'b101: enIO_JRST = enIO_JRST & ;
-                                          3'b110: ;
-                                          3'b111: ;
-                                          endcase else begin
-                                            dramLoadXYeven = 0;
-                                            dramLoadXYodd = 0;
-                                            dramLoadJcommon = 0;
-                                            dramLoadJeven = 0;
-                                            dramLoadJodd = 0;
-                                            enJRST5 = 0;
-                                            enJRST6 = 0;
-                                            enJRST7 = 0;
-                                          end
-
-  assign enIO_JRST = enJRST5 & (~enJRST7 | enIO_JRST);
-  assign enAC = enJRST6 & (~enJRST7 | enAC);
-
+  assign EN_IO_JRST = ~e57Q[5] & (e57Q[7] | EN_IO_JRST);
+  assign EN_AC      = ~e57Q[6] & (e57Q[7] | EN_AC);;
+                                          
   priority_encoder8 e67(.d({1'b0,
                             EDP.AD[0],
                             EDP.AD[6] | (|EDP.AD[0:5]),
