@@ -6,18 +6,28 @@ pag.sv pi.sv pma.sv priority-encoder8.sv scd.sv shm.sv top.sv		\
 universal-counter.sv universal-shift-register.sv vma.sv \
 tb/sim-mem.sv
 
-
+#OPTIMIZE = "-O3 --x-assign fast --x-initial fast"
+#OPTIMIZE = -CFLAGS -O3 -O3
+OPTIMIZE =
 SVHFILES = ebox.svh
 CPPFILES = tb/verilator-main.cc
 HPPFILES = tb/testbench.h
 
+KILL_WARNINGS = \
+		-Wno-LITENDIAN \
+		-Wno-UNOPTFLAT
+
+
 all:	$(SVFILES) $(SVHFILES) $(CPPFILES) $(HPPFILES)
-	verilator \
-		-Wno-UNOPTFLAT -Wno-LITENDIAN \
+	verilator $(KILL_WARNINGS) \
 		--default-language 1800-2017 +1800-2017ext+sv \
 		-DTB -DKL10PV_TB \
-		--trace --timescale-override 1ns/1ps \
+		--trace --trace-structs \
+		--timescale-override 1ns/1ps \
 		tb/verilator-main.cc \
 		$(SVFILES) \
 		--top-module top \
-		--cc --build --exe -o kl10pvtb
+		--cc --build --exe -j 4 $(OPTIMIZE) -o kl10pvtb
+
+clean:
+	rm -rf obj_dir

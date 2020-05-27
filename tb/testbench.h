@@ -1,10 +1,10 @@
 template<class MODULE> class TESTBENCH {
- public: unsigned long tickcount;
+ public: unsigned long long tickcount;
  public: MODULE *mod;
 
   TESTBENCH(void) {
     mod = new MODULE();
-    tickcount = 0ul;
+    tickcount = 0ull;
   }
 
   virtual ~TESTBENCH(void) {
@@ -19,9 +19,9 @@ template<class MODULE> class TESTBENCH {
     mod->CROBAR = 0;
   }
 
-  virtual void tick(void) {
+  virtual unsigned long long tick(void) {
     // Increment our own internal time reference
-    tickcount++;
+    ++tickcount;
 
     // Make sure any combinatorial logic depending upon
     // inputs that may have changed before we called tick()
@@ -38,6 +38,8 @@ template<class MODULE> class TESTBENCH {
     // Falling edge
     mod->clk = 0;
     mod->eval();
+
+    return tickcount;
   }
 
   virtual bool done(void) { return (Verilated::gotFinish()); }

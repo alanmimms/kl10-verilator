@@ -60,10 +60,26 @@ module top(input CROBAR, input clk);
                            1'b0,      // [22] Has master oscillator (not needed here)
                            13'd4001}; // [23:35] Serial number
 
+  bit masterClk;
+
+  var string indent = "";
+  var int nSteps;
+
+  tEBUSdriver EBUSdriver;       // The DTE drives the EBUS too
+
+`ifdef VERILATOR
+  assign masterClk = clk;
+  assign EXTERNAL_CLK = clk;
+  assign clk30 = clk;
+  assign clk31 = clk;
+`endif
+
   ebox ebox0(.*);
   mbox mbox0(.SBUS(SBUS.mbox), .*);
   memory memory0(.SBUS(SBUS.memory), .*);
   dte dte0(.*);
+
+  always @(negedge CROBAR) $display($time, " CROBAR deassert");
 
   // Mux for EBUS data lines
   always_comb unique case (1'b1)

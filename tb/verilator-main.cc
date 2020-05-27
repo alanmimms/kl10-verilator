@@ -1,24 +1,28 @@
 #include <cstdlib>
+#include <iostream>
 #include "Vtop.h"
 #include "testbench.h"
 
-vluint64_t main_time = 0;       // Current simulation time
-// This is a 64-bit integer to reduce wrap over issues and
-// allow modulus.  This is in units of the timeprecision
-// used in Verilog (or from --timescale-override)
+TESTBENCH<Vtop> *tb;
+
 
 double sc_time_stamp () {       // Called by $time in Verilog
-  return main_time;           // converts to double, to match
-  // what SystemC does
+  return tb->tickcount;
 }
 
 
 int main(int argc, char **argv) {
   Verilated::commandArgs(argc, argv);
-  TESTBENCH<Vtop> *tb = new TESTBENCH<Vtop>();
+  tb = new TESTBENCH<Vtop>();
+  Vtop *top = tb->mod;
+  top->CROBAR = 1;
 
   while (!tb->done()) {
+    top->CROBAR = tb->tickcount < 100000ull;
     tb->tick();
+
+    if (tb->tickcount % 1000000ull == 0ull)
+      std::cout << (tb->tickcount / 1000000ull) << "us" << std::endl;
   }
 
   exit(EXIT_SUCCESS);
