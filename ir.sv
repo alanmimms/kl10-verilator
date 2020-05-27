@@ -123,7 +123,7 @@ module ir(iIR IR,
   // p.130 E57 and friends
   bit [0:7] e57Q;
   // This is modeled as one-hot active high unlike the MC10161.
-  always_comb if (CTL.DIAG_LOAD_FUNC_06x) case (DIAG[4:6])
+  always_comb if (CTL.DIAG_LOAD_FUNC_06x) case (CTL.DIAG[4:6])
                                           3'b000: e57Q = 8'b10000000;
                                           3'b001: e57Q = 8'b01000000;
                                           3'b010: e57Q = 8'b00100000;
