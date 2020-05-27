@@ -1,8 +1,8 @@
-`timescale 1ns/1ps
+`timescale 1ns/1ns
 `include "ebox.svh"
 
-module top(input CROBAR, input clk);
-  bit EXTERNAL_CLK, clk30, clk31;
+module top;
+  bit clk, CROBAR, EXTERNAL_CLK, clk30, clk31;
 
   bit [27:35] MBOX_GATE_VMA;
   bit [10:12] CACHE_CLEARER;
@@ -35,7 +35,6 @@ module top(input CROBAR, input clk);
   iCRM CRM();
   iCSH CSH();
   iCTL CTL();
-  iDTE DTE();
   iEDP EDP();
   iIR IR();
   iMBC MBC();
@@ -60,35 +59,21 @@ module top(input CROBAR, input clk);
                            1'b0,      // [22] Has master oscillator (not needed here)
                            13'd4001}; // [23:35] Serial number
 
-  bit masterClk;
-
-  var string indent = "";
-  var int nSteps;
-
-  tEBUSdriver EBUSdriver;       // The DTE drives the EBUS too
-
-`ifdef VERILATOR
-  assign masterClk = clk;
-  assign EXTERNAL_CLK = clk;
-  assign clk30 = clk;
-  assign clk31 = clk;
-`endif
-
   ebox ebox0(.*);
   mbox mbox0(.SBUS(SBUS.mbox), .*);
   memory memory0(.SBUS(SBUS.memory), .*);
-  dte dte0(.*);
 
-  always @(negedge CROBAR) $display($time, " CROBAR deassert");
+`ifdef KL10PV_TB
+  kl10pv_tb kl10pv_tb0(.*);
+`endif
 
   // Mux for EBUS data lines
-  always_comb unique case (1'b1)
+  always_comb unique case (1)
               default: EBUS.data = '0;
               APR.EBUSdriver.driving:        EBUS.data = APR.EBUSdriver.data;
               CON.EBUSdriver.driving:        EBUS.data = CON.EBUSdriver.data;
               CRA.EBUSdriver.driving:        EBUS.data = CRA.EBUSdriver.data;
               CTL.EBUSdriver.driving:        EBUS.data = CTL.EBUSdriver.data;
-              DTE.EBUSdriver.driving:        EBUS.data = DTE.EBUSdriver.data;
               EDP.EBUSdriver.driving:        EBUS.data = EDP.EBUSdriver.data;
               IR.EBUSdriver.driving:         EBUS.data =  IR.EBUSdriver.data;
               MBZ.EBUSdriver.driving:        EBUS.data = MBZ.EBUSdriver.data;
@@ -97,5 +82,8 @@ module top(input CROBAR, input clk);
               SCD.EBUSdriver.driving:        EBUS.data = SCD.EBUSdriver.data;
               SHM.EBUSdriver.driving:        EBUS.data = SHM.EBUSdriver.data;
               VMA.EBUSdriver.driving:        EBUS.data = VMA.EBUSdriver.data;
+`ifdef KL10PV_TB
+              kl10pv_tb0.EBUSdriver.driving: EBUS.data = kl10pv_tb0.EBUSdriver.data;
+`endif
               endcase
 endmodule

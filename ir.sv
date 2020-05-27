@@ -1,4 +1,3 @@
-// XXX This needs to be manually checked against the schematics.
 `timescale 1ns/1ps
 `include "ebox.svh"
 
@@ -25,8 +24,12 @@ module ir(iIR IR,
   bit IR_CLK;
   assign IR_CLK = CLK.IR;
 
-  bit dramLoadXYeven, dramLoadXYodd, EN_IO_JRST, EN_AC;
-  bit dramLoadJcommon, dramLoadJeven, dramLoadJodd;
+
+  initial begin
+    IR.IR <= '0;
+    IR.AC <= '0;
+  end
+  
 
 `ifdef KL10PV_TB
   sim_mem
@@ -51,8 +54,8 @@ module ir(iIR IR,
 
   // JRST is 0o254,F
   bit JRST;
-  assign JRST = enIO_JRST && (IR.IR[0:8] == 9'o254);
-  assign IR.JRST0 = JRST & (IR.IR[9:12] == 4'b0000);
+  assign JRST = IR.IR[0:8] == 13'b010_101_100;
+  assign IR.JRST0 = IR.IR[0:12] == 13'b010_101_100_0000;
 
   // XXX In addition to the below, this has two mystery OR term
   // signals on each input to the AND that are unlabeled except for
@@ -105,7 +108,7 @@ module ir(iIR IR,
     DRAM_PAR_J[8:10] <= DRADR[8] ? DRAM_J_X[8:10] : DRAM_J_Y[8:10];
   end
 
-  always @(posedge CON.LOAD_DRAM) IR.DRAM_J[7:10] <= ~JRST ? DRAM_PAR_J[7:10] : IR.IR[9:12];
+  always @(posedge CON.LOAD_DRAM) IR.DRAM_J[8:10] <= JRST ? DRAM_PAR_J[7:10] : IR.IR[9:12];
 
   // Latch-mux
   always_ff @(posedge CON.LOAD_IR) IR.IR <= CLK.MB_XFER ? EDP.AD[0:12] : MBOX.CACHE_DATA[0:12];
@@ -121,30 +124,41 @@ module ir(iIR IR,
                                } ^ IR.DRAM_B[0];
 
   // p.130 E57 and friends
-  bit [0:7] e57Q;
-  // This is modeled as one-hot active high unlike the MC10161.
-  always_comb if (CTL.DIAG_LOAD_FUNC_06x) case (CTL.DIAG[4:6])
-                                          3'b000: e57Q = 8'b10000000;
-                                          3'b001: e57Q = 8'b01000000;
-                                          3'b010: e57Q = 8'b00100000;
-                                          3'b011: e57Q = 8'b00010000;
-                                          3'b100: e57Q = 8'b00001000;
-                                          3'b101: e57Q = 8'b00000100;
-                                          3'b110: e57Q = 8'b00000010;
-                                          3'b111: e57Q = 8'b00000001;
-                                          endcase
-              else e57Q = 8'b0;
+  bit dramLoadXYeven, dramLoadXYodd;
+  bit dramLoadJcommon, dramLoadJeven, dramLoadJodd;
+  bit enJRST5, enJRST6, enJRST7;
 
-  assign EN_IO_JRST = ~e57Q[5] & (e57Q[7] | EN_IO_JRST);
-  assign EN_AC      = ~e57Q[6] & (e57Q[7] | EN_AC);;
-                                          
-  priority_encoder8 e67(.d({1'b0,
-                            EDP.AD[0],
-                            EDP.AD[6] | (|EDP.AD[0:5]),
-                            EDP.AD[7:10],
-                            |EDP.AD}),
-                        .any(),
-                        .q(IR.NORM));
+  always_comb if (CTL.DIAG_LOAD_FUNC_06x) begin
+    dramLoadXYeven = 3'b000;
+    dramLoadXYodd = 3'b001;
+    dramLoadJcommon = 3'b010;
+    dramLoadJeven = 3'b011;
+    dramLoadJodd = 3'b100;
+    enJRST5 = 3'b101;
+    enJRST6 = 3'b110;
+    enJRST7 = 3'b111;
+  end else begin
+    dramLoadXYeven = 0;
+    dramLoadXYodd = 0;
+    dramLoadJcommon = 0;
+    dramLoadJeven = 0;
+    dramLoadJodd = 0;
+    enJRST5 = 0;
+    enJRST6 = 0;
+    enJRST7 = 0;
+  end
+
+  assign enIO_JRST = enJRST5 & (~enJRST7 | enIO_JRST);
+  assign enAC = enJRST6 & (~enJRST7 | enAC);
+
+  // p.130 E67 priority encoder
+  assign IR.NORM = EDP.AD[0] ? 3'b001 :
+                   |EDP.AD[0:5] || EDP.AD[6] ? 3'b010 :
+                   EDP.AD[7] ? 3'b011 :
+                   EDP.AD[8] ? 3'b100 :
+                   EDP.AD[9] ? 3'b101 :
+                   EDP.AD[10] ? 3'b110 :
+                   |EDP.AD[6:35];
 
   assign IR.DRAM_ODD_PARITY = ^{IR.DRAM_A,
                                 IR.DRAM_B,
@@ -170,7 +184,7 @@ module ir(iIR IR,
                                                                   EDP.AD_CRY[24], EDP.AD_CRY[36],
                                                                   EDP.ADX_CRY[12], EDP.ADX_CRY[24]};
                                endcase
-    else IR.EBUSdriver.data = '0;
+    else IR.EBUSdriver.data = 'z;
 
   // Look-ahead carry functions have been moved from IR to EDP.
 endmodule // ir

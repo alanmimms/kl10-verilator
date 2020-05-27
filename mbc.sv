@@ -1,5 +1,5 @@
 // 04-25-2020: Manually compared with schematics.
-`timescale 1ns/1ps
+`timescale 1ns/1ns
 `include "ebox.svh"
 // M8531 MBC (MBOX control #3)
 module mbc(iAPR APR,
@@ -294,8 +294,7 @@ module mbc(iAPR APR,
   always_ff @(posedge clk) CORE_RD_IN_PROG <= INIT_COMP;
 
   bit [0:1] ignoredE76;
-  UCR4 e76(.RESET(1'b0),
-           .CIN(1'b1),
+  UCR4 e76(.CIN(1'b1),
            .CLK(clk),
            .SEL({INIT_COMP & CORE_RD_IN_PROG,
                  CORE_RD_IN_PROG & ~MBC.CORE_DATA_VALID & RQ_0B & INIT_COMP |

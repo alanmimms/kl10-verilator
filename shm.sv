@@ -1,4 +1,4 @@
-`timescale 1ns/1ps
+`timescale 1ns/1ns
 `include "ebox.svh"
 
 // M8540 SHM
@@ -40,10 +40,8 @@ module shm(iCRAM CRAM,
               {SHIFT_36 | SHIFT_50, SHIFT_50, 1'b0, SHIFT_36, SHIFT_50, 1'b0};
   
   // SHM2 p.335
-  bit [0:71] ar_arx;
-  assign ar_arx = {EDP.AR, EDP.ARX} << sc;
   always_comb case (CRAM.SH)
-              2'b00: SHM.SH = ar_arx[36:71];
+              2'b00: SHM.SH = ({EDP.AR, EDP.ARX} << sc) >> 36;
               2'b01: SHM.SH = EDP.AR;
               2'b10: SHM.SH = EDP.ARX;
               2'b11: SHM.SH = {EDP.AR[18:35], EDP.AR[0:17]};

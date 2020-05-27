@@ -1,5 +1,5 @@
 // Schematic review: MBZ1, MBZ2, MBZ3, MBZ4, MBZ5, MBZ6.
-`timescale 1ns/1ps
+`timescale 1ns/1ns
 `include "ebox.svh"
 
 // M8537 MBZ
@@ -11,8 +11,8 @@ module mbz(iAPR APR,
            iCSH CSH,
            iCTL CTL,
            iEBUS.mod EBUS,
-           iMBOX MBOX,
            iMBC MBC,
+           iMBOX MBOX,
            iMBX MBX,
            iMBZ MBZ,
            iMCL MCL,
@@ -79,7 +79,6 @@ module mbz(iAPR APR,
                             1'b0,
                             CHAN_STATUS_TO_MB,
                             1'b0}),
-                        .any(),
                         .q(e47Q));
 
   always_latch if (e51q14) MBOX.MB_IN_SEL <= e47Q;
@@ -250,16 +249,14 @@ module mbz(iAPR APR,
   always_ff @(posedge clk) e68q4 <= MBOX.A_CHANGE_COMING_IN ^ e72q2;
   always_ff @(posedge clk) e57q3 <= e72q2 & MBOX.A_CHANGE_COMING_IN;
 
-  UCR4 e53(.RESET(1'b0),
-           .SEL({MEM_START_C, 1'b0}),
+  UCR4 e53(.SEL({MEM_START_C, 1'b0}),
            .D('0),
            .CLK(clk),
            .CIN(e57q3),
            .COUT(NXM_CRY_A),
            .Q());
   
-  UCR4 e48(.RESET(1'b0),
-           .SEL({MEM_START_C, 1'b0}),
+  UCR4 e48(.SEL({MEM_START_C, 1'b0}),
            .D('0),
            .CLK(clk),
            .CIN(NXM_CRY_A),
@@ -349,7 +346,7 @@ module mbz(iAPR APR,
   always_ff @(posedge clk) CH_REG_HOLD <= ~MBOX.CH_T2;
   always_ff @(posedge clk) {CH_BUF_00to17_PAR, CH_BUF_18to35_PAR} = chBufParRAM[CH_BUF_ADR];
 
-  always_ff @(posedge MBOX.CH_BUF_WR)
+  always_ff @(MBOX.CH_BUF_WR) if (MBOX.CH_BUF_WR)
     chBufParRAM[CH_BUF_ADR] <= {CH_BUF_IN_00to17_PAR, CH_BUF_IN_18to35_PAR};
 
   mux2x4 e50(.EN(MBOX.MEM_TO_C_EN),

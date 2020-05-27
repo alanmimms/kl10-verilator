@@ -1,4 +1,4 @@
-`timescale 1ns/1ps
+`timescale 1ns/1ns
 `include "ebox.svh"
 
 module pma(iAPR APR,
@@ -130,24 +130,21 @@ module pma(iAPR APR,
            .Q(CCA[23:26]),
            .CLK(clock));
 
-  UCR4 e40(.RESET(1'b0),
-           .D({1'b0, 3'b111}),
+  UCR4 e40(.D(4'b0111),
            .CIN(~e36q15),
            .Q({unusedE40, CCA[27:29]}),
            .COUT(),
            .SEL(CCA_SEL),
            .CLK(clock));
 
-  UCR4 e75(.RESET(1'b0),
-           .D(4'b1111),
+  UCR4 e75(.D(4'b1111),
            .CIN(~e65q2),
            .Q({CCA[30:33]}),
            .COUT(),
            .SEL(CCA_SEL),
            .CLK(clock));
 
-  UCR4 e70(.RESET(1'b0),
-           .D(4'b0011),
+  UCR4 e70(.D(4'b0011),
            .CIN(1'b1),
            .Q({unusedE70, CCA[34:35]}),
            .COUT(),

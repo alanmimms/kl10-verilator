@@ -215,20 +215,6 @@ module con(iAPR APR,
   always @(posedge CON.RUN) $display($time, " [KL RUN]");
   always @(negedge CON.RUN) $display($time, " [RUN flip-flop deassert]");
 
-/*
-  bit runStateNC1, runStateNC2, runStateNC3;
-  bit [0:7] e39Q;
-  assign DIAG_CLR_RUN = e39Q[0];
-  assign DIAG_SET_RUN = e39Q[1];
-  assign DIAG_CONTINUE = e39Q[2];
-  assign DIAG_IR_STROBE = e39Q[4];
-  assign DIAG_DRAM_STROBE = e39Q[5];
-
-  decoder e39(.en(CTL.DIAG_CTL_FUNC_01x),
-              .sel(EBUS.ds[4:6]),
-              .q(e39Q));
-*/
-
   always_comb if (CTL.DIAG_CTL_FUNC_01x) case (EBUS.ds[4:6])
                                          3'b000: DIAG_CLR_RUN = 1;
                                          3'b001: DIAG_SET_RUN = 1;
@@ -403,7 +389,7 @@ module con(iAPR APR,
            .CLK(clk),
            .Q({CON.EBOX_HALTED, unusedE49, CON.PCplus1_INH, SPEC8}));
 
-  always_ff @(posedge clk) if (CON.COND_EBUS_STATE | CON.RESET) begin
+  always_ff @(posedge clk iff CON.COND_EBUS_STATE | CON.RESET) begin
     CON.UCODE_STATE1 <= (CRAM.MAGIC[2] | CRAM.MAGIC[1]) &
                         (CON.UCODE_STATE1 | CRAM.MAGIC[1]);
     CON.UCODE_STATE3 <= (CRAM.MAGIC[4] | CRAM.MAGIC[3]) &

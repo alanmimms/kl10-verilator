@@ -1,7 +1,7 @@
 // TODO: Should the lack ACKN pulse last until START releases? (For
 // back-to-back cycles on the same phase I don't know that it will
 // actually release.)
-`timescale 1ns/1ps
+`timescale 1ns/1ns
 `include "ebox.svh"
 
 // This module pretends to be a MB20 core memory. The A phase is
@@ -23,8 +23,8 @@ module memory(input bit CROBAR,
   bit [0:35] aD, bD;
   bit aParity, bParity;
 
-  assign aClk = ~SBUS.CLK_INT;
-  assign bClk =  SBUS.CLK_INT;
+  always @SBUS.CLK_INT aClk <= ~SBUS.CLK_INT;
+  always @SBUS.CLK_INT bClk <= SBUS.CLK_INT;
 
   assign SBUS.D = aClk ? aD : bD;
   assign SBUS.DATA_PAR = aClk ? aParity : bParity;
@@ -65,7 +65,7 @@ module memPhase(input bit CROBAR,
                 output bit ACKN,
                 output bit VALID);
 
-  bit [14:35] addr;             // Address base we start at for quadword
+  bit [12:35] addr;             // Address base we start at for quadword
   bit [34:35] wo;               // Word offset of quadword
   bit [0:3] toAck;              // Words we have not yet ACKed
 
@@ -73,8 +73,8 @@ module memPhase(input bit CROBAR,
   assign VALID = toAck[0];
 
   always_comb if (VALID) begin
-    D = memory[{addr[36 - $clog2(`MEM_SIZE):33], wo}];
-    PARITY = ^memory[{addr[36 - $clog2(`MEM_SIZE):33], wo}];
+    D = memory[{addr[12:33], wo}];
+    PARITY = ^memory[{addr[12:33], wo}];
   end else begin
     D = '0;
     PARITY = 0;
@@ -90,7 +90,7 @@ module memPhase(input bit CROBAR,
     toAck <= SBUS.RQ;           // Addresses remaining to ACK
   end
 
-  always_ff @(posedge clk) if (toAck != '0) begin
+  always_ff @(posedge clk) if (toAck) begin
     wo <= wo + 1;
     toAck <= toAck << 1;
   end

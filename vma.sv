@@ -1,4 +1,4 @@
-`timescale 1ns/1ps
+`timescale 1ns/1ns
 `include "ebox.svh"
 
 // M8542 VMA
@@ -49,7 +49,7 @@ module vma(iAPR APR,
   bit SPEC_VMA_MAGIC;
   assign SPEC_VMA_MAGIC = CON.COND_VMA_MAGIC;
 
-  bit [27:33] VMA_G;
+  bit VMA_G;
   // XXX this goes nowhere. Why?
   assign VMA_G = CSH.GATE_VMA_27_33 ? VMA.VMA[27:33] : '0;
 

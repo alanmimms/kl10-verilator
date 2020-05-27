@@ -1,4 +1,4 @@
-`timescale 1ns/1ps
+`timescale 1ns/1ns
 `include "ebox.svh"
 
 // M8519 MT0 INT MEM BUS TRANSLATOR

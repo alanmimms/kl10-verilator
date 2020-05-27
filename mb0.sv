@@ -1,5 +1,5 @@
 // Schematic review: MB01, MB02, MB03, MB04, MB05
-`timescale 1ns/1ps
+`timescale 1ns/1ns
 `include "ebox.svh"
 // M8517 MB0 memory buffer board
 // Note all three instances of MB0 are modeled in this module
@@ -129,7 +129,7 @@ module mb0(iCCL CCL,
 
 
   // MB04 p.77
-  bit [0:35] ccwBuf[127:0];
+  bit [0:35] ccwBuf[0:3];
   assign clk = CLK.MB;
   assign MB_IN_EN = ~MBOX.NXM_ANY;
 
@@ -148,7 +148,7 @@ module mb0(iCCL CCL,
                             endcase
 
   // e70, e31, e11
-  always_ff @(posedge MBOX.CCW_BUF_WR) ccwBuf[MBOX.CCW_BUF_ADR] = MBOX.CCW_BUF_IN[0:35];
+  always_ff @(posedge MBOX.CCW_BUF_WR) ccwBuf[MBOX.CCW_BUF_ADR] = MBOX.CCW_BUF_IN;
 
 
   // MB05 p.78
@@ -160,7 +160,7 @@ module mb0(iCCL CCL,
   assign MB_CH_BUF_LOAD = MBOX.CH_T0;
 
   // e74, e48, e10
-  always_ff @(posedge clk) CH_BUF_ADR[0:6] <= CRC.CH_BUF_ADR[0:6];
+  always_ff @(posedge clk) CH_BUF_ADR <= CRC.CH_BUF_ADR;
   always_ff @(posedge clk) CH_BUF_EN <= CCL.CH_BUF_EN;
   always_ff @(posedge clk) CH_REG_HOLD <= ~MBOX.CH_T2;
 

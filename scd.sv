@@ -1,4 +1,4 @@
-`timescale 1ns/1ps
+`timescale 1ns/1ns
 `include "ebox.svh"
 
 // M8524 SCD
@@ -74,7 +74,7 @@ module scd(iAPR APR,
 
   bit [2:9] SCADA_EXP;
   // E53, E76, E51
-  assign SCADA_EXP[2:9] = EDP.AR[1:8] ^ {8{EDP.AR[0]}};
+  assign SCADA_EXP[2:9] = EDP.AR[1:8] ^ EDP.AR[0];
 
   mux2x4 E83(.SEL(CRAM.SCADB),
              .EN(1'b1),

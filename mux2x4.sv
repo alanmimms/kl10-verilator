@@ -1,4 +1,4 @@
-`timescale 1ns/1ps
+`timescale 1ns/1ns
 // Dual 1-of-4 mux
 module mux2x4
   (input bit [0:1] SEL,

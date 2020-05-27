@@ -269,6 +269,5 @@ module ctl(iAPR APR,
     CTL.DIAG_CHANNEL_CLK_STOP <= EBUS.data[25];
     CTL.DIAG_LD_EBUS_REG <= EBUS.data[26];
     CTL.DIAG_FORCE_EXTEND <= EBUS.data[27];
-//    CTL.DIAG_DIAG[4] <= EBUS.data[28];        // NOT USED ANYWHERE
   end
 endmodule // ctl

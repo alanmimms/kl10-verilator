@@ -1,4 +1,4 @@
-`timescale 1ns/1ps
+`timescale 1ns/1ns
 `include "ebox.svh"
 // M8538 MTR
 module mtr(iCHC CHC,
@@ -69,11 +69,11 @@ module mtr(iCHC CHC,
                             .carry());
 
 
-  assign EBOX_COUNT = {1'b0, EBOX_COUNT0.count};
-  assign CACHE_COUNT = {1'b0, CACHE_COUNT0.count};
-  assign _TIME = {1'b0, TIME0.count};
-  assign PERF_COUNT = {1'b0, PERF_COUNT0.count};
-  assign INTERVAL = {1'b0, INTERVAL0.count};
+  assign EBOX_COUNT = EBOX_COUNT0.count;
+  assign CACHE_COUNT = CACHE_COUNT0.count;
+  assign _TIME = TIME0.count;
+  assign PERF_COUNT = PERF_COUNT0.count;
+  assign INTERVAL = INTERVAL0.count;
 
 
   // MTR2 p.325
@@ -183,15 +183,11 @@ module mtr(iCHC CHC,
   always_ff @(posedge INTERVAL_CLK) if ((CONO_TIM | RESET) & (mtrEBUS[22] & RESET)) INTERVAL_DONE <= 0;
                                     else INTERVAL_DONE <= INTERVAL_DONE | e42q6 | INTERVAL_MATCH;
 
-  bit clk1;
-  assign clk1 = TIME_CLK | RESET_PLSD;
-  always @(posedge clk1, posedge RESET_TIME) if (RESET_TIME) CLR_TIME <= 1;
-                                             else CLR_TIME <= RESET;
+  always @(posedge TIME_CLK | RESET_PLSD, posedge RESET_TIME) if (RESET_TIME) CLR_TIME <= 1;
+                                                              else CLR_TIME <= RESET;
 
-  bit clk2;
-  assign clk2 = PERF_CNT_CLK | RESET_PLSD;
-  always @(posedge clk2, posedge RESET_PERF) if (RESET_PERF) CLR_PERF_CNT <= 1;
-                                             else CLR_PERF_CNT <= RESET;
+  always @(posedge PERF_CNT_CLK | RESET_PLSD, posedge RESET_PERF) if (RESET_PERF) CLR_PERF_CNT <= 1;
+                                                                  else CLR_PERF_CNT <= RESET;
 
 
   // MTR4 p.327
@@ -237,9 +233,9 @@ module mtr(iCHC CHC,
   always_ff @(posedge LOAD_PA_LEFT) CACHE_PA_DONT_CARE <= mtrEBUS[34];
 
   bit e58q3, e72q3, e86q3;
-  assign FILL_CACHE_RD = CSH.FILL_CACHE_RD;
-  assign E_WRITEBACK = CSH.E_WRITEBACK;
-  assign CCA_WRITEBACK = CSH.CCA_WRITEBACK;
+  assign CSH.FILL_CACHE_RD = FILL_CACHE_RD;
+  assign CSH.E_WRITEBACK = E_WRITEBACK;
+  assign CSH.CCA_WRITEBACK = CCA_WRITEBACK;
 
   assign EBOX_WAITING = ~VMA.AC_REF & CLK.EBOX_SYNC & CON.MBOX_WAIT;
 
@@ -268,12 +264,10 @@ module mtr(iCHC CHC,
           .q(e66Q));
 
   bit [2:3] unusedE71;
-  UCR4 e71(.RESET(1'b0),
-           .CIN(1'b1),
+  UCR4 e71(.CIN(1'b1),
            .SEL({e66Q | |CHAN_BUSY[0:1], e66Q | RESET}),
            .CLK(MBOX.CH_T1),
            .D({4{e66Q}}),
-           .COUT(),
            .Q({CHAN_BUSY, unusedE71}));
 
 

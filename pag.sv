@@ -1,4 +1,4 @@
-`timescale 1ns/1ps
+`timescale 1ns/1ns
 // M8520 PAG
 module pag(iAPR APR,
            iCLK CLK,
