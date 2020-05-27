@@ -51,8 +51,8 @@ module ir(iIR IR,
 
   // JRST is 0o254,F
   bit JRST;
-  assign JRST = IR.IR[0:8] == 13'b010_101_100;
-  assign IR.JRST0 = IR.IR[0:12] == 13'b010_101_100_0000;
+  assign JRST = enIO_JRST && (IR.IR[0:8] == 9'o254);
+  assign IR.JRST0 = JRST & (IR.IR[9:12] == 4'b0000);
 
   // XXX In addition to the below, this has two mystery OR term
   // signals on each input to the AND that are unlabeled except for
@@ -105,7 +105,7 @@ module ir(iIR IR,
     DRAM_PAR_J[8:10] <= DRADR[8] ? DRAM_J_X[8:10] : DRAM_J_Y[8:10];
   end
 
-  always @(posedge CON.LOAD_DRAM) IR.DRAM_J[8:10] <= JRST ? DRAM_PAR_J[7:10] : IR.IR[9:12];
+  always @(posedge CON.LOAD_DRAM) IR.DRAM_J[7:10] <= ~JRST ? DRAM_PAR_J[7:10] : IR.IR[9:12];
 
   // Latch-mux
   always_ff @(posedge CON.LOAD_IR) IR.IR <= CLK.MB_XFER ? EDP.AD[0:12] : MBOX.CACHE_DATA[0:12];

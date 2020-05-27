@@ -259,7 +259,7 @@ module mcl(iAPR APR,
           .d({3'b000, PXCT_B11, PXCT_B09, PXCT_B11, PXCT_B12, PXCT_B11}),
           .q(MCL.XR_PREVIOUS));
 
-  bit e50SR;
+  bit [0:3] e50SR;
   always_ff @(posedge clk) if (CON.LOAD_SPEC_INSTR) begin
     PXCT <= CRAM.MAGIC[4];
     KERNEL_CYCLE <= CRAM.MAGIC[1];

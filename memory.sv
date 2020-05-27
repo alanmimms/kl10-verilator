@@ -65,7 +65,7 @@ module memPhase(input bit CROBAR,
                 output bit ACKN,
                 output bit VALID);
 
-  bit [12:35] addr;             // Address base we start at for quadword
+  bit [14:35] addr;             // Address base we start at for quadword
   bit [34:35] wo;               // Word offset of quadword
   bit [0:3] toAck;              // Words we have not yet ACKed
 
@@ -73,8 +73,8 @@ module memPhase(input bit CROBAR,
   assign VALID = toAck[0];
 
   always_comb if (VALID) begin
-    D = memory[{addr[12:33], wo}];
-    PARITY = ^memory[{addr[12:33], wo}];
+    D = memory[{addr[36 - $clog2(`MEM_SIZE):33], wo}];
+    PARITY = ^memory[{addr[36 - $clog2(`MEM_SIZE):33], wo}];
   end else begin
     D = '0;
     PARITY = 0;
@@ -90,7 +90,7 @@ module memPhase(input bit CROBAR,
     toAck <= SBUS.RQ;           // Addresses remaining to ACK
   end
 
-  always_ff @(posedge clk) if (toAck) begin
+  always_ff @(posedge clk) if (toAck != '0) begin
     wo <= wo + 1;
     toAck <= toAck << 1;
   end

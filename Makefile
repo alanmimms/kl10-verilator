@@ -10,11 +10,12 @@ tb/sim-mem.sv
 SVHFILES = ebox.svh
 
 all:	$(SVFILES) $(SVHFILES)
-	verilator --cc \
+	verilator \
 		-Wno-UNOPTFLAT -Wno-LITENDIAN \
-		--exe -o kl10pvtb \
 		--default-language 1800-2017 +1800-2017ext+sv \
 		-DTB -DKL10PV_TB \
 		--trace --timescale-override 1ns/1ps \
 		tb/verilator-main.cc \
-		$(SVFILES)
+		$(SVFILES) \
+		--top-module top \
+		--cc --build --exe -o kl10pvtb

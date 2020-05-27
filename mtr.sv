@@ -69,11 +69,11 @@ module mtr(iCHC CHC,
                             .carry());
 
 
-  assign EBOX_COUNT = EBOX_COUNT0.count;
-  assign CACHE_COUNT = CACHE_COUNT0.count;
-  assign _TIME = TIME0.count;
-  assign PERF_COUNT = PERF_COUNT0.count;
-  assign INTERVAL = INTERVAL0.count;
+  assign EBOX_COUNT = {1'b0, EBOX_COUNT0.count};
+  assign CACHE_COUNT = {1'b0, CACHE_COUNT0.count};
+  assign _TIME = {1'b0, TIME0.count};
+  assign PERF_COUNT = {1'b0, PERF_COUNT0.count};
+  assign INTERVAL = {1'b0, INTERVAL0.count};
 
 
   // MTR2 p.325

@@ -1241,13 +1241,13 @@ interface iSBUS;
   bit DATA_VALID_B;
   bit DIAG;
   bit ERROR;
+  bit RD_RQ;
   bit MEM_RESET;
   bit START_A;
   bit START_B;
+  bit WR_RQ;
   bit [0:35] D;
-  bit [0:3] RD_RQ;
   bit [0:3] RQ;
-  bit [0:3] WR_RQ;
   bit [14:35] ADR;
   bit CROBAR;
 
@@ -1345,7 +1345,7 @@ endinterface
 
 interface iSHM;
   bit [0:35] SH;
-  bit [0:35] XR;
+  bit [0:3] XR;
   bit AR_PAR_ODD;
   bit INDEXED;
   bit AR_EXTENDED;
@@ -1391,7 +1391,6 @@ interface iMBOX;
   bit CBUS_PAR_RIGHT_RE;
   bit CBUS_PAR_RIGHT_TE;
   bit CCL_HOLD_MEM;
-  bit CCW_BUF_IN;
   bit CCW_BUF_WR;
   bit CHAN_ADR_PAR_ERR;
   bit CHAN_NXM_ERR;
@@ -1428,6 +1427,7 @@ interface iMBOX;
   bit MB1_HOLD_IN;
   bit MB2_HOLD_IN;
   bit MB3_HOLD_IN;
+  bit MBOX_ADR_PAR_ERR;
   bit MB_DATA_CODE_1;
   bit MB_DATA_CODE_2;
   bit MB_PAR;
@@ -1438,7 +1438,6 @@ interface iMBOX;
   bit MB_SEL_1_EN;
   bit MB_SEL_2_EN;
   bit MB_SEL_HOLD;
-  bit MBOX_ADR_PAR_ERR;
   bit MEM_ACKN_A;
   bit MEM_ACKN_B;
   bit MEM_ADR_PAR;
@@ -1474,10 +1473,12 @@ interface iMBOX;
   bit S_ADR_P_ERR;
   bit [0:10] pfDisp;
   bit [0:1] CAM_SEL;
+  bit [0:1] MEM_TO_C_SEL;
   bit [0:2] MB_IN_SEL;
   bit [0:35] CACHE_DATA;
   bit [0:35] CBUS_D_RE;
   bit [0:35] CBUS_D_TE;
+  bit [0:35] CCW_BUF_IN;
   bit [0:35] CCW_MIX;
   bit [0:35] MB;
   bit [0:35] MEM_DATA_IN;
@@ -1491,11 +1492,10 @@ interface iMBOX;
   bit [0:3] FORCE_VALID_MATCH;
   bit [0:3] MEM_RQ;
   bit [0:6] CCW_BUF_ADR;
-  bit [0:1] MEM_TO_C_SEL;
   bit [14:35] PMA;
-  bit [2:1] MB_SEL;
   bit [27:35] CACHE_ADR;
   bit [27:35] MBOX_GATE_VMA;
+  bit [2:1] MB_SEL;
   bit [34:35] SBUS_ADR;
 endinterface
 
@@ -1536,7 +1536,7 @@ endinterface
 interface iCRC;
   bit CBUS_OUT_HOLD;
   bit BUF_MB_SEL;
-  bit CH_BUF_ADR;
+  bit [0:6] CH_BUF_ADR;
   bit [0:2] SEL;
 endinterface
 
