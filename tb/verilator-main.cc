@@ -1,28 +1,24 @@
-#include <stdlib.h>
-#include "verilated.h"
+#include <cstdlib>
 #include "Vtop.h"
-#include <iostream>
+#include "testbench.h"
 
-Vtop *topP;
-vluint64_t MainTime = 0;
+vluint64_t main_time = 0;       // Current simulation time
+// This is a 64-bit integer to reduce wrap over issues and
+// allow modulus.  This is in units of the timeprecision
+// used in Verilog (or from --timescale-override)
+
+double sc_time_stamp () {       // Called by $time in Verilog
+  return main_time;           // converts to double, to match
+  // what SystemC does
+}
 
 
 int main(int argc, char **argv) {
-  // Initialize Verilators variables
   Verilated::commandArgs(argc, argv);
+  TESTBENCH<Vtop> *tb = new TESTBENCH<Vtop>();
 
-  topP = new Vtop;              // Create top module instance
-  topP->CROBAR = 1;             // Assert CROBAR at beginning of time
-
-  // Create an instance of our module under test
-  Vmodule *tb = new Vmodule;
-
-  // Tick the clock until we are done
-  while (!Verilated::gotFinish()) {
-    topP->clk = tb->i_clk = 1;
-    tb->eval();
-    topP->clk = tb->i_clk = 0;
-    tb->eval();
+  while (!tb->done()) {
+    tb->tick();
   }
 
   exit(EXIT_SUCCESS);

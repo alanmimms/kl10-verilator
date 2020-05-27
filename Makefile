@@ -8,8 +8,10 @@ tb/sim-mem.sv
 
 
 SVHFILES = ebox.svh
+CPPFILES = tb/verilator-main.cc
+HPPFILES = tb/testbench.h
 
-all:	$(SVFILES) $(SVHFILES)
+all:	$(SVFILES) $(SVHFILES) $(CPPFILES) $(HPPFILES)
 	verilator \
 		-Wno-UNOPTFLAT -Wno-LITENDIAN \
 		--default-language 1800-2017 +1800-2017ext+sv \
