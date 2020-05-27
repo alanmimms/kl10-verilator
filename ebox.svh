@@ -1,3 +1,4 @@
+`default_nettype	none
 `ifndef _EBOX_SVH_
  `define _EBOX_SVH_ 1
 
