@@ -16,8 +16,8 @@ int main(int argc, char **argv) {
   Verilated::commandArgs(argc, argv);
   tb = new TESTBENCH<Vtop>();
   Verilated::traceEverOn(true);
-  tb->opentrace("kl10pv-trace.vcd");
   Vtop *top = tb->mod;
+  tb->opentrace("kl10pv-trace.vcd");
   top->CROBAR = 1;
 
   while (!tb->done) {

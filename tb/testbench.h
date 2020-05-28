@@ -11,7 +11,6 @@ public: bool done;
   TESTBENCH(void) {
     mod = new MODULE();
     tickcount = 0ull;
-    mod = (MODULE *) 0;
     trace = (TRACECLASS *) 0;
     done = false;
   }
@@ -31,10 +30,10 @@ public: bool done;
 
   virtual void opentrace(const char *vcdName) {
       trace = new TRACECLASS;
+      mod->trace(trace, 99);
       trace->spTrace()->set_time_resolution("ps");
       trace->spTrace()->set_time_unit("ps");
       trace->open(vcdName);
-      mod->trace(trace, 99);
   }
 
   virtual vluint64_t tick(void) {
@@ -44,16 +43,11 @@ public: bool done;
     mod->clk = 0;
     mod->eval();
 
-    if (trace) trace->dump(tickcount);
-
     // Toggle the clock
-
     // Rising edge
     mod->clk = 1;
     ++tickcount;
     mod->eval();
-
-    if (trace) trace->dump(tickcount);
 
     // Falling edge
     mod->clk = 0;
