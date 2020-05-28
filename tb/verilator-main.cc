@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include <iostream>
+#include <verilated.h>
 #include "Vtop.h"
 #include "testbench.h"
 
@@ -14,12 +15,14 @@ double sc_time_stamp () {       // Called by $time in Verilog
 int main(int argc, char **argv) {
   Verilated::commandArgs(argc, argv);
   tb = new TESTBENCH<Vtop>();
+  Verilated::traceEverOn(true);
+  tb->opentrace("kl10pv-trace.vcd");
   Vtop *top = tb->mod;
   top->CROBAR = 1;
 
-  while (!tb->done()) {
+  while (!tb->done) {
     top->CROBAR = tb->tickcount < 100000ull;
-    tb->tick();
+    if (tb->tick() > 1500000ull) break;
 
     if (tb->tickcount % 1000000ull == 0ull)
       std::cout << (tb->tickcount / 1000000ull) << "us" << std::endl;

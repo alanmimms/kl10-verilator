@@ -1,13 +1,23 @@
+#include <verilated_vcd_c.h>
+#define TRACECLASS      VerilatedVcdC
+
+
 template<class MODULE> class TESTBENCH {
- public: unsigned long long tickcount;
- public: MODULE *mod;
+public: vluint64_t tickcount;
+public: MODULE *mod;
+public: TRACECLASS *trace;
+public: bool done;
 
   TESTBENCH(void) {
     mod = new MODULE();
     tickcount = 0ull;
+    mod = (MODULE *) 0;
+    trace = (TRACECLASS *) 0;
+    done = false;
   }
 
   virtual ~TESTBENCH(void) {
+    if (trace) trace->close();
     delete mod;
     mod = NULL;
   }
@@ -19,28 +29,39 @@ template<class MODULE> class TESTBENCH {
     mod->CROBAR = 0;
   }
 
-  virtual unsigned long long tick(void) {
-    // Increment our own internal time reference
-    ++tickcount;
+  virtual void opentrace(const char *vcdName) {
+      trace = new TRACECLASS;
+      trace->spTrace()->set_time_resolution("ps");
+      trace->spTrace()->set_time_unit("ps");
+      trace->open(vcdName);
+      mod->trace(trace, 99);
+  }
 
+  virtual vluint64_t tick(void) {
     // Make sure any combinatorial logic depending upon
     // inputs that may have changed before we called tick()
     // has settled before the rising edge of the clock.
     mod->clk = 0;
     mod->eval();
 
+    if (trace) trace->dump(tickcount);
+
     // Toggle the clock
 
     // Rising edge
     mod->clk = 1;
+    ++tickcount;
     mod->eval();
+
+    if (trace) trace->dump(tickcount);
 
     // Falling edge
     mod->clk = 0;
+    ++tickcount;
     mod->eval();
+    if (trace) trace->dump(tickcount);
 
+    if (Verilated::gotFinish()) done = true;
     return tickcount;
   }
-
-  virtual bool done(void) { return (Verilated::gotFinish()); }
 };
