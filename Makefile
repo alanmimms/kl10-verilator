@@ -5,6 +5,7 @@ mc10181.sv mcl.sv memory.sv mt0.sv mtr.sv mux2x4.sv mux4x2.sv mux.sv	\
 pag.sv pi.sv pma.sv pri8.sv scd.sv shm.sv top.sv ucr4.sv usr4.sv	\
 vma.sv tb/sim-mem.sv
 
+DEBUG = -CFLAGS -g -LDFLAGS -g
 #OPTIMIZE = "-O3 --x-assign fast --x-initial fast"
 #OPTIMIZE = -CFLAGS -O3 -O3
 OPTIMIZE =
@@ -26,7 +27,9 @@ all:	$(SVFILES) $(SVHFILES) $(CPPFILES) $(HPPFILES)
 		tb/verilator-main.cc \
 		$(SVFILES) \
 		--top-module top \
-		--cc --build --exe -j 4 $(OPTIMIZE) -o kl10pvtb
+		--cc --build --exe -j 4 \
+		$(DEBUG) $(OPTIMIZE) \
+		-o kl10pvtb
 
 clean:
 	rm -rf obj_dir
