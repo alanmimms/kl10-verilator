@@ -83,26 +83,13 @@ module ir(iIR IR,
   bit [7:10] DRAM_PAR_J;
   bit DRAM_PAR;
 
-  // XXX this is to allow CLK to start up
-  initial begin
-    IR.DRAM_A = '0;
-    IR.DRAM_B = '0;
-    DRAM_PAR_J = '0;
-  end
-
-  // XXX THIS SIGNAL does not appear to be defined in IR or anywhere.
-  // It would seem it is to be combinatorially drived from
-  // DRAM_PAR_X/DRAM_PAR_Y. But I can find no logic to do this.
-  initial begin
-    DRAM_PAR = 0;
-  end
-
   // Latch-mux
   always @(posedge CON.LOAD_DRAM) if (DRADR[8]) begin
-    IR.DRAM_A <= DRADR[8] ? DRAM_A_X : DRAM_A_Y;
-    IR.DRAM_B <= DRADR[8] ? DRAM_B_X : DRAM_B_Y;
+    IR.DRAM_A <= DRADR[8] ? DRAM_A_Y : DRAM_A_X;
+    IR.DRAM_B <= DRADR[8] ? DRAM_B_Y : DRAM_B_X;
+    DRAM_PAR <= DRADR[8] ? DRAM_PAR_Y : DRAM_PAR_X;
     DRAM_PAR_J[7] <= IR.DRAM_J[7];
-    DRAM_PAR_J[8:10] <= DRADR[8] ? DRAM_J_X[8:10] : DRAM_J_Y[8:10];
+    DRAM_PAR_J[8:10] <= DRADR[8] ? DRAM_J_Y[8:10] : DRAM_J_X[8:10];
   end
 
   always @(posedge CON.LOAD_DRAM) IR.DRAM_J[7:10] <= ~JRST ? DRAM_PAR_J[7:10] : IR.IR[9:12];
@@ -155,22 +142,22 @@ module ir(iIR IR,
   // Diagnostics to drive EBUS
   assign IR.EBUSdriver.driving = CTL.DIAG_READ_FUNC_13x;
 
-  always_comb
-    if (IR.EBUSdriver.driving) case (CTL.DIAG[4:6])
-                               3'b000: IR.EBUSdriver.data[0:5] = {IR.NORM, DRADR[0:2]};
-                               3'b001: IR.EBUSdriver.data[0:5] = DRADR[3:8];
-                               3'b010: IR.EBUSdriver.data[0:5] = {enIO_JRST, enAC, IR.AC};
-                               3'b011: IR.EBUSdriver.data[0:5] = {IR.DRAM_A, IR.DRAM_B};
-                               3'b100: IR.EBUSdriver.data[0:5] = {IR.TEST_SATISFIED, IR.JRST0, IR.DRAM_J[1:4]};
-                               3'b101: IR.EBUSdriver.data[0:5] = {DRAM_PAR, IR.DRAM_ODD_PARITY, IR.DRAM_J[7:10]};
-                               3'b110: IR.EBUSdriver.data[0:5] = {IR.ADeq0, IR.IO_LEGAL,
-                                                                  CTL.INH_CRY_18, CTL.SPEC_GEN_CRY_18,
-                                                                  CTL.SPEC_GEN_CRY_18, EDP.AD_CRY[-2]};
-                               3'b111: IR.EBUSdriver.data[0:5] = {EDP.AD_CRY[12], EDP.AD_CRY[18],
-                                                                  EDP.AD_CRY[24], EDP.AD_CRY[36],
-                                                                  EDP.ADX_CRY[12], EDP.ADX_CRY[24]};
-                               endcase
-    else IR.EBUSdriver.data = '0;
+  always_comb if (IR.EBUSdriver.driving)
+    case (CTL.DIAG[4:6])
+    3'b000: IR.EBUSdriver.data[0:5] = {IR.NORM, DRADR[0:2]};
+    3'b001: IR.EBUSdriver.data[0:5] = DRADR[3:8];
+    3'b010: IR.EBUSdriver.data[0:5] = {enIO_JRST, enAC, IR.AC};
+    3'b011: IR.EBUSdriver.data[0:5] = {IR.DRAM_A, IR.DRAM_B};
+    3'b100: IR.EBUSdriver.data[0:5] = {IR.TEST_SATISFIED, IR.JRST0, IR.DRAM_J[1:4]};
+    3'b101: IR.EBUSdriver.data[0:5] = {DRAM_PAR, IR.DRAM_ODD_PARITY, IR.DRAM_J[7:10]};
+    3'b110: IR.EBUSdriver.data[0:5] = {IR.ADeq0, IR.IO_LEGAL,
+                                       CTL.INH_CRY_18, CTL.SPEC_GEN_CRY_18,
+                                       CTL.SPEC_GEN_CRY_18, EDP.AD_CRY[-2]};
+    3'b111: IR.EBUSdriver.data[0:5] = {EDP.AD_CRY[12], EDP.AD_CRY[18],
+                                       EDP.AD_CRY[24], EDP.AD_CRY[36],
+                                       EDP.ADX_CRY[12], EDP.ADX_CRY[24]};
+    endcase
+              else IR.EBUSdriver.data = '0;
 
   // Look-ahead carry functions have been moved from IR to EDP.
 endmodule // ir

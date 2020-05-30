@@ -35,7 +35,6 @@ module top(input CROBAR, input clk);
   iCRM CRM();
   iCSH CSH();
   iCTL CTL();
-  iDTE DTE();
   iEDP EDP();
   iIR IR();
   iMBC MBC();
@@ -89,7 +88,6 @@ module top(input CROBAR, input clk);
   ebox ebox0(.*);
   mbox mbox0(.SBUS(SBUS.mbox), .*);
   memory memory0(.SBUS(SBUS.memory), .*);
-  dte dte0(.*);
 
   always @(negedge CROBAR) $display($time, " CROBAR deassert");
 
@@ -100,7 +98,6 @@ module top(input CROBAR, input clk);
               CON.EBUSdriver.driving:        EBUS.data = CON.EBUSdriver.data;
               CRA.EBUSdriver.driving:        EBUS.data = CRA.EBUSdriver.data;
               CTL.EBUSdriver.driving:        EBUS.data = CTL.EBUSdriver.data;
-              DTE.EBUSdriver.driving:        EBUS.data = DTE.EBUSdriver.data;
               EDP.EBUSdriver.driving:        EBUS.data = EDP.EBUSdriver.data;
               IR.EBUSdriver.driving:         EBUS.data =  IR.EBUSdriver.data;
               MBZ.EBUSdriver.driving:        EBUS.data = MBZ.EBUSdriver.data;
