@@ -14,8 +14,8 @@ CPPFILES = tb/verilator-main.cc
 HPPFILES = tb/testbench.h
 
 KILL_WARNINGS = \
-		-Wno-LITENDIAN
-#		-Wno-UNOPTFLAT
+		-Wno-LITENDIAN \
+		-Wno-UNOPTFLAT
 
 
 all:	$(SVFILES) $(SVHFILES) $(CPPFILES) $(HPPFILES)
