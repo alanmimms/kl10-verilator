@@ -1,4 +1,32 @@
 // XXX This needs to be manually checked against the schematics.
+//
+// I have tried to make most of this FPGA based design as close to the
+// original schematics as possible. But the DRAM ("DISPATCH RAM" - not
+// "DYNAMIC RAM") addressing architecture in the KL10 is arse -- a
+// bridge too far. Even the microcode guys made fun of the choice as
+// is evidenced by this quip from the microcode listing:
+//
+//     The J field is the starting location of the microroutine to
+//     execute the instruction.  Note that the 40 and 20 bits must
+//     always be zero.  Also, even-odd pairs of DRAM J fields may
+//     differ only in the low order three bits.  (Someone thought he
+//     was being very clever when he designed the machine this way.
+//     It probably reduced our transfer cost by at least five dollars,
+//     after all, and the microcode pain that occurred later didn't cost
+//     anything, in theory.)
+//
+// Indeed, the intrepid microcoders bore the brunt of that complexity.
+//
+// I didn't waste my (well, ... hobby) time tediously cramming DRAM
+// into 256 words with a rubegoldbergian 256x3 even/odd scheme. Here
+// we implement all 512 words of A[0:2], B:[0,2], P, J[1:4], J[7:10]
+// or 512*15 = a big throbbing 7.5kilobits of RAM. I did avoid storing
+// J[5:6] since they have to be zero anyway.
+//
+// I have simplified
+// the design by "wasting" a small amount of RAM. Sue me. It's the
+// fucking 21st Century and we stand SO TALL on the shoulders of
+// giants that we don't have to dick around to save a few kilobits.
 `timescale 1ns/1ps
 `include "ebox.svh"
 
@@ -54,15 +82,8 @@ module ir(iIR IR,
   assign JRST = enIO_JRST && (IR.IR[0:8] == 9'o254);
   assign IR.JRST0 = JRST & (IR.IR[9:12] == 4'b0000);
 
-  // XXX In addition to the below, this has two mystery OR term
-  // signals on each input to the AND that are unlabeled except for
-  // backplane references ES2 and ER2. See E66 p.128.
-  assign IR.IO_LEGAL = &IR.IR[3:6];
-  assign IR.ACeq0 = IR.IR[9:12] == 4'b0;
-
   bit enIO_JRST;
   bit enAC;
-
   bit instr7XX;
   bit instr3thru6;
   bit enableAC;
@@ -81,22 +102,40 @@ module ir(iIR IR,
 
   bit [0:2] DRAM_A_X, DRAM_A_Y, DRAM_B_X, DRAM_B_Y;
   bit [7:10] DRAM_PAR_J;
-  bit DRAM_PAR;
+  bit DRAM_PAR, DRAM_PAR_X, DRAM_PAR_Y;
+
+  bit HOLD_DRAM, HOLD_IR;
+  assign HOLD_DRAM = ~CON.LOAD_DRAM | CLK.IR;
+  assign HOLD_IR = ~CON.LOAD_IR | CLK.IR;
+
+  // Latch-mux es
+  always_latch if (HOLD_DRAM) IR.DRAM_A = DRADR[8] ? DRAM_A_Y : DRAM_A_X;
+  always_latch if (HOLD_DRAM) DRAM_PAR = DRADR[8] ? DRAM_PAR_Y : DRAM_PAR_X;
+  always_latch if (HOLD_DRAM) IR.DRAM_B = DRADR[8] ? DRAM_B_Y : DRAM_B_X;
+  always_latch if (HOLD_DRAM) IR.DRAM_J[1:4] = ~IR_JRST ? DRAM_J[1:4] : {DRAM_J[1:3], 1'b0};
+  always_latch if (HOLD_DRAM) IR.DRAM_J[1:4] = DRADR[8] ? DRAM_J_Y[7:10] : DRAM_J_Y[7:10];
+  always_latch if (HOLD_DRAM) IR.DRAM_J[7:10] = ~IR_JRST ? IR.IR[9:12] : DRAM_PAR_J[7:10];
+  always_latch if (HOLD_DRAM) IR.AC[9:12] = ~IR_EN_AC ? 4'b0000 : IR.IR[9:12];
+
+  bit INSTR_7xx, e75q2;
+  assign INSTR_7xx = |IR[0:2] | IR_EN_IO_JRST;
+  assign e75q2 = ~&(~IR[3:6]);
+  always_comb DR_ADR[3:5] == INSTR_7xx ? {3{e75q2}} | IR.IR[7:9] : IR.IR[3:5];
+  always_comb DR_ADR[6:8] == INSTR_7xx ? IR.IR[10:12] : IR.IR[6:8];
 
   // Latch-mux
-  always @(posedge CON.LOAD_DRAM) if (DRADR[8]) begin
-    IR.DRAM_A <= DRADR[8] ? DRAM_A_Y : DRAM_A_X;
-    IR.DRAM_B <= DRADR[8] ? DRAM_B_Y : DRAM_B_X;
-    DRAM_PAR <= DRADR[8] ? DRAM_PAR_Y : DRAM_PAR_X;
-    DRAM_PAR_J[7] <= IR.DRAM_J[7];
-    DRAM_PAR_J[8:10] <= DRADR[8] ? DRAM_J_Y[8:10] : DRAM_J_X[8:10];
-  end
+  always_latch if (HOLD_IR) IR.IR = ~CLK.MB_XFER ? EDP.AD[0:12] : MBOX.CACHE_DATA[0:12];
 
-  always @(posedge CON.LOAD_DRAM) IR.DRAM_J[7:10] <= ~JRST ? DRAM_PAR_J[7:10] : IR.IR[9:12];
+  assign IR.ACeq0 = IR.IR[9:12] == 4'b0;
 
-  // Latch-mux
-  always_ff @(posedge CON.LOAD_IR) IR.IR <= CLK.MB_XFER ? EDP.AD[0:12] : MBOX.CACHE_DATA[0:12];
-  always_ff @(posedge CON.LOAD_IR) IR.AC <= enableAC ? IR.IR[9:12] : 4'b0;
+  // XXX In addition to the below, this has two mystery OR term
+  // signals on each input to the AND that are unlabeled except for
+  // backplane references ES2 and ER2. See E66 p.128.
+  assign IR.IO_LEGAL = &IR.IR[3:6];
+
+
+  // IR2 p.129
+
 
   assign magic7eq8 = CRAM.MAGIC[7] ^ CRAM.MAGIC[8];
   assign AgtB = EDP.AD[0] ^ EDP.AD_CRY[-2];
