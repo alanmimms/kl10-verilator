@@ -10,7 +10,8 @@ DEBUG = -CFLAGS -g -LDFLAGS -g
 #OPTIMIZE = -CFLAGS -O3 -O3
 OPTIMIZE =
 SVHFILES = ebox.svh
-CPPFILES = tb/verilator-main.cc dte.cc
+CPPFILES = tb/verilator-main.cc
+CFILES = dte.c
 HPPFILES = tb/testbench.h
 
 KILL_WARNINGS = \
@@ -28,6 +29,7 @@ all:	$(SVFILES) $(SVHFILES) $(CPPFILES) $(HPPFILES)
 		tb/verilator-main.cc \
 		$(SVFILES) \
 		$(CPPFILES) \
+		$(CFILES) \
 		--top-module top \
 		--cc --build --exe -j 4 \
 		$(DEBUG) $(OPTIMIZE) \
