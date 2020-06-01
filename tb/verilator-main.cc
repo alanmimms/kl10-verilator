@@ -21,11 +21,11 @@ int main(int argc, char **argv) {
   top->CROBAR = 1;
 
   while (!tb->done) {
-    top->CROBAR = tb->tickcount < 100000ull;
+    top->CROBAR = tb->tickcount < 10000ull;
     if (tb->tick() > 1500000ull) break;
 
-    if (tb->tickcount % 1000000ull == 0ull)
-      std::cout << (tb->tickcount / 1000000ull) << "us" << std::endl;
+    if (tb->tickcount % 100000ull == 0ull)
+      std::cout << (tb->tickcount / 1000ull) << "ns" << std::endl;
   }
 
   exit(EXIT_SUCCESS);

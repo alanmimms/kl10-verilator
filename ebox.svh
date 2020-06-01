@@ -1105,6 +1105,11 @@ interface iCTL;
 endinterface
 
 
+interface iDTE;
+  tEBUSdriver EBUSdriver;
+endinterface
+
+
 interface iEDP;
   bit DIAG_READ_FUNC_10x;
   bit FM_PARITY;

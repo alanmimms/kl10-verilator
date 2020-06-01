@@ -154,9 +154,17 @@ module ir(iIR IR,
                                           endcase
               else e57Q = 8'b0;
 
+// For now, I'm going to eliminate these two enables. They are only
+// present to allow certain diagnostic operations (?) and they
+// effectively implement latches that Verilator cannot optimize.
+`ifdef DO_AC_JRST_ENABLES
   assign EN_IO_JRST = ~e57Q[5] & (e57Q[7] | EN_IO_JRST);
   assign EN_AC      = ~e57Q[6] & (e57Q[7] | EN_AC);
-                                          
+`else
+  assign EN_IO_JRST = 1'b1;
+  assign EN_AC = 1'b1;
+`endif
+
   priority_encoder8 e67(.d({1'b0,
                             EDP.AD[0],
                             EDP.AD[6] | (EDP.AD[0:5] != '0),

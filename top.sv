@@ -35,6 +35,7 @@ module top(input CROBAR, input clk);
   iCRM CRM();
   iCSH CSH();
   iCTL CTL();
+  iDTE DTE();
   iEDP EDP();
   iIR IR();
   iMBC MBC();
@@ -64,8 +65,6 @@ module top(input CROBAR, input clk);
   var string indent = "";
   var int nSteps;
 
-  tEBUSdriver EBUSdriver;       // The DTE drives the EBUS too
-
 `ifdef VERILATOR
   assign masterClk = clk;
   assign EXTERNAL_CLK = clk;
@@ -88,23 +87,25 @@ module top(input CROBAR, input clk);
   ebox ebox0(.*);
   mbox mbox0(.SBUS(SBUS.mbox), .*);
   memory memory0(.SBUS(SBUS.memory), .*);
+  dte dte0(.*);
 
   always @(negedge CROBAR) $display($time, " CROBAR deassert");
 
   // Mux for EBUS data lines
   always_comb unique case (1'b1)
               default: EBUS.data = '0;
-              APR.EBUSdriver.driving:        EBUS.data = APR.EBUSdriver.data;
-              CON.EBUSdriver.driving:        EBUS.data = CON.EBUSdriver.data;
-              CRA.EBUSdriver.driving:        EBUS.data = CRA.EBUSdriver.data;
-              CTL.EBUSdriver.driving:        EBUS.data = CTL.EBUSdriver.data;
-              EDP.EBUSdriver.driving:        EBUS.data = EDP.EBUSdriver.data;
-              IR.EBUSdriver.driving:         EBUS.data =  IR.EBUSdriver.data;
-              MBZ.EBUSdriver.driving:        EBUS.data = MBZ.EBUSdriver.data;
-              MTR.EBUSdriver.driving:        EBUS.data = MTR.EBUSdriver.data;
-              PIC.EBUSdriver.driving:        EBUS.data = PIC.EBUSdriver.data;
-              SCD.EBUSdriver.driving:        EBUS.data = SCD.EBUSdriver.data;
-              SHM.EBUSdriver.driving:        EBUS.data = SHM.EBUSdriver.data;
-              VMA.EBUSdriver.driving:        EBUS.data = VMA.EBUSdriver.data;
+              APR.EBUSdriver.driving: EBUS.data = APR.EBUSdriver.data;
+              CON.EBUSdriver.driving: EBUS.data = CON.EBUSdriver.data;
+              CRA.EBUSdriver.driving: EBUS.data = CRA.EBUSdriver.data;
+              CTL.EBUSdriver.driving: EBUS.data = CTL.EBUSdriver.data;
+              DTE.EBUSdriver.driving: EBUS.data = DTE.EBUSdriver.data;
+              EDP.EBUSdriver.driving: EBUS.data = EDP.EBUSdriver.data;
+              IR.EBUSdriver.driving:  EBUS.data =  IR.EBUSdriver.data;
+              MBZ.EBUSdriver.driving: EBUS.data = MBZ.EBUSdriver.data;
+              MTR.EBUSdriver.driving: EBUS.data = MTR.EBUSdriver.data;
+              PIC.EBUSdriver.driving: EBUS.data = PIC.EBUSdriver.data;
+              SCD.EBUSdriver.driving: EBUS.data = SCD.EBUSdriver.data;
+              SHM.EBUSdriver.driving: EBUS.data = SHM.EBUSdriver.data;
+              VMA.EBUSdriver.driving: EBUS.data = VMA.EBUSdriver.data;
               endcase
 endmodule
