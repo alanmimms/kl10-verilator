@@ -56,7 +56,7 @@ static void runDTE(void) {
 }
 
 
-void FEinitial(void) {
+extern "C" void FEinitial(void) {
   int st;
   static char initialBuf[] = "initial";
 
@@ -86,7 +86,7 @@ void FEinitial(void) {
 }
 
 
-void FEfinal(void) {
+extern "C" void FEfinal(void) {
   static char finalBuf[] = "final";
 
   if (toFE[1])

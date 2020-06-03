@@ -5,8 +5,10 @@
 #include <verilated_vcd_c.h>
 #include "Vtop.h"
 
-extern "C" void FEinitial(void);
-extern "C" void FEfinal(void);
+extern "C" {
+void FEinitial(void);
+void FEfinal(void);
+}
 
 
 template<class MODULE> class TESTBENCH {
