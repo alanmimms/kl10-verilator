@@ -4,21 +4,12 @@ module dte(input bit clk,
            iEBUS.dte EBUS,
            iMBOX MBOX);
 
-  import "DPI-C" function void DTEtick(input bit CROBAR,
-                                       input longint ns);
+  import "DPI-C" function void DTEtick(input bit CROBAR, input longint ns);
+  import "DPI-C" function void DTEinitial();
+  import "DPI-C" function void DTEfinal();
 
-  initial begin
-    $display($time, " starting");
-
-    repeat (100) begin
-      @(negedge clk) ;
-    end
-
-    $display($time, " 100 clocks later");
-  end
-
-  final begin
-  end
+  initial DTEinitial();
+  final DTEfinal();
 
   always @(posedge clk) DTEtick(CROBAR, $time / 1000);
 endmodule
