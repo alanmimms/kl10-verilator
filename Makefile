@@ -28,7 +28,7 @@ KILL_WARNINGS = \
 #		-LDLIBS "-Wl,--end-group" \
 
 INCDIR = $(VERILATOR_ROOT)/include
-CFLAGS += -I$(VOBJDIR) -I$(INCDIR) -I$(INCDIR)/vltstd
+CFLAGS += -I$(VOBJDIR) -I$(INCDIR) -I$(INCDIR)/vltstd -std=gnu++14
 CXXFLAGS += -I$(VOBJDIR) -I$(INCDIR) -I$(INCDIR)/vltstd
 
 VERILATOR ?= verilator

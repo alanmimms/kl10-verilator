@@ -46,6 +46,7 @@
 #define _GNU_SOURCE 1
 
 #include <sys/types.h>
+#include <sys/prctl.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -245,14 +246,25 @@ static void klMasterReset() {
 }
 
 
-static void runFE(void) {
-  LL ticks;
-  
-  ticks = waitForMessage("initial");
-  printf("%llu DTE 'initial'\n", ticks);
+static void HUPhandler(int sig) {
+  fprintf(stderr, "\n[SIGHUP from parent death - exiting]\n");
+  exit(-1);
+}
 
-  ticks = waitForMessage("final");
-  printf("%llu DTE 'final'\n[exiting]\n", ticks);
+
+static void runFE(void) {
+  // Arrange to have our HUP handler called when parent exits
+  static const struct sigaction HUPaction = {HUPhandler};
+
+  int st = sigaction(SIGHUP, &HUPaction, 0);
+  if (st) perror("SIGHUP sigaction");
+  
+  prctl(PR_SET_PDEATHSIG, SIGHUP);
+  
+  for (;;) {
+    LL ticks = waitForMessage("final");
+    printf("%llu DTE 'final'\n[exiting]\n", ticks);
+  }
 }
 
 
