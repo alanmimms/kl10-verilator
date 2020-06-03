@@ -5,11 +5,17 @@
 #include <verilated_vcd_c.h>
 #include "Vtop.h"
 
+// Probably we are building 64-bit anyway, but this emphasizes the
+// point. These are 64-bit typedefs.
+typedef unsigned long long W36;
+
+typedef long long LL;           /* For ticks values from Verilator */
+
+
 extern "C" {
 void FEinitial(void);
-void FEfinal(void);
+void FEfinal(LL ns);
 }
-
 
 template<class MODULE> class TESTBENCH {
 public: vluint64_t tickcount;
@@ -200,8 +206,8 @@ void DTEinitial() {
 }
 
 
-void DTEfinal() {
-  FEfinal();
+void DTEfinal(LL ns) {
+  FEfinal(ns);
 }
 
 

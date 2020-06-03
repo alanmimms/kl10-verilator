@@ -6,10 +6,10 @@ module dte(input bit clk,
 
   import "DPI-C" function void DTEtick(input bit CROBAR, input longint ns);
   import "DPI-C" function void DTEinitial();
-  import "DPI-C" function void DTEfinal();
+  import "DPI-C" function void DTEfinal(input longint ns);
 
   initial DTEinitial();
-  final DTEfinal();
+  final DTEfinal($time);
 
   always @(posedge clk) DTEtick(CROBAR, $time / 1000);
 endmodule
