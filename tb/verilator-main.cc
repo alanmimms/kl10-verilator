@@ -20,13 +20,13 @@ public: vluint64_t tickcount;
 public: MODULE *mod;
 public: TRACECLASS *trace;
 public: bool done;
-public: long long sigCount;
+public: long long sigioCount;
 
   TESTBENCH(void) {
     mod = new MODULE();
     tickcount = 0ll;
     trace = (TRACECLASS *) 0;
-    sigCount = 0ll;
+    sigioCount = 0ll;
     done = false;
   }
 
@@ -104,7 +104,7 @@ void DTEfinal(LL ns) {
 }
 
 
-extern "C" int sigioHandler(int sig) {
+static void sigioHandler(int sig) {
   ++tb->sigioCount;
 }
 
