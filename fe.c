@@ -17,16 +17,19 @@
 // excutes at the constrained time and the result of the operation is
 // sent as a reply in format shown in the next section.
 //
-// * doDiagFunc DIAG
+// * DiagFunc DIAG
 //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS.
 //
-// * doDiagRead DIAG
+// * DiagRead DIAG
 //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS and return
 //   the resulting EBUS.data as part of the reply.
 //
-// * doDiagWrite DIAG EBUS-DATA
+// * DiagWrite DIAG EBUS-DATA
 //   Do an EBUS DS diagnostic write with DIAG on EBUS.DS and EBUS-DATA
 //   on EBUS.data.
+//
+// * wait TICKS
+//   Wait until the specified ticks count.
 //
 // Every operation returns a reply TB->FE of the form
 // TICKS OP RESULT ...
@@ -54,6 +57,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <svdpi.h>
+
+static const int verbose = 1;
 
 // Probably we are building 64-bit anyway, but this emphasizes the
 // point. These are 64-bit typedefs.
@@ -103,38 +108,38 @@ static const W36 B35 = 1ull << (35 - 35);
 
 
 // Diagnostic (DS[4:6]) functions
-static const unsigned diagfSTOP_CLOCK = 000;
-static const unsigned diagfSTART_CLOCK = 001;
-static const unsigned diagfSTEP_CLOCK = 002;
-static const unsigned diagfCOND_STEP = 004;
-static const unsigned diagfBURST = 005;
+static const int diagfSTOP_CLOCK = 000;
+static const int diagfSTART_CLOCK = 001;
+static const int diagfSTEP_CLOCK = 002;
+static const int diagfCOND_STEP = 004;
+static const int diagfBURST = 005;
 
-static const unsigned diagfCLR_RESET = 006;
-static const unsigned diagfSET_RESET = 007;
-static const unsigned diagfCLR_RUN = 010;
-static const unsigned diagfSET_RUN = 011;
-static const unsigned diagfCONTINUE = 012;
+static const int diagfCLR_RESET = 006;
+static const int diagfSET_RESET = 007;
+static const int diagfCLR_RUN = 010;
+static const int diagfSET_RUN = 011;
+static const int diagfCONTINUE = 012;
 
-static const unsigned diagfCLR_BURST_CTR_RH = 042;
-static const unsigned diagfCLR_BURST_CTR_LH = 043;
-static const unsigned diagfCLR_CLK_SRC_RATE = 044;
-static const unsigned diagfSET_EBOX_CLK_DISABLES = 045;
-static const unsigned diagfRESET_PAR_REGS = 046;
-static const unsigned diagfCLR_MBOXDIS_PARCHK_ERRSTOP = 047;
+static const int diagfCLR_BURST_CTR_RH = 042;
+static const int diagfCLR_BURST_CTR_LH = 043;
+static const int diagfCLR_CLK_SRC_RATE = 044;
+static const int diagfSET_EBOX_CLK_DISABLES = 045;
+static const int diagfRESET_PAR_REGS = 046;
+static const int diagfCLR_MBOXDIS_PARCHK_ERRSTOP = 047;
 
-static const unsigned diagfCLR_CRAM_DIAG_ADR_RH = 051;
-static const unsigned diagfCLR_CRAM_DIAG_ADR_LH = 052;
+static const int diagfCLR_CRAM_DIAG_ADR_RH = 051;
+static const int diagfCLR_CRAM_DIAG_ADR_LH = 052;
 
-static const unsigned diagfENABLE_KL = 067;
+static const int diagfENABLE_KL = 067;
 
-static const unsigned diagfINIT_CHANNELS = 070;
-static const unsigned diagfWRITE_MBOX = 071;
-static const unsigned diagfEBUS_LOAD = 076;
+static const int diagfINIT_CHANNELS = 070;
+static const int diagfWRITE_MBOX = 071;
+static const int diagfEBUS_LOAD = 076;
 
-static const unsigned diagfIdle = 007;
+static const int diagfIdle = 007;
 
 
-static LL ticks;
+static LL ticks;                /* Time stamp of most recent reply */
 
 
 // To be clear: "toDTE" is from the fork running from here to
@@ -145,45 +150,89 @@ static int toDTE[2], toFE[2];
 static pid_t fePID;
 
 
-static LL waitForMessage(const char *msgP) {
-  int len;
+static void fatalError(const char *msgP) {
+  perror(msgP);
+  exit(-1);
+}
+
+
+static LL sendAndGetResult(const char *msgP, char *resultP, int maxResultSize) {
+  int len, sendLen;
   char buf[1024];
-  LL ticks;
 
-  for (;;) {
-    len = read(toDTE[0], buf, sizeof(buf));
+  sendLen = strlen(msgP);
+  len = write(toDTE[1], msgP, sendLen);
+  if (len < sendLen) fatalError("write to DTE pipe");
+  if (verbose) fprintf(stderr, "toDTE '%s'\n", msgP);
 
-    if (len < 0) {
-      perror("Read from toDTE pipe");
-      exit(-1);
-    }
+  len = read(toFE[0], resultP, maxResultSize - 1);
+  if (len < 0) fatalError("read from DTE pipe");
+  resultP[len] = 0;
+  if (verbose) fprintf(stderr, "fromDTE '%s'\n", resultP);
+  sscanf(resultP, "%llu %s", &ticks, buf);
 
-    buf[len] = 0;
-
-    if (strcmp(buf, msgP) != 0) {
-      fprintf(stderr, "Expected '%s' message, but got '%s' instead\n", buf, msgP);
-    } else {
-      sscanf(buf, "%*s %llu", &ticks);
-      return ticks;
-    }
+  if (strcmp(buf, "FINAL") == 0) {
+    fprintf(stderr, "%llu DTE 'final'\n[exiting]\n", ticks);
+    exit(0);
   }
+
+  return ticks;
 }
 
 
-static void doDiagWrite(unsigned func, W36 value) {
+// * DiagWrite DIAG EBUS-DATA
+//   Do an EBUS DS diagnostic write with DIAG on EBUS.DS and EBUS-DATA
+//   on EBUS.data.
+static void doDiagWrite(int func, W36 value) {
+  char result[1024];
+  char msg[1024];
+
+  // * DiagFunc DIAG
+  //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS.
+  sprintf(msg, "DiagWrite %o %llo", func, value);
+  sendAndGetResult(msg, result, sizeof(result));
 }
 
 
-static void doDiagFunc(unsigned func) {
+static void doDiagFunc(int func) {
+  char result[1024];
+  char msg[1024];
+
+  // * DiagFunc DIAG
+  //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS.
+  sprintf(msg, "DiagFunc %o", func);
+  sendAndGetResult(msg, result, sizeof(result));
 }
 
 
 static void waitFor(LL nTicks) {
+  char result[1024];
+  char msg[1024];
+
+  // * wait TICKS
+  //   Wait until the specified ticks count.
+  sprintf(msg, "wait %lld", nTicks);
+  sendAndGetResult(msg, result, sizeof(result));
 }
 
 
-static W36 getEBUS(unsigned func) {
-  return 0ull;
+// * DiagRead DIAG
+//   Do an EBUS DS diagnostic function with DIAG on EBUS.DS and return
+//   the resulting EBUS.data as part of the reply.
+static W36 doDiagRead(int func) {
+  char result[1024];
+  char msg[1024];
+
+  // * DiagFunc DIAG
+  //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS.
+  sprintf(msg, "DiagRead %o", func);
+  sendAndGetResult(msg, result, sizeof(result));
+
+  // Every operation returns a reply TB->FE of the form
+  // TICKS OP RESULT ...
+  W36 valueRead;
+  sscanf(result, "%*d diagRead %llo", &valueRead);
+  return valueRead;
 }
 
 
@@ -215,7 +264,8 @@ static void klMasterReset() {
 
   for (int k = 0; k < 5; ++k) {
     waitFor(1000);
-    if (getEBUS(0162) & B32) break;
+
+    if (doDiagRead(0162) & B32) break;
 
     waitFor(1000);
     doDiagFunc(diagfSTEP_CLOCK);
@@ -257,36 +307,24 @@ static void runFE(void) {
   static const struct sigaction HUPaction = {HUPhandler};
 
   int st = sigaction(SIGHUP, &HUPaction, 0);
-  if (st) perror("SIGHUP sigaction");
+  if (st) fatalError("SIGHUP sigaction");
   
   prctl(PR_SET_PDEATHSIG, SIGHUP);
   
-  for (;;) {
-    LL ticks = waitForMessage("final");
-    printf("%llu DTE 'final'\n[exiting]\n", ticks);
-  }
+  klMasterReset();
+  waitFor(10000000000ll);
 }
 
 
 extern "C" void FEinitial(void) {
   int st;
 
-  if (st = pipe2(toDTE, O_DIRECT)) {
-    perror("Create toDTE pipe");
-    exit(-1);
-  }
+  if (st = pipe2(toDTE, O_DIRECT)) fatalError("Create toDTE pipe");
 
-  if (st = pipe2(toFE, O_DIRECT)) {
-    perror("Create toFE pipe");
-    exit(-1);
-  }
+  if (st = pipe2(toFE, O_DIRECT)) fatalError("Create toFE pipe");
 
   pid_t pid = fork();
-
-  if (pid < 0) {
-    perror("Fork");
-    exit(-1);
-  }
+  if (pid < 0) fatalError("fork FE");
 
   /* FE never returns. It blocks waiting for messages. */
   if (pid == 0) runFE();
