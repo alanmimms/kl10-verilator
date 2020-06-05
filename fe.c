@@ -1,61 +1,45 @@
 // The FE protocol is communicated via shared memory form from the
 // fork to this same code running in Verilator simulation process.
-// Every message FE->TB is of the form:
+// Every message FE->TB and TB->FE is tPipeMessage.
 //
-// TIME-CONSTRAINT TICKS OP ARGS ...
+// Where time specifies the ticks count to do the action or is zero
+// for asynchronous (do it NOW) operations.
 //
-// Where TIME-CONSTRAINT is '=' for "should be at the specified ticks
-// count" or it is '>' for "should be at specified ticks count or
-// later". There is no space between the TIME-CONSTRAINT and the TICKS
-// value, but there is one space between each other part of the
-// request.
-//
-// Where TICKS is a 64-bit tick count in nanoseconds.
-//
-// Where OP is one of the operations below and ARGS is the list of
+// Where `type` is one of the operations below and ARGS is the list of
 // space separated parameters needed by the operation. Each operation
 // excutes at the constrained time and the result of the operation is
 // sent as a reply in format shown in the next section.
 //
-// * DiagFunc DIAG
+// * dteDiagFunc
 //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS.
 //
-// * DiagRead DIAG
+// * dteDiagRead
 //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS and return
 //   the resulting EBUS.data as part of the reply.
 //
-// * DiagWrite DIAG EBUS-DATA
+// * dteDiagWrite
 //   Do an EBUS DS diagnostic write with DIAG on EBUS.DS and EBUS-DATA
 //   on EBUS.data.
 //
-// * wait TICKS
-//   Wait until the specified ticks count.
+// Every operation returns a reply TB->FE tPipeMessage.
 //
-// Every operation returns a reply TB->FE of the form
-// TICKS OP RESULT ...
+// Where `time` is the tick count of when the operation actually
+// executed.
 //
-// Where TICKS is the tick count of when the operation actually executed.
-//
-// Where OP is the OP this reply is associated with. One special case
-// is where OP is the string "FINAL", which is sent by the simulation
-// to indicate the end of the simulation.
-//
-// Where RESULT is a possibly empty series of response data values
-// from the operation.
-//
-// In all of the above, numeric values are 36-bit octal (perversely)
-// except for TICKS which are are 64-bit decimal (even more
-// perversely).
+// Where `type` is the operation type this reply is associated with.
+
+// Where `data` is the EBUS data value returned after the operation.
 #define _GNU_SOURCE 1
 
 #include <sys/types.h>
+#include <sys/select.h>
 #include <sys/prctl.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
-#include <semaphore.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include <svdpi.h>
 
 static const int verbose = 1;
@@ -136,14 +120,33 @@ static const int diagfINIT_CHANNELS = 070;
 static const int diagfWRITE_MBOX = 071;
 static const int diagfEBUS_LOAD = 076;
 
+static const int diagfIdle = 077;
+
+
+// To be clear: "toDTE" is from the fork running from here to
+// communicate BACK TO the simulated DTE20 hardware in the Verilator
+// simulation process. "toFE" is to allow the simulator to communicate
+// to this fork (the "front end" or FE).
+// Recall that [0] is the read end of the pipe, [1] is the write end.
+static int toDTE[2], toFE[2];
+static pid_t fePID;
+
+static const LL ticksPerClk = 16000ll;
 
 static LL ticks;                /* Time stamp of most recent reply */
-sem_t waitForReplySem;
-static pid_t fePID;
 
 
 typedef enum {dteDiagFunc, dteDiagRead, dteDiagWrite} tReqType;
 static const char *typeNames[] = {"dteDiagFunc", "dteDiagRead", "dteDiagWrite"};
+
+// Struct used in both directions on the pipe.
+struct tPipeMessage {
+  LL time;
+  tReqType type;
+  int diag;
+  W36 data;
+};
+
 
 static const char *diagNames[] = {
   /* 000 */ "STOP_CLOCK",
@@ -232,49 +235,24 @@ static void fatalError(const char *msgP) {
 
 
 static LL sendAndGetResult(LL aTicks, tReqType aType, int aDiag, W36 aData) {
-  nextReqTicks = aTicks;
-  reqType = aType;
-  reqDiag = aDiag;
-  reqData = aData;
+  tPipeMessage req;
+  req.time = aTicks;
+  req.type = aType;
+  req.diag = aDiag;
+  req.data = aData;
+  int len = write(toDTE[1], &req, sizeof(req));
+  if (len < sizeof(req)) fatalError("write to DTE pipe");
   if (verbose) fprintf(stderr, "%8lld FE-->DTE: %s %s %lld\n",
                        aTicks, typeNames[aType], diagNames[aDiag], aData);
 
-  int st = sem_wait(&waitForReplySem);
-  if (st < 0) fatalError("sem_wait");
+  len = read(toFE[0], &req, sizeof(req));
+  if (len < sizeof(req)) fatalError("read from DTE pipe");
 
   if (verbose) fprintf(stderr, "%8lld DTE-->FE: %s %lld\n",
-                       replyTime, typeNames[replyType], aData);
-  return replyTime;
+                       req.time, typeNames[req.type], req.data);
+  return req.data;
 }
 
-
-/*
-  bit [3:0] state;
-
-  initial state = '0;
-
-  always @(posedge clk)
-    if (DTEnextReqTime(reqType diagReq, reqData) == $time || state != '0) begin
-
-    if (state == 4'h0) begin
-      EBUS.ds <= diagReq;
-      EBUS.diagStrobe <= '1;
-
-      if (reqType == dteDiagWrite) begin
-        DTE.EBUSdriver.driving <= 1;
-        DTE.EBUSdriver.data <= reqData;
-      end
-    end else if (state == 4'h8) begin
-      EBUS.ds <= diagfIdle;
-      EBUS.diagStrobe <= '0;
-      if (reqType == dteDiagRead) replyData <= EBUS.data;
-    end else if (state == 4'hF) begin
-      DTEreply($time, reqType, replyData);
-    end
-
-    state <= state + 1;
-  end
-*/
 
 //   Do an EBUS DS diagnostic write with DIAG on EBUS.DS and EBUS-DATA
 //   on EBUS.data.
@@ -285,15 +263,20 @@ static void doDiagWrite(int func, W36 value) {
 
 //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS.
 static void doDiagFunc(int func) {
-  nextReqTicks = sendAndGetResult(nextReqTicks, dteDiagFunc, func, 0ll);
+  nextReqTicks = sendAndGetResult(nextReqTicks, dteDiagFunc, func, 0);
 }
 
 
 //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS and return
 //   the resulting EBUS.data as part of the reply.
 static W36 doDiagRead(int func) {
-  nextReqTicks = sendAndGetResult(nextReqTicks, dteDiagRead, func, 0ll);
+  nextReqTicks = sendAndGetResult(nextReqTicks, dteDiagRead, func, 0);
   return replyData;
+}
+
+
+static void waitFor(LL ticks) {
+  sendAndGetResult(nextReqTicks + ticks, dteDiagRead, diagfIdle, 0);
 }
 
 
@@ -324,11 +307,9 @@ static void klMasterReset() {
   fprintf(stderr, "%08llu [step up to 5 clocks to syncronize MBOX]", ticks);
 
   for (int k = 0; k < 5; ++k) {
-    waitFor(1000);
-
+    waitFor(8ll * ticksPerClk);
     if (doDiagRead(0162) & B32) break;
-
-    waitFor(1000);
+    waitFor(8ll * ticksPerClk);
     doDiagFunc(diagfSTEP_CLOCK);
   }
   
@@ -383,28 +364,51 @@ static void runFE(void) {
 }
 
 
-// This function runs in sim context.
-LL DTEgetRequest(int *reqTypeP, int *diagReqP, LL *reqDataP) {
-  *reqTypeP = (int) reqType;
-  *diagReqP = (int) diagReq;
-  *reqDataP = reqData;
-  return nextReqTicks;
+static int dteReadNFDs;
+static fd_set dteReadFDs;
+
+
+// This function runs in sim context and is called from RTL.
+extern "C" LL DTEgetRequest(int *reqTypeP, int *diagReqP, LL *reqDataP) {
+  struct timeval justPollTimeVal;
+  justPollTimeVal.tv_sec = 0;
+  justPollTimeVal.tv_usec = 0;
+  int st = select(dteReadNFDs, &dteReadFDs, NULL, NULL, &justPollTimeVal);
+
+  if (st < 0) fatalError("DTEgetRequest select");
+  if (st == 0) return 0;
+
+  // If we get here we have a message in the pipe. Read it.
+  tPipeMessage req;
+  st = read(toDTE[0], &req, sizeof(req));
+  if (st < 0) fatalError("DTEgetRequest pipe read");
+  *reqTypeP = (int) req.type;
+  *diagReqP = (int) req.diag;
+  *reqDataP = req.data;
+  nextReqTicks = req.time + 1;
+  return req.time;
 }
 
 
 // This function runs in sim context.
-void DTEreply(LL dteReplyTime, int dteReplyType, LL dteReplyData) {
-  replyTime = dteReplyTime;
-  replyType = dteReplyType;
-  replyData = dteReplyData;
-  int st = sem_post(&waitForReplySem);
-  if (st < 0) fatalError("sem_post");
+extern "C" void DTEreply(LL aReplyTime, int aReplyType, LL aReplyData) {
+  struct tPipeMessage reply;
+  reply.time = aReplyTime;
+  reply.type = (tReqType) aReplyType;
+  reply.data = aReplyData;
+  int st = write(toFE[1], &reply, sizeof(reply));
+  if (st < 0) fatalError("write toFE");
 }
 
 
 extern "C" void FEinitial(void) {
-  int st = sem_init(&waitForReplySem, 1, 1);
-  if (st < 0) fatalError("sem_init");
+  int st;
+
+  if (st = pipe2(toDTE, O_DIRECT)) fatalError("Create toDTE pipe");
+  if (st = pipe2(toFE, O_DIRECT)) fatalError("Create toFE pipe");
+
+  dteReadNFDs = toDTE[0] + 1;
+  FD_SET(toDTE[0], &dteReadFDs);
 
   pid_t pid = fork();
   if (pid < 0) fatalError("fork FE");
