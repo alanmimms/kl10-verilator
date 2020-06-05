@@ -4,8 +4,7 @@ module dte(input bit clk,
            iEBUS.dte EBUS,
            iMBOX MBOX);
 
-  typedef enum {dteDiagFunc, dteDiagRead, dteDiagWrite} tDTEReq;
-  typedef bit [0:6] tDTEDiag;
+  typedef enum {dteDiagFunc, dteDiagRead, dteDiagWrite} tFEReqType;
 
   import "DPI-C" function void DTEtick(input bit CROBAR, input longint ns);
   import "DPI-C" function void DTEinitial();
@@ -14,8 +13,8 @@ module dte(input bit clk,
                                                 output int diagReq,
                                                 output longint reqData);
   import "DPI-C" function void DTEreply(input longint t,
-                                        tDTEReq reqType,
-                                        bit [0:35] replyData);
+                                        input tFEReq reqType,
+                                        input bit [0:35] replyData);
 
   var tDTEReq reqType;
   var tDTEDiag diagReq;

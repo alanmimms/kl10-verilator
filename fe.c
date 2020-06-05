@@ -53,15 +53,12 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
-#include <signal.h>
+#include <semaphore.h>
 #include <stdlib.h>
 #include <string.h>
 #include <svdpi.h>
 
 static const int verbose = 1;
-
-enum {dteDiagFunc, dteDiagRead, dteDiagWrite};
-
 
 // Probably we are building 64-bit anyway, but this emphasizes the
 // point. These are 64-bit typedefs.
@@ -139,22 +136,93 @@ static const int diagfINIT_CHANNELS = 070;
 static const int diagfWRITE_MBOX = 071;
 static const int diagfEBUS_LOAD = 076;
 
-static const int diagfIdle = 007;
-
 
 static LL ticks;                /* Time stamp of most recent reply */
-
-
-static int messagePending = 0;  /* Pending flag for DTE ticks polling */
-static LL sigioCount;           /* Counter of SIGIO signasl we have handled */
-
-
-// To be clear: "toDTE" is from the fork running from here to
-// communicate BACK TO the simulated DTE20 hardware in the Verilator
-// simulation process. "toFE" is to allow the simulator to communicate
-// to this fork (the "front end" or FE).
-static int toDTE[2], toFE[2];
+sem_t waitForReplySem;
 static pid_t fePID;
+
+
+typedef enum {dteDiagFunc, dteDiagRead, dteDiagWrite} tReqType;
+static const char *typeNames[] = {"dteDiagFunc", "dteDiagRead", "dteDiagWrite"};
+
+static const char *diagNames[] = {
+  /* 000 */ "STOP_CLOCK",
+  /* 001 */ "START_CLOCK",
+  /* 002 */ "STEP_CLOCK",
+  /* 003 */ 0,
+  /* 004 */ "COND_STEP",
+  /* 005 */ "BURST",
+  /* 006 */ "CLR_RESET",
+  /* 007 */ "SET_RESET",
+  /* 010 */ "CLR_RUN",
+  /* 011 */ "SET_RUN",
+  /* 012 */ "CONTINUE",
+  /* 013 */ 0,
+  /* 014 */ 0,
+  /* 015 */ 0,
+  /* 016 */ 0,
+  /* 017 */ 0,
+  /* 020 */ 0,
+  /* 021 */ 0,
+  /* 022 */ 0,
+  /* 023 */ 0,
+  /* 024 */ 0,
+  /* 025 */ 0,
+  /* 026 */ 0,
+  /* 027 */ 0,
+  /* 030 */ 0,
+  /* 031 */ 0,
+  /* 032 */ 0,
+  /* 033 */ 0,
+  /* 034 */ 0,
+  /* 035 */ 0,
+  /* 036 */ 0,
+  /* 037 */ 0,
+  /* 040 */ 0,
+  /* 041 */ 0,
+  /* 042 */ "CLR_BURST_CTR_RH",
+  /* 043 */ "CLR_BURST_CTR_LH",
+  /* 044 */ "CLR_CLK_SRC_RATE",
+  /* 045 */ "SET_EBOX_CLK_DISABLES",
+  /* 046 */ "RESET_PAR_REGS",
+  /* 047 */ "CLR_MBOXDIS_PARCHK_ERRSTOP",
+  /* 050 */ 0,
+  /* 051 */ "CLR_CRAM_DIAG_ADR_RH",
+  /* 052 */ "CLR_CRAM_DIAG_ADR_LH",
+  /* 053 */ 0,
+  /* 054 */ 0,
+  /* 055 */ 0,
+  /* 056 */ 0,
+  /* 057 */ 0,
+  /* 060 */ 0,
+  /* 061 */ 0,
+  /* 062 */ 0,
+  /* 063 */ 0,
+  /* 064 */ 0,
+  /* 065 */ 0,
+  /* 066 */ 0,
+  /* 067 */ "ENABLE_KL",
+  /* 070 */ "INIT_CHANNELS",
+  /* 071 */ "WRITE_MBOX",
+  /* 072 */ 0,
+  /* 073 */ 0,
+  /* 074 */ 0,
+  /* 075 */ 0,
+  /* 076 */ "EBUS_LOAD",
+};
+
+// Only one request can be outstanding at one time. The ticks value at
+// which it should execute is `nextReqTicks`, the request type is
+// `reqType`, the EBUS.DS code is `reqDiag`, and the EBUS.data word is
+// `reqData` (if it is needed at all).
+static LL nextReqTicks = 0;            /* Ticks count to do next request */
+static tReqType reqType = dteDiagFunc; /* Type for next request */
+static int reqDiag = diagfSTOP_CLOCK;  /* Diagnostic code for next request */
+static LL reqData = 0;                 /* EBUS data (if any) for next request */
+
+static LL replyTime;
+static tReqType replyType;
+static W36 replyData;
 
 
 static void fatalError(const char *msgP) {
@@ -163,83 +231,69 @@ static void fatalError(const char *msgP) {
 }
 
 
-static LL sendAndGetResult(const char *msgP, char *resultP, int maxResultSize) {
-  int len, sendLen;
-  char buf[1024];
+static LL sendAndGetResult(LL aTicks, tReqType aType, int aDiag, W36 aData) {
+  nextReqTicks = aTicks;
+  reqType = aType;
+  reqDiag = aDiag;
+  reqData = aData;
+  if (verbose) fprintf(stderr, "%8lld FE-->DTE: %s %s %lld\n",
+                       aTicks, typeNames[aType], diagNames[aDiag], aData);
 
-  sendLen = strlen(msgP);
-  len = write(toDTE[1], msgP, sendLen);
-  if (len < sendLen) fatalError("write to DTE pipe");
-  if (verbose) fprintf(stderr, "toDTE '%s'\n", msgP);
+  int st = sem_wait(&waitForReplySem);
+  if (st < 0) fatalError("sem_wait");
 
-  len = read(toFE[0], resultP, maxResultSize - 1);
-  if (len < 0) fatalError("read from DTE pipe");
-  resultP[len] = 0;
-  if (verbose) fprintf(stderr, "fromDTE '%s'\n", resultP);
-  sscanf(resultP, "%llu %s", &ticks, buf);
-
-  if (strcmp(buf, "FINAL") == 0) {
-    fprintf(stderr, "%llu DTE 'final'\n[exiting]\n", ticks);
-    exit(0);
-  }
-
-  return ticks;
+  if (verbose) fprintf(stderr, "%8lld DTE-->FE: %s %lld\n",
+                       replyTime, typeNames[replyType], aData);
+  return replyTime;
 }
 
 
-// * DiagWrite DIAG EBUS-DATA
+/*
+  bit [3:0] state;
+
+  initial state = '0;
+
+  always @(posedge clk)
+    if (DTEnextReqTime(reqType diagReq, reqData) == $time || state != '0) begin
+
+    if (state == 4'h0) begin
+      EBUS.ds <= diagReq;
+      EBUS.diagStrobe <= '1;
+
+      if (reqType == dteDiagWrite) begin
+        DTE.EBUSdriver.driving <= 1;
+        DTE.EBUSdriver.data <= reqData;
+      end
+    end else if (state == 4'h8) begin
+      EBUS.ds <= diagfIdle;
+      EBUS.diagStrobe <= '0;
+      if (reqType == dteDiagRead) replyData <= EBUS.data;
+    end else if (state == 4'hF) begin
+      DTEreply($time, reqType, replyData);
+    end
+
+    state <= state + 1;
+  end
+*/
+
 //   Do an EBUS DS diagnostic write with DIAG on EBUS.DS and EBUS-DATA
 //   on EBUS.data.
 static void doDiagWrite(int func, W36 value) {
-  char result[1024];
-  char msg[1024];
-
-  // * DiagFunc DIAG
-  //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS.
-  sprintf(msg, "DiagWrite %o %llo", func, value);
-  sendAndGetResult(msg, result, sizeof(result));
+  nextReqTicks = sendAndGetResult(nextReqTicks, dteDiagWrite, func, value);
 }
 
 
+//   Do an EBUS DS diagnostic function with DIAG on EBUS.DS.
 static void doDiagFunc(int func) {
-  char result[1024];
-  char msg[1024];
-
-  // * DiagFunc DIAG
-  //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS.
-  sprintf(msg, "DiagFunc %o", func);
-  sendAndGetResult(msg, result, sizeof(result));
+  nextReqTicks = sendAndGetResult(nextReqTicks, dteDiagFunc, func, 0ll);
 }
 
 
-static void waitFor(LL nTicks) {
-  char result[1024];
-  char msg[1024];
-
-  // * wait TICKS
-  //   Wait until the specified ticks count.
-  sprintf(msg, "wait %lld", nTicks);
-  sendAndGetResult(msg, result, sizeof(result));
-}
-
-
-// * DiagRead DIAG
 //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS and return
 //   the resulting EBUS.data as part of the reply.
 static W36 doDiagRead(int func) {
-  char result[1024];
-  char msg[1024];
-
-  // * DiagFunc DIAG
-  //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS.
-  sprintf(msg, "DiagRead %o", func);
-  sendAndGetResult(msg, result, sizeof(result));
-
-  // Every operation returns a reply TB->FE of the form
-  // TICKS OP RESULT ...
-  W36 valueRead;
-  sscanf(result, "%*d diagRead %llo", &valueRead);
-  return valueRead;
+  nextReqTicks = sendAndGetResult(nextReqTicks, dteDiagRead, func, 0ll);
+  return replyData;
 }
 
 
@@ -329,37 +383,36 @@ static void runFE(void) {
 }
 
 
-static LL nextReqTime;
-
+// This function runs in sim context.
 LL DTEgetRequest(int *reqTypeP, int *diagReqP, LL *reqDataP) {
-  *reqTypeP = reqType;
-  *diagReqP = diagReq;
+  *reqTypeP = (int) reqType;
+  *diagReqP = (int) diagReq;
   *reqDataP = reqData;
-  return nextReqTime;
+  return nextReqTicks;
 }
 
 
+// This function runs in sim context.
 void DTEreply(LL dteReplyTime, int dteReplyType, LL dteReplyData) {
   replyTime = dteReplyTime;
   replyType = dteReplyType;
   replyData = dteReplyData;
-}
-
-
-// Runs in simulator context to set up the FE's "parent".
-static void configureFE(void) {
+  int st = sem_post(&waitForReplySem);
+  if (st < 0) fatalError("sem_post");
 }
 
 
 extern "C" void FEinitial(void) {
+  int st = sem_init(&waitForReplySem, 1, 1);
+  if (st < 0) fatalError("sem_init");
+
   pid_t pid = fork();
   if (pid < 0) fatalError("fork FE");
 
   if (pid == 0) {               /* Running in the child (FE context) */
     for (;;) runFE();           /* FE blocks waiting for messages - never returns */
   } else {                      /* Running in the parent (sim context) */
-    fePID = pid;
-    configureFE();
+    fePID = pid;                /* Save PID of child */
   }
 }
 
