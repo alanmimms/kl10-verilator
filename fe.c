@@ -1,4 +1,4 @@
-// The FE protocol is communicated over pipes in text form from the
+// The FE protocol is communicated via shared memory form from the
 // fork to this same code running in Verilator simulation process.
 // Every message FE->TB is of the form:
 //
@@ -59,6 +59,9 @@
 #include <svdpi.h>
 
 static const int verbose = 1;
+
+enum {dteDiagFunc, dteDiagRead, dteDiagWrite};
+
 
 // Probably we are building 64-bit anyway, but this emphasizes the
 // point. These are 64-bit typedefs.
@@ -140,6 +143,10 @@ static const int diagfIdle = 007;
 
 
 static LL ticks;                /* Time stamp of most recent reply */
+
+
+static int messagePending = 0;  /* Pending flag for DTE ticks polling */
+static LL sigioCount;           /* Counter of SIGIO signasl we have handled */
 
 
 // To be clear: "toDTE" is from the fork running from here to
@@ -296,8 +303,13 @@ static void klMasterReset() {
 }
 
 
+static void klBoot(void) {
+  fprintf(stderr, "%8lld [KL boot goes here]\n", ticks);
+}
+
+
 static void HUPhandler(int sig) {
-  fprintf(stderr, "\n[SIGHUP from parent death - exiting]\n");
+  fprintf(stderr, "\n[SIGHUP from parent - exiting]\n");
   exit(-1);
 }
 
@@ -312,32 +324,47 @@ static void runFE(void) {
   prctl(PR_SET_PDEATHSIG, SIGHUP);
   
   klMasterReset();
+  klBoot();
   waitFor(10000000000ll);
 }
 
 
+static LL nextReqTime;
+
+LL DTEgetRequest(int *reqTypeP, int *diagReqP, LL *reqDataP) {
+  *reqTypeP = reqType;
+  *diagReqP = diagReq;
+  *reqDataP = reqData;
+  return nextReqTime;
+}
+
+
+void DTEreply(LL dteReplyTime, int dteReplyType, LL dteReplyData) {
+  replyTime = dteReplyTime;
+  replyType = dteReplyType;
+  replyData = dteReplyData;
+}
+
+
+// Runs in simulator context to set up the FE's "parent".
+static void configureFE(void) {
+}
+
+
 extern "C" void FEinitial(void) {
-  int st;
-
-  if (st = pipe2(toDTE, O_DIRECT)) fatalError("Create toDTE pipe");
-
-  if (st = pipe2(toFE, O_DIRECT)) fatalError("Create toFE pipe");
-
   pid_t pid = fork();
   if (pid < 0) fatalError("fork FE");
 
-  /* FE never returns. It blocks waiting for messages. */
-  if (pid == 0) runFE();
+  if (pid == 0) {               /* Running in the child (FE context) */
+    for (;;) runFE();           /* FE blocks waiting for messages - never returns */
+  } else {                      /* Running in the parent (sim context) */
+    fePID = pid;
+    configureFE();
+  }
 }
 
 
 extern "C" void FEfinal(LL ns) {
-  char finalMsg[200];
-
-  sprintf(finalMsg, "%llu FINAL", ns);
-
-  if (toFE[1])
-    write(toFE[1], finalMsg, strlen(finalMsg));
-  else if (fePID > 0)           /* Kill it if we can't talk to it */
-    kill(fePID, SIGKILL);
+  /* Kill our kid */
+  if (fePID > 0) kill(fePID, SIGHUP);
 }

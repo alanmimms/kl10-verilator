@@ -20,13 +20,11 @@ public: vluint64_t tickcount;
 public: MODULE *mod;
 public: TRACECLASS *trace;
 public: bool done;
-public: long long sigioCount;
 
   TESTBENCH(void) {
     mod = new MODULE();
     tickcount = 0ll;
     trace = (TRACECLASS *) 0;
-    sigioCount = 0ll;
     done = false;
   }
 
@@ -104,11 +102,6 @@ void DTEfinal(LL ns) {
 }
 
 
-static void sigioHandler(int sig) {
-  ++tb->sigioCount;
-}
-
-
 int main(int argc, char **argv) {
   Verilated::commandArgs(argc, argv);
   tb = new TESTBENCH<Vtop>();
@@ -116,10 +109,6 @@ int main(int argc, char **argv) {
   Vtop *top = tb->mod;
   tb->opentrace("kl10pv-trace.vcd");
   top->CROBAR = 1;
-
-  // Set up SIGIO signal to set flag for incoming FE message
-  static const struct sigaction act = {sigioHandler};
-  int st = sigaction(SIGIO, &act, (struct sigaction *) 0);
 
   while (!tb->done) {
     top->CROBAR = tb->tickcount < 10000ll;
