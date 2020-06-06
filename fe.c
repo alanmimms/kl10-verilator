@@ -212,6 +212,7 @@ static const char *diagNames[] = {
   /* 074 */ 0,
   /* 075 */ 0,
   /* 076 */ "EBUS_LOAD",
+  /* 077 */ "idle",
 };
 
 // Only one request can be outstanding at one time. The ticks value at
