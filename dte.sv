@@ -31,7 +31,7 @@ module dte(input bit clk,
   always @(posedge clk) begin
     reqTime = DTEgetRequest(reqType, diagReq, {28'b0, reqData});
 
-    if (reqTime == '0 || reqTime == $time) begin
+    if (reqTime == '0 || reqTime >= $time) begin
       EBUS.ds <= 7'(diagReq);
       EBUS.diagStrobe <= '1;
 

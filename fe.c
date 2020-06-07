@@ -126,6 +126,8 @@ static const int diagfIdle = 077;
 // dteMisc functions
 static const int clrCROBAR = 000;
 
+#define DIAG_DURATION   10ll
+
 
 // To be clear: "toDTE" is from the fork running from here to
 // communicate BACK TO the simulated DTE20 hardware in the Verilator
@@ -233,8 +235,6 @@ static tReqType reqType = dteDiagFunc; /* Type for next request */
 static int reqDiag = diagfSTOP_CLOCK;  /* Diagnostic code for next request */
 static LL reqData = 0;                 /* EBUS data (if any) for next request */
 
-static LL replyTime;
-static tReqType replyType;
 static W36 replyData;
 
 
@@ -244,7 +244,7 @@ static void fatalError(const char *msgP) {
 }
 
 
-static LL sendAndGetResult(LL aTicks, tReqType aType, int aDiag, W36 aData) {
+static LL sendAndGetResult(LL aTicks, LL duration, tReqType aType, int aDiag, W36 aData) {
   tPipeMessage req;
   req.time = aTicks;
   req.type = aType;
@@ -262,6 +262,7 @@ static LL sendAndGetResult(LL aTicks, tReqType aType, int aDiag, W36 aData) {
 
   if (verbose) fprintf(stderr, "%8lld DTE-->FE: %s %lld\n",
                        req.time, typeNames[req.type], req.data);
+  nextReqTicks += duration;
   return req.data;
 }
 
@@ -269,37 +270,36 @@ static LL sendAndGetResult(LL aTicks, tReqType aType, int aDiag, W36 aData) {
 //   Do an EBUS DS diagnostic write with DIAG on EBUS.DS and EBUS-DATA
 //   on EBUS.data.
 static void doDiagWrite(int func, W36 value) {
-  nextReqTicks = sendAndGetResult(nextReqTicks, dteDiagWrite, func, value);
+  sendAndGetResult(nextReqTicks, DIAG_DURATION, dteDiagWrite, func, value);
 }
 
 
 //   Do a miscellaneous control function in DTE.
 static void doMiscFunc(int func) {
-  nextReqTicks = sendAndGetResult(nextReqTicks, dteMisc, func, 0);
+  sendAndGetResult(nextReqTicks, DIAG_DURATION, dteMisc, func, 0);
 }
 
 
 //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS.
 static void doDiagFunc(int func) {
-  nextReqTicks = sendAndGetResult(nextReqTicks, dteDiagFunc, func, 0);
+  sendAndGetResult(nextReqTicks, DIAG_DURATION, dteDiagFunc, func, 0);
 }
 
 
 //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS and return
 //   the resulting EBUS.data as part of the reply.
 static W36 doDiagRead(int func) {
-  nextReqTicks = sendAndGetResult(nextReqTicks, dteDiagRead, func, 0);
-  return replyData;
+  return sendAndGetResult(nextReqTicks, DIAG_DURATION, dteDiagRead, func, 0);
 }
 
 
 static void waitFor(LL ticks) {
-  sendAndGetResult(nextReqTicks + ticks, dteDiagRead, diagfIdle, 0);
+  sendAndGetResult(nextReqTicks, ticks, dteDiagRead, diagfIdle, 0);
 }
 
 
 static void klMasterReset() {
-  fprintf(stderr, "%lld ticks KLMasterReset() START\n", ticks);
+  fprintf(stderr, "%8lld ticks KLMasterReset() START\n", ticks);
 
   // $DFXC(.CLRUN=010)    ; Clear run
   doDiagFunc(diagfCLR_RUN);
@@ -322,7 +322,7 @@ static void klMasterReset() {
   // Loop up to three times:
   //   Do diag function 162 via $DFRD test (A CHANGE COMING A L)=EBUS[32]
   //   If not set, $DFXC(.SSCLK=002) to single step the MBOX
-  fprintf(stderr, "%08llu [step up to 5 clocks to syncronize MBOX]", ticks);
+  fprintf(stderr, "%08llu [step up to 5 clocks to syncronize MBOX]\n", ticks);
 
   for (int k = 0; k < 5; ++k) {
     waitFor(8ll * ticksPerClk);
