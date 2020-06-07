@@ -123,6 +123,10 @@ static const int diagfEBUS_LOAD = 076;
 static const int diagfIdle = 077;
 
 
+// dteMisc functions
+static const int clrCROBAR = 000;
+
+
 // To be clear: "toDTE" is from the fork running from here to
 // communicate BACK TO the simulated DTE20 hardware in the Verilator
 // simulation process. "toFE" is to allow the simulator to communicate
@@ -136,8 +140,8 @@ static const LL ticksPerClk = 16000ll;
 static LL ticks;                /* Time stamp of most recent reply */
 
 
-typedef enum {dteDiagFunc, dteDiagRead, dteDiagWrite} tReqType;
-static const char *typeNames[] = {"dteDiagFunc", "dteDiagRead", "dteDiagWrite"};
+typedef enum {dteDiagFunc, dteDiagRead, dteDiagWrite, dteMisc} tReqType;
+static const char *typeNames[] = {"dteDiagFunc", "dteDiagRead", "dteDiagWrite", "dteMisc"};
 
 // Struct used in both directions on the pipe.
 struct tPipeMessage {
@@ -215,6 +219,11 @@ static const char *diagNames[] = {
   /* 077 */ "idle",
 };
 
+
+static const char *miscNames[] = {
+  /* 000 */ "clrCROBAR",
+};
+
 // Only one request can be outstanding at one time. The ticks value at
 // which it should execute is `nextReqTicks`, the request type is
 // `reqType`, the EBUS.DS code is `reqDiag`, and the EBUS.data word is
@@ -244,7 +253,9 @@ static LL sendAndGetResult(LL aTicks, tReqType aType, int aDiag, W36 aData) {
   int len = write(toDTE[1], &req, sizeof(req));
   if (len < sizeof(req)) fatalError("write to DTE pipe");
   if (verbose) fprintf(stderr, "%8lld FE-->DTE: %s %s %lld\n",
-                       aTicks, typeNames[aType], diagNames[aDiag], aData);
+                       aTicks, typeNames[aType],
+                       aType == dteMisc ? miscNames[aDiag] : diagNames[aDiag],
+                       aData);
 
   len = read(toFE[0], &req, sizeof(req));
   if (len < sizeof(req)) fatalError("read from DTE pipe");
@@ -259,6 +270,12 @@ static LL sendAndGetResult(LL aTicks, tReqType aType, int aDiag, W36 aData) {
 //   on EBUS.data.
 static void doDiagWrite(int func, W36 value) {
   nextReqTicks = sendAndGetResult(nextReqTicks, dteDiagWrite, func, value);
+}
+
+
+//   Do a miscellaneous control function in DTE.
+static void doMiscFunc(int func) {
+  nextReqTicks = sendAndGetResult(nextReqTicks, dteMisc, func, 0);
 }
 
 
@@ -359,6 +376,9 @@ static void runFE(void) {
   
   prctl(PR_SET_PDEATHSIG, SIGHUP);
   
+  // Release CROBAR (power on RESET) signal
+  doMiscFunc(clrCROBAR);
+
   klMasterReset();
   klBoot();
   waitFor(10000000000ll);

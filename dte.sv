@@ -1,10 +1,11 @@
 module dte(input bit clk,
-           input bit CROBAR,
+           output bit CROBAR,
            iDTE DTE,
            iEBUS.dte EBUS,
            iMBOX MBOX);
 
-  typedef enum {dteDiagFunc, dteDiagRead, dteDiagWrite} tFEReqType;
+  typedef enum {dteDiagFunc, dteDiagRead, dteDiagWrite, dteMisc} tFEReqType;
+  typedef enum {clrCROBAR} tMiscFuncType;
 
   import "DPI-C" function void DTEtick(input bit CROBAR, input longint ns);
   import "DPI-C" function void DTEinitial();
@@ -40,6 +41,14 @@ module dte(input bit clk,
       end else begin
         DTE.EBUSdriver.driving <= 0;
         DTE.EBUSdriver.data <= '0;
+
+        if (reqType == dteMisc) begin
+
+          case (diagReq)
+          clrCROBAR: CROBAR <= 0;
+          default: ;
+          endcase
+        end
       end
 
       DTEreply($time, reqType, diagReq, {28'b0, EBUS.data});

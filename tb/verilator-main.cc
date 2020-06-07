@@ -34,13 +34,6 @@ public: bool done;
     mod = NULL;
   }
 
-  virtual void reset(void) {
-    mod->CROBAR = 1;
-    // Make sure any inheritance gets applied
-    this->tick();
-    mod->CROBAR = 0;
-  }
-
   virtual void opentrace(const char *vcdName) {
       trace = new TRACECLASS;
       mod->trace(trace, 99);
@@ -108,10 +101,8 @@ int main(int argc, char **argv) {
   Verilated::traceEverOn(true);
   Vtop *top = tb->mod;
   tb->opentrace("kl10pv-trace.vcd");
-  top->CROBAR = 1;
 
   while (!tb->done) {
-    top->CROBAR = tb->tickcount < 10000ll;
     LL ticks = tb->tick();
 
     if (ticks > 1500000ll) break;
