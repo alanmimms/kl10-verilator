@@ -20,12 +20,14 @@ public: vluint64_t tickcount;
 public: MODULE *mod;
 public: TRACECLASS *trace;
 public: bool done;
+public: double nsPerClock;
 
   TESTBENCH(void) {
     mod = new MODULE();
     tickcount = 0ll;
     trace = (TRACECLASS *) 0;
     done = false;
+    nsPerClock = 1.0e9/60.0e6; // 60MHz clock
   }
 
   virtual ~TESTBENCH(void) {
@@ -37,8 +39,8 @@ public: bool done;
   virtual void opentrace(const char *vcdName) {
       trace = new TRACECLASS;
       mod->trace(trace, 99);
-      trace->spTrace()->set_time_resolution("ps");
-      trace->spTrace()->set_time_unit("ps");
+      trace->spTrace()->set_time_resolution("ns");
+      trace->spTrace()->set_time_unit("ns");
       trace->open(vcdName);
   }
 
@@ -57,9 +59,8 @@ public: bool done;
 
     // Falling edge
     mod->clk = 0;
-    ++tickcount;
     mod->eval();
-    if (trace) trace->dump(tickcount);
+    if (trace) trace->dump(tickcount * nsPerClock);
 
     if (Verilated::gotFinish()) done = true;
     return tickcount;
@@ -95,6 +96,9 @@ void DTEfinal(LL ns) {
 }
 
 
+static const double endTime = 1.5 * 1000 * 1000 * 1000; // 1.5 seconds
+
+
 int main(int argc, char **argv) {
   Verilated::commandArgs(argc, argv);
   tb = new TESTBENCH<Vtop>();
@@ -104,11 +108,12 @@ int main(int argc, char **argv) {
 
   while (!tb->done) {
     LL ticks = tb->tick();
+    double ns = ticks * tb->nsPerClock;
 
-    if (ticks > 1.5 * 1000 * 1000ll) break;
+    if (ns >= endTime) break;
 
-    if (tb->tickcount % (100 * 1000ll) == 0)
-      std::cout << (tb->tickcount / 1000) << "ns" << std::endl;
+    if ((LL) ns % 1000000 == 0)
+      std::cout << (ns/1000) << "us" << std::endl;
   }
 
   exit(EXIT_SUCCESS);

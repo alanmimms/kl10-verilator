@@ -430,10 +430,10 @@ static fd_set dteReadFDs;
 // This function runs in sim context and is called from RTL.
 extern "C" LL DTEgetRequest(int *reqTypeP, int *diagReqP, LL *reqDataP) {
   struct timeval justPollTimeVal = {0, 0};
-  FD_ZERO(&dteReadFDs);
-  int st = select(dteReadNFDs, &dteReadFDs, NULL, NULL, &justPollTimeVal);
+  fd_set fds = dteReadFDs;
+  int st = select(dteReadNFDs, &fds, NULL, NULL, &justPollTimeVal);
   if (st < 0) fatalError("DTEgetRequest select");
-  if (st == 0 || !FD_ISSET(toDTE[0], &dteReadFDs)) return -1LL;
+  if (st == 0 || !FD_ISSET(toDTE[0], &fds)) return -1;
 
   // If we get here we have a message in the pipe. Read it.
   tPipeMessage req;

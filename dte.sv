@@ -34,14 +34,14 @@ module dte(iCLK CLK,
   always @(posedge clk) begin
     DTEtick(CROBAR, dteTicks);
     dteTicks <= dteTicks + 1;
-    if (dteTicks % 1000 == '0) $display($time, " dteTicks=%d", dteTicks);
+//    if (dteTicks % 100 == '0) $display($time, " dteTicks=%d", dteTicks);
   end
 
 
   always @(posedge clk) begin
     reqTime = DTEgetRequest(reqType, diagReq, {28'b0, reqData});
 
-    if (reqTime == '0 || reqTime >= dteTicks) begin
+    if (reqTime >= dteTicks) begin
       EBUS.ds <= 7'(diagReq);
       EBUS.diagStrobe <= '1;
 
