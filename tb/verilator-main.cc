@@ -78,16 +78,13 @@ double sc_time_stamp () {       // Called by $time in Verilog
 
 static LL waitingForTicks = 0ll;
 
-void DTEtick(svBit CROBAR, LL ticks) {
-}
 
-
-extern "C" void FEinitial(void);
+extern "C" void FEinitial(double nsPerClock);
 extern "C" void FEfinal(LL ns);
 
 
 void DTEinitial() {
-  FEinitial();
+  FEinitial(tb->nsPerClock);
 }
 
 

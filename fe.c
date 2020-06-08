@@ -145,8 +145,21 @@ static int toDTE[2], toFE[2];
 static pid_t fePID;
 
 
-typedef enum {dteDiagFunc, dteDiagRead, dteDiagWrite, dteMisc} tReqType;
-static const char *typeNames[] = {"dteDiagFunc", "dteDiagRead", "dteDiagWrite", "dteMisc"};
+typedef enum {
+  dteDiagFunc,
+  dteDiagRead,
+  dteDiagWrite,
+  dteMisc,
+  dteReleaseEBUSData,
+} tReqType;
+
+static const char *typeNames[] = {
+  "dteDiagFunc",
+  "dteDiagRead",
+  "dteDiagWrite",
+  "dteReleaseEBUSData",
+  "dteMisc",
+};
 
 // Struct used in both directions on the pipe.
 struct tPipeMessage {
@@ -230,16 +243,10 @@ static const char *miscNames[] = {
 };
 
 // Only one request can be outstanding at one time. The ticks value at
-// which it should execute is `nextReqTicks`, the request type is
-// `reqType`, the EBUS.DS code is `reqDiag`, and the EBUS.data word is
-// `reqData` (if it is needed at all).
+// which it should execute is `nextReqTicks`.
 static LL nextReqTicks = 0;            /* Ticks count to do next request */
-static tReqType reqType = dteDiagFunc; /* Type for next request */
-static int reqDiag = diagfSTOP_CLOCK;  /* Diagnostic code for next request */
-static LL reqData = 0;                 /* EBUS data (if any) for next request */
 
-static W36 replyData;
-
+static double nsPerClock;       /* Nanoseconds in each of our ticks */
 
 static void fatalError(const char *msgP) {
   perror(msgP);
@@ -273,7 +280,11 @@ static const char *pipeN(int fd) {
 }
 
 
-static LL sendAndGetResult(LL aTicks, LL duration, tReqType aType, int aDiag, W36 aData) {
+static LL sendAndGetResult(LL aTicks,
+                           LL duration,
+                           tReqType aType,
+                           int aDiag = diagfIdle,
+                           W36 aData = 0) {
   tPipeMessage req;
   req.time = aTicks;
   req.type = aType;
@@ -282,7 +293,7 @@ static LL sendAndGetResult(LL aTicks, LL duration, tReqType aType, int aDiag, W3
   if (wVerbose) fprintf(stderr, "[fe]  write(%s) %ld bytes\n", pipeN(toDTE[1]), sizeof(req));
   int len = write(toDTE[1], &req, sizeof(req));
   if (len < sizeof(req)) fatalError("write to DTE pipe");
-  if (verbose) fprintf(stderr, "[fe]  %8lld FE-->DTE: %s %s %s\n",
+  if (verbose) fprintf(stderr, "[fe]  %lld: send %s %s %s\n",
                        req.time, typeNames[aType],
                        aType == dteMisc ? miscNames[aDiag] : diagNames[aDiag],
                        octW(aData));
@@ -291,7 +302,7 @@ static LL sendAndGetResult(LL aTicks, LL duration, tReqType aType, int aDiag, W3
   len = read(toFE[0], &req, sizeof(req));
   if (len < sizeof(req)) fatalError("read from DTE pipe");
 
-  if (verbose) fprintf(stderr, "[fe]  %8lld DTE-->FE: %s %lld\n",
+  if (verbose) fprintf(stderr, "[fe]  %lld: reply from DTE: %s %lld\n",
                        nextReqTicks + req.time, typeNames[req.type], req.data);
   nextReqTicks += duration;
   return req.data;
@@ -301,31 +312,44 @@ static LL sendAndGetResult(LL aTicks, LL duration, tReqType aType, int aDiag, W3
 //   Do an EBUS DS diagnostic write with DIAG on EBUS.DS and EBUS-DATA
 //   on EBUS.data.
 static void doDiagWrite(int func, W36 value) {
+  if (verbose) fprintf(stderr, "[fe]  diag write %s %s\n", diagNames[func], octW(value));
   sendAndGetResult(nextReqTicks, DIAG_DURATION, dteDiagWrite, func, value);
+  sendAndGetResult(nextReqTicks, 1, dteReleaseEBUSData);
 }
 
 
 //   Do a miscellaneous control function in DTE.
 static void doMiscFunc(int func) {
-  sendAndGetResult(nextReqTicks, 1, dteMisc, func, 0);
+  if (verbose) fprintf(stderr, "[fe]  misc func %s\n", miscNames[func]);
+  sendAndGetResult(20, 13, dteMisc, func);
 }
 
 
 //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS.
 static void doDiagFunc(int func) {
-  sendAndGetResult(nextReqTicks, DIAG_DURATION, dteDiagFunc, func, 0);
+  if (verbose) fprintf(stderr, "[fe]  diag func %s\n", diagNames[func]);
+  sendAndGetResult(nextReqTicks, DIAG_DURATION, dteDiagFunc, func);
 }
 
 
 //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS and return
 //   the resulting EBUS.data as part of the reply.
 static W36 doDiagRead(int func) {
-  return sendAndGetResult(nextReqTicks, DIAG_DURATION, dteDiagRead, func, 0);
+  if (verbose) fprintf(stderr, "[fe]  diag func %s\n", diagNames[func]);
+
+  /* Send function and delay 1us until EBUS.data is stable */
+  sendAndGetResult(nextReqTicks, (LL) (1000 / nsPerClock), dteDiagFunc, func);
+
+  if (verbose) fprintf(stderr, "[fe]  diag read\n");
+  W36 result = sendAndGetResult(nextReqTicks, DIAG_DURATION, dteDiagRead);
+  if (verbose) fprintf(stderr, "      result=%s\n", octW(result));
+  return result;
 }
 
 
 static void waitFor(LL ticks) {
-  fprintf(stderr, "[fe]  %8lld wait %lld\n", nextReqTicks, ticks);
+  fprintf(stderr, "[fe]  %lld: wait %lld to %lld\n",
+          nextReqTicks, ticks, nextReqTicks + ticks);
   nextReqTicks += ticks;
 }
 
@@ -419,7 +443,7 @@ static void runFE(void) {
 
   klMasterReset();
   klBoot();
-  waitFor(99999999LL);
+  for (;;) waitFor(99999999LL);
 }
 
 
@@ -456,12 +480,12 @@ extern "C" void DTEreply(LL aReplyTime, int aReplyType, LL aReplyData) {
   if (wVerbose) fprintf(stderr, "[sim] write(%s) %ld bytes\n", pipeN(toFE[1]), sizeof(reply));
   int st = write(toFE[1], &reply, sizeof(reply));
   if (st < 0) fatalError("write toFE");
-  if (verbose) fprintf(stderr, "[sim] %8lld DTE-->FE: %s %lld\n",
+  if (verbose) fprintf(stderr, "[sim] %lld: reply %s %lld\n",
                        nextReqTicks + reply.time, typeNames[reply.type], reply.data);
 }
 
 
-extern "C" void FEinitial(void) {
+extern "C" void FEinitial(double aNsPerClock) {
   int st;
 
   if (st = pipe2(toDTE, O_DIRECT)) fatalError("Create toDTE pipe");
@@ -475,11 +499,14 @@ extern "C" void FEinitial(void) {
   dteReadNFDs = toDTE[0] + 1;
   FD_SET(toDTE[0], &dteReadFDs);
 
+  nsPerClock = aNsPerClock;
+  if (verbose) fprintf(stderr, "[%g ns per DTE clock]\n", nsPerClock);
+
   pid_t pid = fork();
   if (pid < 0) fatalError("fork FE");
 
   if (pid == 0) {               /* Running in the child (FE context) */
-    for (;;) runFE();           /* FE blocks waiting for messages - never returns */
+    runFE();                    /* FE blocks waiting for messages - never returns */
   } else {                      /* Running in the parent (sim context) */
     fePID = pid;                /* Save PID of child */
   }
