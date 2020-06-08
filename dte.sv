@@ -27,6 +27,9 @@ module dte(iCLK CLK,
   var longint reqTime;
 
   var longint dteTicks = '0;     // 60ns tick counter
+  var tDiagFunction func;
+
+  bit reqPending = 0;
 
   initial DTEinitial();
   final DTEfinal(dteTicks);
@@ -34,28 +37,39 @@ module dte(iCLK CLK,
   always @(posedge clk) begin
     DTEtick(CROBAR, dteTicks);
     dteTicks <= dteTicks + 1;
-//    if (dteTicks % 100 == '0) $display($time, " dteTicks=%d", dteTicks);
   end
 
 
   always @(posedge clk) begin
-    reqTime = DTEgetRequest(reqType, diagReq, {28'b0, reqData});
+
+    if (~reqPending) begin
+      reqTime = DTEgetRequest(reqType, diagReq, {28'b0, reqData});
+
+      if (reqTime != '1) $display($time, " DTE: DTEgetRequest got one ==========");
+
+      // Remember we have a request already pending 
+      if (reqTime < dteTicks) reqPending <= 1;
+    end
 
     if (reqTime >= dteTicks) begin
+      reqPending <= 0;          // No longer pending
       EBUS.ds <= 7'(diagReq);
       EBUS.diagStrobe <= '1;
+      func = tDiagFunction'(diagReq);
 
       if (reqType == dteDiagWrite) begin
         DTE.EBUSdriver.driving <= 1;
         DTE.EBUSdriver.data <= 36'(reqData);
+        $display($time, " DTE: %s write %s", func.name, octW(reqData));
       end else begin
+        $display($time, " DTE: %s", func.name);
         DTE.EBUSdriver.driving <= 0;
         DTE.EBUSdriver.data <= '0;
 
         if (reqType == dteMisc) begin
 
           case (diagReq)
-          clrCROBAR: begin CROBAR <= 0; $display($time, " clear CROBAR"); end
+          clrCROBAR: begin CROBAR <= 0; $display($time, " DTE: clear CROBAR"); end
           default: ;
           endcase
         end
@@ -64,4 +78,9 @@ module dte(iCLK CLK,
       DTEreply(dteTicks, reqType, diagReq, {28'b0, EBUS.data});
     end
   end
+
+
+  function string octW(input bit [0:35] w);
+    $sformat(octW, "%06o,,%06o", w[0:17], w[18:35]);
+  endfunction
 endmodule

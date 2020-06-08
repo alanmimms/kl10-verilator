@@ -51,7 +51,7 @@ static const int wVerbose = 1;
 // point. These are 64-bit typedefs.
 typedef unsigned long long W36;
 
-typedef long long LL;           /* For ticks values from Verilator */
+typedef unsigned long long LL;           /* For ticks values from Verilator */
 
 
 // Halfword mask
@@ -279,19 +279,19 @@ static LL sendAndGetResult(LL aTicks, LL duration, tReqType aType, int aDiag, W3
   req.type = aType;
   req.diag = aDiag;
   req.data = aData;
-  if (wVerbose) fprintf(stderr, "[fe] write(%s) %ld bytes\n", pipeN(toDTE[1]), sizeof(req));
+  if (wVerbose) fprintf(stderr, "[fe]  write(%s) %ld bytes\n", pipeN(toDTE[1]), sizeof(req));
   int len = write(toDTE[1], &req, sizeof(req));
   if (len < sizeof(req)) fatalError("write to DTE pipe");
-  if (verbose) fprintf(stderr, "%8lld FE-->DTE: %s %s %s\n",
+  if (verbose) fprintf(stderr, "[fe]  %8lld FE-->DTE: %s %s %s\n",
                        req.time, typeNames[aType],
                        aType == dteMisc ? miscNames[aDiag] : diagNames[aDiag],
                        octW(aData));
 
-  if (rVerbose) fprintf(stderr, "[fe] read(%s) %ld bytes\n", pipeN(toFE[0]), sizeof(req));
+  if (rVerbose) fprintf(stderr, "[fe]  read(%s) %ld bytes\n", pipeN(toFE[0]), sizeof(req));
   len = read(toFE[0], &req, sizeof(req));
   if (len < sizeof(req)) fatalError("read from DTE pipe");
 
-  if (verbose) fprintf(stderr, "%8lld           DTE-->FE: %s %lld\n",
+  if (verbose) fprintf(stderr, "[fe]  %8lld DTE-->FE: %s %lld\n",
                        nextReqTicks + req.time, typeNames[req.type], req.data);
   nextReqTicks += duration;
   return req.data;
@@ -325,7 +325,7 @@ static W36 doDiagRead(int func) {
 
 
 static void waitFor(LL ticks) {
-  fprintf(stderr, "%8lld wait %lld\n", nextReqTicks, ticks);
+  fprintf(stderr, "[fe]  %8lld wait %lld\n", nextReqTicks, ticks);
   nextReqTicks += ticks;
 }
 
@@ -433,7 +433,7 @@ extern "C" LL DTEgetRequest(int *reqTypeP, int *diagReqP, LL *reqDataP) {
   fd_set fds = dteReadFDs;
   int st = select(dteReadNFDs, &fds, NULL, NULL, &justPollTimeVal);
   if (st < 0) fatalError("DTEgetRequest select");
-  if (st == 0 || !FD_ISSET(toDTE[0], &fds)) return -1;
+  if (st == 0 || !FD_ISSET(toDTE[0], &fds)) return ~0ull;
 
   // If we get here we have a message in the pipe. Read it.
   tPipeMessage req;
@@ -456,6 +456,8 @@ extern "C" void DTEreply(LL aReplyTime, int aReplyType, LL aReplyData) {
   if (wVerbose) fprintf(stderr, "[sim] write(%s) %ld bytes\n", pipeN(toFE[1]), sizeof(reply));
   int st = write(toFE[1], &reply, sizeof(reply));
   if (st < 0) fatalError("write toFE");
+  if (verbose) fprintf(stderr, "[sim] %8lld DTE-->FE: %s %lld\n",
+                       nextReqTicks + reply.time, typeNames[reply.type], reply.data);
 }
 
 
@@ -465,8 +467,10 @@ extern "C" void FEinitial(void) {
   if (st = pipe2(toDTE, O_DIRECT)) fatalError("Create toDTE pipe");
   if (st = pipe2(toFE, O_DIRECT)) fatalError("Create toFE pipe");
 
+#if 0
   if (rVerbose || wVerbose) fprintf(stderr, "toDTE=%d,%d  toFE=%d,%d\n",
                                     toDTE[0], toDTE[1], toFE[0], toFE[1]);
+#endif
 
   dteReadNFDs = toDTE[0] + 1;
   FD_SET(toDTE[0], &dteReadFDs);
