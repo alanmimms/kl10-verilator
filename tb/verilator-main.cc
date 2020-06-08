@@ -105,10 +105,10 @@ int main(int argc, char **argv) {
   while (!tb->done) {
     LL ticks = tb->tick();
 
-    if (ticks > 1500000ll) break;
+    if (ticks > 1.5 * 1000 * 1000ll) break;
 
-    if (tb->tickcount % 100000ll == 0ll)
-      std::cout << (tb->tickcount / 1000ll) << "ns" << std::endl;
+    if (tb->tickcount % (100 * 1000ll) == 0)
+      std::cout << (tb->tickcount / 1000) << "ns" << std::endl;
   }
 
   exit(EXIT_SUCCESS);

@@ -90,8 +90,6 @@ module top(input clk);
   memory memory0(.SBUS(SBUS.memory), .*);
   dte dte0(.*);
 
-  always @(negedge CROBAR) $display($time, " CROBAR deassert");
-
   // Mux for EBUS data lines
   always_comb unique case (1'b1)
               default: EBUS.data = '0;

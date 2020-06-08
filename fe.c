@@ -2,7 +2,8 @@
 // fork to this same code running in Verilator simulation process.
 // Every message FE->TB and TB->FE is tPipeMessage.
 //
-// Where time specifies the ticks count to do the action or is zero
+// Time in measured in terms of 10/11 clocks - 60ns per tick. The
+// request time specifies the ticks count to do the action or is zero
 // for asynchronous (do it NOW) operations.
 //
 // Where `type` is one of the operations below and ARGS is the list of
@@ -43,12 +44,18 @@
 #include <svdpi.h>
 
 static const int verbose = 1;
+static const int rVerbose = 1;
+static const int wVerbose = 1;
 
 // Probably we are building 64-bit anyway, but this emphasizes the
 // point. These are 64-bit typedefs.
 typedef unsigned long long W36;
 
 typedef long long LL;           /* For ticks values from Verilator */
+
+
+// Halfword mask
+static const LL HALF = 0777777LL;
 
 
 // PDP10 bit constants
@@ -136,10 +143,6 @@ static const int clrCROBAR = 000;
 // Recall that [0] is the read end of the pipe, [1] is the write end.
 static int toDTE[2], toFE[2];
 static pid_t fePID;
-
-static const LL ticksPerClk = 16000ll;
-
-static LL ticks;                /* Time stamp of most recent reply */
 
 
 typedef enum {dteDiagFunc, dteDiagRead, dteDiagWrite, dteMisc} tReqType;
@@ -244,24 +247,52 @@ static void fatalError(const char *msgP) {
 }
 
 
+static LL LH(LL w) {
+  return (w >> 36) & HALF;
+}
+
+
+static LL RH(LL w) {
+  return w & HALF;
+}
+
+
+static char *octW(LL w) {
+  static char buf[64];
+  sprintf(buf, "%06llo,,%06llo", LH(w), RH(w));
+  return buf;
+}
+
+
+static const char *pipeN(int fd) {
+  if (fd == toDTE[0]) return "r-toDTE";
+  else if (fd == toDTE[1]) return "w-toDTE";
+  else if (fd == toFE[0]) return "r-toFE";
+  else if (fd == toFE[1]) return "w-toFE";
+  else return "???";
+}
+
+
 static LL sendAndGetResult(LL aTicks, LL duration, tReqType aType, int aDiag, W36 aData) {
   tPipeMessage req;
   req.time = aTicks;
   req.type = aType;
   req.diag = aDiag;
   req.data = aData;
+  if (wVerbose) fprintf(stderr, "[fe] write(%s) %ld bytes\n", pipeN(toDTE[1]), sizeof(req));
   int len = write(toDTE[1], &req, sizeof(req));
   if (len < sizeof(req)) fatalError("write to DTE pipe");
-  if (verbose) fprintf(stderr, "%8lld FE-->DTE: %s %s %lld\n",
-                       aTicks, typeNames[aType],
+  if (verbose) fprintf(stderr, "%8lld FE-->DTE: %s %s %s\n",
+                       req.time, typeNames[aType],
                        aType == dteMisc ? miscNames[aDiag] : diagNames[aDiag],
-                       aData);
+                       octW(aData));
 
+  if (rVerbose) fprintf(stderr, "[fe] read(%s) %ld bytes\n", pipeN(toFE[0]), sizeof(req));
   len = read(toFE[0], &req, sizeof(req));
   if (len < sizeof(req)) fatalError("read from DTE pipe");
 
-  if (verbose) fprintf(stderr, "%8lld DTE-->FE: %s %lld\n",
-                       req.time, typeNames[req.type], req.data);
+  if (verbose) fprintf(stderr, "%8lld           DTE-->FE: %s %lld\n",
+                       nextReqTicks + req.time, typeNames[req.type], req.data);
   nextReqTicks += duration;
   return req.data;
 }
@@ -276,7 +307,7 @@ static void doDiagWrite(int func, W36 value) {
 
 //   Do a miscellaneous control function in DTE.
 static void doMiscFunc(int func) {
-  sendAndGetResult(nextReqTicks, DIAG_DURATION, dteMisc, func, 0);
+  sendAndGetResult(nextReqTicks, 1, dteMisc, func, 0);
 }
 
 
@@ -294,12 +325,13 @@ static W36 doDiagRead(int func) {
 
 
 static void waitFor(LL ticks) {
-  sendAndGetResult(nextReqTicks, ticks, dteDiagRead, diagfIdle, 0);
+  fprintf(stderr, "%8lld wait %lld\n", nextReqTicks, ticks);
+  nextReqTicks += ticks;
 }
 
 
 static void klMasterReset() {
-  fprintf(stderr, "%8lld ticks KLMasterReset() START\n", ticks);
+  fprintf(stderr, "[KL master reset]\n");
 
   // $DFXC(.CLRUN=010)    ; Clear run
   doDiagFunc(diagfCLR_RUN);
@@ -322,12 +354,17 @@ static void klMasterReset() {
   // Loop up to three times:
   //   Do diag function 162 via $DFRD test (A CHANGE COMING A L)=EBUS[32]
   //   If not set, $DFXC(.SSCLK=002) to single step the MBOX
-  fprintf(stderr, "%08llu [step up to 5 clocks to syncronize MBOX]\n", ticks);
+  fprintf(stderr, "[step up to 5 clocks to synchronize MBOX]\n");
 
   for (int k = 0; k < 5; ++k) {
-    waitFor(8ll * ticksPerClk);
-    if (doDiagRead(0162) & B32) break;
-    waitFor(8ll * ticksPerClk);
+    waitFor(8);
+
+    if (doDiagRead(0162) & B32) {
+      fprintf(stderr, "[success]\n");
+      break;
+    }
+
+    waitFor(8);
     doDiagFunc(diagfSTEP_CLOCK);
   }
   
@@ -357,7 +394,7 @@ static void klMasterReset() {
 
 
 static void klBoot(void) {
-  fprintf(stderr, "%8lld [KL boot goes here]\n", ticks);
+  fprintf(stderr, "[KL boot goes here]\n");
 }
 
 
@@ -377,11 +414,12 @@ static void runFE(void) {
   prctl(PR_SET_PDEATHSIG, SIGHUP);
   
   // Release CROBAR (power on RESET) signal
+  waitFor(10);
   doMiscFunc(clrCROBAR);
 
   klMasterReset();
   klBoot();
-  waitFor(10000000000ll);
+  waitFor(99999999LL);
 }
 
 
@@ -391,22 +429,20 @@ static fd_set dteReadFDs;
 
 // This function runs in sim context and is called from RTL.
 extern "C" LL DTEgetRequest(int *reqTypeP, int *diagReqP, LL *reqDataP) {
-  struct timeval justPollTimeVal;
-  justPollTimeVal.tv_sec = 0;
-  justPollTimeVal.tv_usec = 0;
+  struct timeval justPollTimeVal = {0, 0};
+  FD_ZERO(&dteReadFDs);
   int st = select(dteReadNFDs, &dteReadFDs, NULL, NULL, &justPollTimeVal);
-
   if (st < 0) fatalError("DTEgetRequest select");
-  if (st == 0) return 0;
+  if (st == 0 || !FD_ISSET(toDTE[0], &dteReadFDs)) return -1LL;
 
   // If we get here we have a message in the pipe. Read it.
   tPipeMessage req;
+  if (rVerbose) fprintf(stderr, "[sim] read(%s) %ld bytes\n", pipeN(toDTE[0]), sizeof(req));
   st = read(toDTE[0], &req, sizeof(req));
   if (st < 0) fatalError("DTEgetRequest pipe read");
   *reqTypeP = (int) req.type;
   *diagReqP = (int) req.diag;
   *reqDataP = req.data;
-  nextReqTicks = req.time + 1;
   return req.time;
 }
 
@@ -417,6 +453,7 @@ extern "C" void DTEreply(LL aReplyTime, int aReplyType, LL aReplyData) {
   reply.time = aReplyTime;
   reply.type = (tReqType) aReplyType;
   reply.data = aReplyData;
+  if (wVerbose) fprintf(stderr, "[sim] write(%s) %ld bytes\n", pipeN(toFE[1]), sizeof(reply));
   int st = write(toFE[1], &reply, sizeof(reply));
   if (st < 0) fatalError("write toFE");
 }
@@ -427,6 +464,9 @@ extern "C" void FEinitial(void) {
 
   if (st = pipe2(toDTE, O_DIRECT)) fatalError("Create toDTE pipe");
   if (st = pipe2(toFE, O_DIRECT)) fatalError("Create toFE pipe");
+
+  if (rVerbose || wVerbose) fprintf(stderr, "toDTE=%d,%d  toFE=%d,%d\n",
+                                    toDTE[0], toDTE[1], toFE[0], toFE[1]);
 
   dteReadNFDs = toDTE[0] + 1;
   FD_SET(toDTE[0], &dteReadFDs);
@@ -442,7 +482,7 @@ extern "C" void FEinitial(void) {
 }
 
 
-extern "C" void FEfinal(LL ns) {
+extern "C" void FEfinal(LL ticks) {
   /* Kill our kid */
   if (fePID > 0) kill(fePID, SIGHUP);
 }

@@ -1,8 +1,8 @@
-module dte(input bit clk,
-           output bit CROBAR,
+`timescale 1ns/1ps
+module dte(iCLK CLK,
            iDTE DTE,
            iEBUS.dte EBUS,
-           iMBOX MBOX);
+           output bit CROBAR);
 
   typedef enum {dteDiagFunc, dteDiagRead, dteDiagWrite, dteMisc} tFEReqType;
   typedef enum {clrCROBAR} tMiscFuncType;
@@ -18,20 +18,30 @@ module dte(input bit clk,
                                         input int diagReq,
                                         input longint replyData);
 
+  bit clk;
+  assign clk = CLK.EBUS_CLK;
+
   var tFEReqType reqType;
   var int diagReq;
   var bit [0:35] reqData, replyData;
   var longint reqTime;
 
-  initial DTEinitial();
-  final DTEfinal($time);
+  var longint dteTicks = '0;     // 60ns tick counter
 
-  always @(posedge clk) DTEtick(CROBAR, $time / 1000);
+  initial DTEinitial();
+  final DTEfinal(dteTicks);
+
+  always @(posedge clk) begin
+    DTEtick(CROBAR, dteTicks);
+    dteTicks <= dteTicks + 1;
+    if (dteTicks % 1000 == '0) $display($time, " dteTicks=%d", dteTicks);
+  end
+
 
   always @(posedge clk) begin
     reqTime = DTEgetRequest(reqType, diagReq, {28'b0, reqData});
 
-    if (reqTime == '0 || reqTime >= $time) begin
+    if (reqTime == '0 || reqTime >= dteTicks) begin
       EBUS.ds <= 7'(diagReq);
       EBUS.diagStrobe <= '1;
 
@@ -45,13 +55,13 @@ module dte(input bit clk,
         if (reqType == dteMisc) begin
 
           case (diagReq)
-          clrCROBAR: CROBAR <= 0;
+          clrCROBAR: begin CROBAR <= 0; $display($time, " clear CROBAR"); end
           default: ;
           endcase
         end
       end
 
-      DTEreply($time, reqType, diagReq, {28'b0, EBUS.data});
+      DTEreply(dteTicks, reqType, diagReq, {28'b0, EBUS.data});
     end
   end
 endmodule
