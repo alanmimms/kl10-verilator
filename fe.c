@@ -339,7 +339,7 @@ static void doDiagWrite(int func, W36 value) {
 //   Do a miscellaneous control function in DTE.
 static void doMiscFunc(int func) {
   VLOG("[fe]  misc func %s\n", miscNames[func]);
-  sendAndGetResult(nextReqTicks, 13, dteMisc, func);
+  sendAndGetResult(nextReqTicks, 17, dteMisc, func);
 }
 
 
@@ -455,7 +455,7 @@ static void runFE(void) {
   prctl(PR_SET_PDEATHSIG, SIGHUP);
   
   // Release CROBAR (power on RESET) signal
-  waitFor(10);
+  waitFor(13);
   doMiscFunc(clrCROBAR);
 
   klMasterReset();

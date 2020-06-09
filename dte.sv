@@ -8,8 +8,8 @@ module dte(iCLK CLK,
                 dteDiagFunc,
                 dteDiagRead,
                 dteDiagWrite,
-                dteReleaseEBUSData,
-                dteMisc} tFEReqType;
+                dteMisc,
+                dteReleaseEBUSData} tFEReqType;
 
   typedef enum {clrCROBAR} tMiscFuncType;
 
@@ -37,6 +37,7 @@ module dte(iCLK CLK,
 
   var longint ticks = '0;     // 60ns tick counter
   var tDiagFunction func;
+  var tMiscFuncType miscFunc;
 
   var enum {stIdle, stPending} state = stIdle;
   initial state = stIdle;
@@ -58,7 +59,7 @@ module dte(iCLK CLK,
     ticks <= ticks + 1;
 //    $display("%8d DTE: ticks=%0d reqTime=%0d", ticks, ticks, reqTime);
 
-    if (ticks >= reqTime) begin
+    if (state == stPending && ticks >= reqTime) begin
       state <= stIdle;
 
       if (reqType == dteMisc) begin
