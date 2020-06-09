@@ -20,6 +20,8 @@ TBOBJS = $(foreach F,$(CFILES:.c=.o) $(CXXFILES:.cc=.o),$(VOBJDIR)/$F)
 
 EXE = kl10pvtb
 
+DTE_INTERFACE = dte.svh dte.h
+
 KILL_WARNINGS = -Wno-LITENDIAN \
 		-Wno-UNOPTFLAT
 
@@ -42,9 +44,15 @@ VFLAGS = \
 .PHONY:	all
 all:	$(EXE)
 
-$(EXE):	$(SVFILES) $(SVHFILES) $(CXXFILES) $(CFILES) $(HFILES)
+$(EXE):	$(SVFILES) $(SVHFILES) $(CXXFILES) $(CFILES) $(HFILES) $(DTE_INTERFACE)
 	$(VERILATOR) $(VFLAGS) $(filter-out %.h, $^) -o $(EXE)
+
+dte.svh: dte-interface.cpp
+	gcc -E -DGENERATE_SVH $^ -nostdinc -CC -P -o $@
+
+dte.h: dte-interface.cpp
+	gcc -E -DGENERATE_CXX $^ -nostdinc -CC -P -o $@
 
 .PHONY:	clean
 clean:
-	rm -rf $(VOBJDIR)
+	rm -rf $(VOBJDIR) $(DTE_INTERFACE)

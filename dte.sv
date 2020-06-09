@@ -4,98 +4,103 @@ module dte(iCLK CLK,
            iEBUS.dte EBUS,
            output bit CROBAR);
 
-  typedef enum {dteNone,
-                dteDiagFunc,
-                dteDiagRead,
-                dteDiagWrite,
-                dteMisc,
-                dteReleaseEBUSData} tFEReqType;
-
-  typedef enum {clrCROBAR} tMiscFuncType;
+`include "dte.svh"
 
   import "DPI-C" function void DTEinitial();
   import "DPI-C" function void DTEfinal(input longint ns);
   import "DPI-C" function bit DTErequestIsPending();
   import "DPI-C" function void DTEgetRequest(output longint reqTime,
-                                             output int reqType,
-                                             output int diagReq,
+                                             output tReqType reqType,
+                                             output tDiagFunction diagReq,
                                              output longint reqData);
   import "DPI-C" function void DTEreply(input longint t,
-                                        input int reqType,
-                                        input int diagReq,
+                                        input tReqType reqType,
+                                        input tDiagFunction diagReq,
                                         input longint replyData);
 
   bit clk;
   assign clk = CLK.EBUS_CLK;
 
-  var tFEReqType reqType;
-  var int diagReq;
+  var tReqType reqType;
+  var tDiagFunction diagReq;
   var bit [0:35] reqData, replyData;
 
   var longint reqTime;
   initial reqTime = '0;
 
-  var longint ticks = '0;     // 60ns tick counter
-  var tDiagFunction func;
-  var tMiscFuncType miscFunc;
+  var longint ticks;            // 16.667ns tick counter
+  initial ticks = '0;
 
-  var enum {stIdle, stPending} state = stIdle;
-  initial state = stIdle;
+  bit reqPending;
+  initial reqPending = 0;
 
   initial DTEinitial();
   final DTEfinal(ticks);
 
-  always @(posedge clk) begin
+  always @(posedge reqPending, negedge reqPending)
+    $display("D %0d reqPending=%0d", ticks, reqPending);
 
-    if (state == stIdle) begin
+  always @(posedge clk) ticks <= ticks + 1;
+  always @(posedge clk) if (reqPending) $display("D ticks=%0d reqTime=%0d", ticks, reqTime);
 
-      if (DTErequestIsPending()) begin
-        DTEgetRequest(reqTime, reqType, diagReq, {28'b0, reqData});
-//        $display("%8d DTE: DTEgetRequest req ticks %0d ==========", ticks, reqTime);
-        state <= stPending;
-      end
-    end
-
-    ticks <= ticks + 1;
-//    $display("%8d DTE: ticks=%0d reqTime=%0d", ticks, ticks, reqTime);
-
-    if (state == stPending && ticks >= reqTime) begin
-      state <= stIdle;
-
-      if (reqType == dteMisc) begin
-
-        case (diagReq)
-        clrCROBAR: CROBAR <= 0;
-        default: ;
-        endcase
-      end else if (reqType == dteDiagWrite || reqType == dteDiagFunc) begin
-        EBUS.ds <= 7'(diagReq);
-        EBUS.diagStrobe <= '1;
-        func = tDiagFunction'(diagReq);
-
-        if (reqType == dteDiagWrite) begin
-          DTE.EBUSdriver.driving <= 1;
-          DTE.EBUSdriver.data <= 36'(reqData);
-//          $display("%8d DTE: %s %s", ticks, func.name, octW(reqData));
-        end else begin          // Simply diagnostic function
-//          $display("%8d DTE: %s", ticks, func.name);
-        end
-      end else if (reqType == dteDiagRead) begin
-//          $display("%8d DTE: %s", ticks, func.name);
-        // We always include EBUS.data in our reply
-      end else if (reqType == dteReleaseEBUSData) begin
-//        $display("%8d DTE: %s", ticks, func.name);
-        DTE.EBUSdriver.driving <= 0;
-        DTE.EBUSdriver.data <= '0;
-      end else $display("%8d DTE: reqType=%0d is not one we know how to do", ticks, reqType);
-
-      DTEreply(ticks, reqType, diagReq, {28'b0, EBUS.data});
-    end
+  always @(posedge clk) if (DTErequestIsPending()) begin
+    DTEgetRequest(reqTime, reqType, diagReq, {28'b0, reqData});
+    $display("D %0d: DTEgetRequest %s/%s at %0d ==========",
+             ticks, reqType.name, diagReq.name, reqTime);
+    reqPending <= 1;
   end
 
-  always @(posedge clk) begin
+  always @(posedge clk) if (reqPending && ticks >= reqTime && reqType == dteMisc) begin
+
+    case (int'(diagReq))
+    clrCROBAR: CROBAR <= 0;
+    default: ;
+    endcase
+
+    DTEreply(ticks, reqType, diagReq, {28'b0, EBUS.data});
+    $display("D %0d: clear reqPending", ticks);
+    reqPending <= 0;           // No longer waiting to do request
   end
 
+  always @(posedge clk) if (reqPending && ticks >= reqTime && reqType == dteDiagWrite) begin
+    EBUS.ds <= 7'(diagReq);
+    EBUS.diagStrobe <= '1;
+
+    DTE.EBUSdriver.driving <= 1;
+    DTE.EBUSdriver.data <= 36'(reqData);
+    $display("D %0d: %s %s", ticks, diagReq.name, octW(reqData));
+
+    DTEreply(ticks, reqType, diagReq, {28'b0, EBUS.data});
+    $display("D %0d: clear reqPending", ticks);
+    reqPending <= 0;           // No longer waiting to do request
+  end
+
+  always @(posedge clk) if (reqPending && ticks >= reqTime && reqType == dteDiagFunc) begin
+    EBUS.ds <= 7'(diagReq);
+    EBUS.diagStrobe <= '1;
+
+    DTEreply(ticks, reqType, diagReq, {28'b0, EBUS.data});
+    $display("D %0d: clear reqPending", ticks);
+    reqPending <= 0;           // No longer waiting to do request
+  end
+
+  always @(posedge clk) if (reqPending && ticks >= reqTime && reqType == dteDiagRead) begin
+    $display("D %0d: %s", ticks, diagReq.name);
+
+    DTEreply(ticks, reqType, diagReq, {28'b0, EBUS.data});
+    $display("D %0d: clear reqPending", ticks);
+    reqPending <= 0;           // No longer waiting to do request
+  end
+
+  always @(posedge clk) if (reqPending && ticks >= reqTime && reqType == dteReleaseEBUSData) begin
+    $display("D %0d: %s", ticks, diagReq.name);
+    DTE.EBUSdriver.driving <= 0;
+    DTE.EBUSdriver.data <= '0;
+
+    DTEreply(ticks, reqType, diagReq, {28'b0, EBUS.data});
+    $display("D %0d: clear reqPending", ticks);
+    reqPending <= 0;           // No longer waiting to do request
+  end
 
   function string octW(input bit [0:35] w);
     $sformat(octW, "%06o,,%06o", w[0:17], w[18:35]);
