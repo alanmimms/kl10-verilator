@@ -44,8 +44,8 @@
 #include <svdpi.h>
 
 static const int verbose = 1;
-static const int rVerbose = 1;
-static const int wVerbose = 1;
+static const int rVerbose = 0;
+static const int wVerbose = 0;
 
 // Probably we are building 64-bit anyway, but this emphasizes the
 // point. These are 64-bit typedefs.
@@ -133,7 +133,8 @@ static const int diagfIdle = 077;
 // dteMisc functions
 static const int clrCROBAR = 000;
 
-#define DIAG_DURATION   10ll
+// Number of DTE clock ticks to leave a diag function asserted
+#define DIAG_DURATION   10
 
 
 // To be clear: "toDTE" is from the fork running from here to
@@ -146,6 +147,7 @@ static pid_t fePID;
 
 
 typedef enum {
+  dteNone,
   dteDiagFunc,
   dteDiagRead,
   dteDiagWrite,
@@ -154,6 +156,7 @@ typedef enum {
 } tReqType;
 
 static const char *typeNames[] = {
+  "dteNone",
   "dteDiagFunc",
   "dteDiagRead",
   "dteDiagWrite",
@@ -248,6 +251,21 @@ static LL nextReqTicks = 0;            /* Ticks count to do next request */
 
 static double nsPerClock;       /* Nanoseconds in each of our ticks */
 
+
+#define RLOG(...) do {                          \
+if (rVerbose) printf(__VA_ARGS__);              \
+} while (0)                                     \
+
+
+#define WLOG(...) do {                          \
+if (wVerbose) printf(__VA_ARGS__);              \
+} while (0)                                     \
+
+#define VLOG(...) do {                          \
+if (verbose) printf(__VA_ARGS__);               \
+} while (0)                                     \
+
+
 static void fatalError(const char *msgP) {
   perror(msgP);
   exit(-1);
@@ -290,20 +308,20 @@ static LL sendAndGetResult(LL aTicks,
   req.type = aType;
   req.diag = aDiag;
   req.data = aData;
-  if (wVerbose) fprintf(stderr, "[fe]  write(%s) %ld bytes\n", pipeN(toDTE[1]), sizeof(req));
+  WLOG("[fe]  write(%s) %ld bytes\n", pipeN(toDTE[1]), sizeof(req));
   int len = write(toDTE[1], &req, sizeof(req));
   if (len < sizeof(req)) fatalError("write to DTE pipe");
-  if (verbose) fprintf(stderr, "[fe]  %lld: send %s %s %s\n",
-                       req.time, typeNames[aType],
-                       aType == dteMisc ? miscNames[aDiag] : diagNames[aDiag],
-                       octW(aData));
+  WLOG("[fe]  %lld: send %s %s %s\n",
+       req.time, typeNames[aType],
+       aType == dteMisc ? miscNames[aDiag] : diagNames[aDiag],
+       octW(aData));
 
-  if (rVerbose) fprintf(stderr, "[fe]  read(%s) %ld bytes\n", pipeN(toFE[0]), sizeof(req));
+  RLOG("[fe]  read(%s) %ld bytes\n", pipeN(toFE[0]), sizeof(req));
   len = read(toFE[0], &req, sizeof(req));
   if (len < sizeof(req)) fatalError("read from DTE pipe");
 
-  if (verbose) fprintf(stderr, "[fe]  %lld: reply from DTE: %s %lld\n",
-                       nextReqTicks + req.time, typeNames[req.type], req.data);
+  RLOG("[fe]  %lld: reply received from DTE: %s %lld\n",
+       nextReqTicks + req.time, typeNames[req.type], req.data);
   nextReqTicks += duration;
   return req.data;
 }
@@ -312,7 +330,7 @@ static LL sendAndGetResult(LL aTicks,
 //   Do an EBUS DS diagnostic write with DIAG on EBUS.DS and EBUS-DATA
 //   on EBUS.data.
 static void doDiagWrite(int func, W36 value) {
-  if (verbose) fprintf(stderr, "[fe]  diag write %s %s\n", diagNames[func], octW(value));
+  VLOG("[fe]  diag write %s %s\n", diagNames[func], octW(value));
   sendAndGetResult(nextReqTicks, DIAG_DURATION, dteDiagWrite, func, value);
   sendAndGetResult(nextReqTicks, 1, dteReleaseEBUSData);
 }
@@ -320,14 +338,14 @@ static void doDiagWrite(int func, W36 value) {
 
 //   Do a miscellaneous control function in DTE.
 static void doMiscFunc(int func) {
-  if (verbose) fprintf(stderr, "[fe]  misc func %s\n", miscNames[func]);
-  sendAndGetResult(20, 13, dteMisc, func);
+  VLOG("[fe]  misc func %s\n", miscNames[func]);
+  sendAndGetResult(nextReqTicks, 13, dteMisc, func);
 }
 
 
 //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS.
 static void doDiagFunc(int func) {
-  if (verbose) fprintf(stderr, "[fe]  diag func %s\n", diagNames[func]);
+  VLOG("[fe]  diag func %s\n", diagNames[func]);
   sendAndGetResult(nextReqTicks, DIAG_DURATION, dteDiagFunc, func);
 }
 
@@ -335,27 +353,26 @@ static void doDiagFunc(int func) {
 //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS and return
 //   the resulting EBUS.data as part of the reply.
 static W36 doDiagRead(int func) {
-  if (verbose) fprintf(stderr, "[fe]  diag func %s\n", diagNames[func]);
+  //  VLOG("[fe]  diag func %s\n", diagNames[func]);
 
   /* Send function and delay 1us until EBUS.data is stable */
   sendAndGetResult(nextReqTicks, (LL) (1000 / nsPerClock), dteDiagFunc, func);
 
-  if (verbose) fprintf(stderr, "[fe]  diag read\n");
+  VLOG("[fe]  diag %s read\n", diagNames[func]);
   W36 result = sendAndGetResult(nextReqTicks, DIAG_DURATION, dteDiagRead);
-  if (verbose) fprintf(stderr, "      result=%s\n", octW(result));
+  VLOG("      result=%s\n", octW(result));
   return result;
 }
 
 
 static void waitFor(LL ticks) {
-  fprintf(stderr, "[fe]  %lld: wait %lld to %lld\n",
-          nextReqTicks, ticks, nextReqTicks + ticks);
+  VLOG("[fe]  %lld: wait %lld ticks until %lld\n", nextReqTicks, ticks, nextReqTicks + ticks);
   nextReqTicks += ticks;
 }
 
 
 static void klMasterReset() {
-  fprintf(stderr, "[KL master reset]\n");
+  printf("[KL master reset]\n");
 
   // $DFXC(.CLRUN=010)    ; Clear run
   doDiagFunc(diagfCLR_RUN);
@@ -378,13 +395,13 @@ static void klMasterReset() {
   // Loop up to three times:
   //   Do diag function 162 via $DFRD test (A CHANGE COMING A L)=EBUS[32]
   //   If not set, $DFXC(.SSCLK=002) to single step the MBOX
-  fprintf(stderr, "[step up to 5 clocks to synchronize MBOX]\n");
+  printf("[step up to 5 clocks to synchronize MBOX]\n");
 
   for (int k = 0; k < 5; ++k) {
     waitFor(8);
 
     if (doDiagRead(0162) & B32) {
-      fprintf(stderr, "[success]\n");
+      printf("[success]\n");
       break;
     }
 
@@ -418,12 +435,12 @@ static void klMasterReset() {
 
 
 static void klBoot(void) {
-  fprintf(stderr, "[KL boot goes here]\n");
+  printf("[KL boot goes here]\n");
 }
 
 
 static void HUPhandler(int sig) {
-  fprintf(stderr, "\n[SIGHUP from parent - exiting]\n");
+  printf("\n[SIGHUP from parent - exiting]\n");
   exit(-1);
 }
 
@@ -451,23 +468,29 @@ static int dteReadNFDs;
 static fd_set dteReadFDs;
 
 
-// This function runs in sim context and is called from RTL.
-extern "C" LL DTEgetRequest(int *reqTypeP, int *diagReqP, LL *reqDataP) {
+// This function runs in sim context and is called from RTL. Returns
+// true if there is a request to do.
+extern "C" bool DTErequestIsPending(void) {
   struct timeval justPollTimeVal = {0, 0};
   fd_set fds = dteReadFDs;
   int st = select(dteReadNFDs, &fds, NULL, NULL, &justPollTimeVal);
   if (st < 0) fatalError("DTEgetRequest select");
-  if (st == 0 || !FD_ISSET(toDTE[0], &fds)) return ~0ull;
+  return st != 0 && FD_ISSET(toDTE[0], &fds);
+}
 
+
+// This function runs in sim context and is called from RTL. Only call
+// this if `DTErequestIsPending()` returns `true` or you'll block.
+extern "C" void DTEgetRequest(LL *reqTimeP, int *reqTypeP, int *diagReqP, LL *reqDataP) {
   // If we get here we have a message in the pipe. Read it.
   tPipeMessage req;
-  if (rVerbose) fprintf(stderr, "[sim] read(%s) %ld bytes\n", pipeN(toDTE[0]), sizeof(req));
-  st = read(toDTE[0], &req, sizeof(req));
+  RLOG("[sim] read(%s) %ld bytes\n", pipeN(toDTE[0]), sizeof(req));
+  int st = read(toDTE[0], &req, sizeof(req));
   if (st < 0) fatalError("DTEgetRequest pipe read");
+  *reqTimeP = req.time;
   *reqTypeP = (int) req.type;
   *diagReqP = (int) req.diag;
   *reqDataP = req.data;
-  return req.time;
 }
 
 
@@ -477,11 +500,11 @@ extern "C" void DTEreply(LL aReplyTime, int aReplyType, LL aReplyData) {
   reply.time = aReplyTime;
   reply.type = (tReqType) aReplyType;
   reply.data = aReplyData;
-  if (wVerbose) fprintf(stderr, "[sim] write(%s) %ld bytes\n", pipeN(toFE[1]), sizeof(reply));
+  WLOG("[sim] write(%s) %ld bytes\n", pipeN(toFE[1]), sizeof(reply));
   int st = write(toFE[1], &reply, sizeof(reply));
   if (st < 0) fatalError("write toFE");
-  if (verbose) fprintf(stderr, "[sim] %lld: reply %s %lld\n",
-                       nextReqTicks + reply.time, typeNames[reply.type], reply.data);
+  //  VLOG("[sim] %lld: reply sent to FE %s %lld\n",
+  //       aReplyTime, typeNames[reply.type], reply.data);
 }
 
 
@@ -491,16 +514,11 @@ extern "C" void FEinitial(double aNsPerClock) {
   if (st = pipe2(toDTE, O_DIRECT)) fatalError("Create toDTE pipe");
   if (st = pipe2(toFE, O_DIRECT)) fatalError("Create toFE pipe");
 
-#if 0
-  if (rVerbose || wVerbose) fprintf(stderr, "toDTE=%d,%d  toFE=%d,%d\n",
-                                    toDTE[0], toDTE[1], toFE[0], toFE[1]);
-#endif
-
   dteReadNFDs = toDTE[0] + 1;
   FD_SET(toDTE[0], &dteReadFDs);
 
   nsPerClock = aNsPerClock;
-  if (verbose) fprintf(stderr, "[%g ns per DTE clock]\n", nsPerClock);
+  VLOG("[%g ns per DTE clock]\n", nsPerClock);
 
   pid_t pid = fork();
   if (pid < 0) fatalError("fork FE");

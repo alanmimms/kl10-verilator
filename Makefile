@@ -20,16 +20,12 @@ TBOBJS = $(foreach F,$(CFILES:.c=.o) $(CXXFILES:.cc=.o),$(VOBJDIR)/$F)
 
 EXE = kl10pvtb
 
-KILL_WARNINGS = \
-		-Wno-LITENDIAN \
+KILL_WARNINGS = -Wno-LITENDIAN \
 		-Wno-UNOPTFLAT
 
-#		-LDFLAGS "-Wl,--start-group" \
-#		-LDLIBS "-Wl,--end-group" \
-
 INCDIR = $(VERILATOR_ROOT)/include
-CFLAGS += -I$(VOBJDIR) -I$(INCDIR) -I$(INCDIR)/vltstd -std=gnu++14
-CXXFLAGS += -I$(VOBJDIR) -I$(INCDIR) -I$(INCDIR)/vltstd
+CFLAGS += -I$(VOBJDIR) -I$(INCDIR) -I$(INCDIR)/vltstd -std=gnu++14 $(DEBUG)
+CXXFLAGS += -I$(VOBJDIR) -I$(INCDIR) -I$(INCDIR)/vltstd $(DEBUG)
 
 VERILATOR ?= verilator
 VFLAGS = \
@@ -37,6 +33,8 @@ VFLAGS = \
 	--default-language 1800-2017 +1800-2017ext+sv \
 	-DTB -DKL10PV_TB \
 	--MMD \
+	$(foreach F, $(CFLAGS), -CFLAGS $F) \
+	$(foreach F, $(DEBUG), -LDFLAGS $F) \
 	--trace --trace-structs \
 	--timescale-override 1ns/1ps --top-module top --x-initial 0 \
 	--cc --build --exe -j 4
