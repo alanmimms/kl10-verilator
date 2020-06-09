@@ -44,8 +44,8 @@
 #include <svdpi.h>
 
 static const int verbose = 1;
-static const int rVerbose = 0;
-static const int wVerbose = 0;
+static const int rVerbose = 1;
+static const int wVerbose = 1;
 
 // Probably we are building 64-bit anyway, but this emphasizes the
 // point. These are 64-bit typedefs.
@@ -130,9 +130,6 @@ static const int diagfEBUS_LOAD = 076;
 static const int diagfIdle = 077;
 
 
-// dteMisc functions
-static const int clrCROBAR = 000;
-
 // Number of DTE clock ticks to leave a diag function asserted
 #define DIAG_DURATION   10
 
@@ -146,23 +143,7 @@ static int toDTE[2], toFE[2];
 static pid_t fePID;
 
 
-typedef enum {
-  dteNone,
-  dteDiagFunc,
-  dteDiagRead,
-  dteDiagWrite,
-  dteMisc,
-  dteReleaseEBUSData,
-} tReqType;
-
-static const char *typeNames[] = {
-  "dteNone",
-  "dteDiagFunc",
-  "dteDiagRead",
-  "dteDiagWrite",
-  "dteReleaseEBUSData",
-  "dteMisc",
-};
+#include "dte.h"
 
 // Struct used in both directions on the pipe.
 struct tPipeMessage {
@@ -241,10 +222,6 @@ static const char *diagNames[] = {
 };
 
 
-static const char *miscNames[] = {
-  /* 000 */ "clrCROBAR",
-};
-
 // Only one request can be outstanding at one time. The ticks value at
 // which it should execute is `nextReqTicks`.
 static LL nextReqTicks = 0;            /* Ticks count to do next request */
@@ -290,10 +267,10 @@ static char *octW(LL w) {
 
 
 static const char *pipeN(int fd) {
-  if (fd == toDTE[0]) return "r-toDTE";
-  else if (fd == toDTE[1]) return "w-toDTE";
-  else if (fd == toFE[0]) return "r-toFE";
-  else if (fd == toFE[1]) return "w-toFE";
+  if (fd == toDTE[0]) return "fromFE";
+  else if (fd == toDTE[1]) return "toDTE";
+  else if (fd == toFE[0]) return "fromDTE";
+  else if (fd == toFE[1]) return "toFE";
   else return "???";
 }
 
@@ -308,20 +285,20 @@ static LL sendAndGetResult(LL aTicks,
   req.type = aType;
   req.diag = aDiag;
   req.data = aData;
-  WLOG("[fe]  write(%s) %ld bytes\n", pipeN(toDTE[1]), sizeof(req));
+  WLOG("F write(%s) %ld bytes\n", pipeN(toDTE[1]), sizeof(req));
   int len = write(toDTE[1], &req, sizeof(req));
   if (len < sizeof(req)) fatalError("write to DTE pipe");
-  WLOG("[fe]  %lld: send %s %s %s\n",
-       req.time, typeNames[aType],
-       aType == dteMisc ? miscNames[aDiag] : diagNames[aDiag],
+  WLOG("F %lld: send %s %s %s\n",
+       req.time, reqTypeNames[aType],
+       aType == dteMisc ? miscFuncNames[aDiag] : diagNames[aDiag],
        octW(aData));
 
-  RLOG("[fe]  read(%s) %ld bytes\n", pipeN(toFE[0]), sizeof(req));
+  RLOG("F read(%s) %ld bytes\n", pipeN(toFE[0]), sizeof(req));
   len = read(toFE[0], &req, sizeof(req));
   if (len < sizeof(req)) fatalError("read from DTE pipe");
 
-  RLOG("[fe]  %lld: reply received from DTE: %s %lld\n",
-       nextReqTicks + req.time, typeNames[req.type], req.data);
+  RLOG("F %lld: reply received from DTE: %s %lld\n",
+       nextReqTicks + req.time, reqTypeNames[req.type], req.data);
   nextReqTicks += duration;
   return req.data;
 }
@@ -330,7 +307,7 @@ static LL sendAndGetResult(LL aTicks,
 //   Do an EBUS DS diagnostic write with DIAG on EBUS.DS and EBUS-DATA
 //   on EBUS.data.
 static void doDiagWrite(int func, W36 value) {
-  VLOG("[fe]  diag write %s %s\n", diagNames[func], octW(value));
+  VLOG("F diag write %s %s\n", diagNames[func], octW(value));
   sendAndGetResult(nextReqTicks, DIAG_DURATION, dteDiagWrite, func, value);
   sendAndGetResult(nextReqTicks, 1, dteReleaseEBUSData);
 }
@@ -338,14 +315,14 @@ static void doDiagWrite(int func, W36 value) {
 
 //   Do a miscellaneous control function in DTE.
 static void doMiscFunc(int func) {
-  VLOG("[fe]  misc func %s\n", miscNames[func]);
+  VLOG("F misc func %s\n", miscFuncNames[func]);
   sendAndGetResult(nextReqTicks, 17, dteMisc, func);
 }
 
 
 //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS.
 static void doDiagFunc(int func) {
-  VLOG("[fe]  diag func %s\n", diagNames[func]);
+  VLOG("F diag func %s\n", diagNames[func]);
   sendAndGetResult(nextReqTicks, DIAG_DURATION, dteDiagFunc, func);
 }
 
@@ -353,12 +330,12 @@ static void doDiagFunc(int func) {
 //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS and return
 //   the resulting EBUS.data as part of the reply.
 static W36 doDiagRead(int func) {
-  //  VLOG("[fe]  diag func %s\n", diagNames[func]);
+  //  VLOG("F diag func %s\n", diagNames[func]);
 
   /* Send function and delay 1us until EBUS.data is stable */
   sendAndGetResult(nextReqTicks, (LL) (1000 / nsPerClock), dteDiagFunc, func);
 
-  VLOG("[fe]  diag %s read\n", diagNames[func]);
+  VLOG("F diag %s read\n", diagNames[func]);
   W36 result = sendAndGetResult(nextReqTicks, DIAG_DURATION, dteDiagRead);
   VLOG("      result=%s\n", octW(result));
   return result;
@@ -366,7 +343,7 @@ static W36 doDiagRead(int func) {
 
 
 static void waitFor(LL ticks) {
-  VLOG("[fe]  %lld: wait %lld ticks until %lld\n", nextReqTicks, ticks, nextReqTicks + ticks);
+  VLOG("F %lld: wait %lld ticks until %lld\n", nextReqTicks, ticks, nextReqTicks + ticks);
   nextReqTicks += ticks;
 }
 
@@ -484,7 +461,7 @@ extern "C" bool DTErequestIsPending(void) {
 extern "C" void DTEgetRequest(LL *reqTimeP, int *reqTypeP, int *diagReqP, LL *reqDataP) {
   // If we get here we have a message in the pipe. Read it.
   tPipeMessage req;
-  RLOG("[sim] read(%s) %ld bytes\n", pipeN(toDTE[0]), sizeof(req));
+  RLOG("S read(%s) %ld bytes\n", pipeN(toDTE[0]), sizeof(req));
   int st = read(toDTE[0], &req, sizeof(req));
   if (st < 0) fatalError("DTEgetRequest pipe read");
   *reqTimeP = req.time;
@@ -500,11 +477,11 @@ extern "C" void DTEreply(LL aReplyTime, int aReplyType, LL aReplyData) {
   reply.time = aReplyTime;
   reply.type = (tReqType) aReplyType;
   reply.data = aReplyData;
-  WLOG("[sim] write(%s) %ld bytes\n", pipeN(toFE[1]), sizeof(reply));
+  WLOG("S write(%s) %ld bytes\n", pipeN(toFE[1]), sizeof(reply));
   int st = write(toFE[1], &reply, sizeof(reply));
   if (st < 0) fatalError("write toFE");
-  //  VLOG("[sim] %lld: reply sent to FE %s %lld\n",
-  //       aReplyTime, typeNames[reply.type], reply.data);
+  //  VLOG("S %lld: reply sent to FE %s %lld\n",
+  //       aReplyTime, reqTypeNames[reply.type], reply.data);
 }
 
 
