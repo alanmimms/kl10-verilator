@@ -67,7 +67,7 @@ ${defCXXEnum('tMiscFuncType', miscFuncTypes)};
 ${defCXXNames('miscFuncNames', miscFuncTypes)};
 
 
-${defCXXSparseEnum('tDiagFunction', diagFuncTypes)};
+${defCXXSparseEnum('tDiagFunction', diagFuncTypes, 7)};
 
 ${defCXXSparseNames('diagFuncNames', diagFuncTypes)};
 `;
@@ -75,18 +75,14 @@ fs.writeFileSync(hFileName, hFileContent);
 
 
 const svhFileContent = `
-typedef enum {
-  FE_REQ_TYPES(SVH_TYPE)
-} tReqType;
+\`ifndef __DTE_SVH__
+\`define __DTE_SVH__ 1
+${defCXXEnum('tReqType', FEreqTypes)};
 
-typedef enum {
-  MISC_FUNC_TYPES(SVH_TYPE)
-} tMiscFuncType;
+${defCXXEnum('tMiscFuncType', miscFuncTypes)};
 
-
-typedef enum bit [0:6] {
-  DIAGFUNC_TYPES(SVH_TYPE2,7)
-} tDiagFunction;
+${defSVHSparseEnum('tDiagFunction', diagFuncTypes, 'bit [0:6]', 7)};
+\`endif
 `;
 fs.writeFileSync(svhFileName, svhFileContent);
 
@@ -107,10 +103,12 @@ static const char *${arrayName}[] = {
 }
 
 
-function defCXXSparseEnum(enumName, items) {
+function defCXXSparseEnum(enumName, items, w) {
+  const nDigits = Math.ceil(w / 3);
   return `\
 typedef enum {
-  ${Object.keys(items).map(it => it + ' = ' + items[it].toString(8)).join(',\n  ')}
+  ${Object.keys(items).map(it => it + ' = ' +
+     (+items[it]).toString(8).padStart(nDigits, '0')).join(',\n  ')}
 }`;
 }
 
@@ -130,6 +128,16 @@ static const char *${arrayName}[] = {
     notSparse.map(x => `  /* ${x} */ "${inverted[x]}"`).join(',\n  ')
   + `
 }`;
+}
+
+
+function defSVHSparseEnum(enumName, items, typedef, w) {
+  const nDigits = Math.ceil(w / 3);
+  return `\
+typedef enum ${typedef} {
+  ${Object.keys(items).map(it => it + " = " +
+     w.toString() + "'o" + (+items[it]).toString(8).padStart(nDigits, '0')).join(',\n  ')}
+} ${enumName}`;
 }
 
 

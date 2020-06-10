@@ -14,11 +14,11 @@
 // * dteDiagFunc
 //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS.
 //
-// * dteDiagRead
+// * dteRead
 //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS and return
 //   the resulting EBUS.data as part of the reply.
 //
-// * dteDiagWrite
+// * dteWrite
 //   Do an EBUS DS diagnostic write with DIAG on EBUS.DS and EBUS-DATA
 //   on EBUS.data.
 //
@@ -96,38 +96,6 @@ static const W36 B32 = 1ull << (35 - 32);
 static const W36 B33 = 1ull << (35 - 33);
 static const W36 B34 = 1ull << (35 - 34);
 static const W36 B35 = 1ull << (35 - 35);
-
-
-// Diagnostic (DS[4:6]) functions
-static const int diagfSTOP_CLOCK = 000;
-static const int diagfSTART_CLOCK = 001;
-static const int diagfSTEP_CLOCK = 002;
-static const int diagfCOND_STEP = 004;
-static const int diagfBURST = 005;
-
-static const int diagfCLR_RESET = 006;
-static const int diagfSET_RESET = 007;
-static const int diagfCLR_RUN = 010;
-static const int diagfSET_RUN = 011;
-static const int diagfCONTINUE = 012;
-
-static const int diagfCLR_BURST_CTR_RH = 042;
-static const int diagfCLR_BURST_CTR_LH = 043;
-static const int diagfCLR_CLK_SRC_RATE = 044;
-static const int diagfSET_EBOX_CLK_DISABLES = 045;
-static const int diagfRESET_PAR_REGS = 046;
-static const int diagfCLR_MBOXDIS_PARCHK_ERRSTOP = 047;
-
-static const int diagfCLR_CRAM_DIAG_ADR_RH = 051;
-static const int diagfCLR_CRAM_DIAG_ADR_LH = 052;
-
-static const int diagfENABLE_KL = 067;
-
-static const int diagfINIT_CHANNELS = 070;
-static const int diagfWRITE_MBOX = 071;
-static const int diagfEBUS_LOAD = 076;
-
-static const int diagfIdle = 077;
 
 
 // Number of DTE clock ticks to leave a diag function asserted
@@ -306,9 +274,9 @@ static LL sendAndGetResult(LL aTicks,
 
 //   Do an EBUS DS diagnostic write with DIAG on EBUS.DS and EBUS-DATA
 //   on EBUS.data.
-static void doDiagWrite(int func, W36 value) {
+static void doWrite(int func, W36 value) {
   VLOG("F diag write %s %s\n", diagNames[func], octW(value));
-  sendAndGetResult(nextReqTicks, DIAG_DURATION, dteDiagWrite, func, value);
+  sendAndGetResult(nextReqTicks, DIAG_DURATION, dteWrite, func, value);
   sendAndGetResult(nextReqTicks, 1, dteReleaseEBUSData);
 }
 
@@ -329,14 +297,14 @@ static void doDiagFunc(int func) {
 
 //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS and return
 //   the resulting EBUS.data as part of the reply.
-static W36 doDiagRead(int func) {
+static W36 doRead(int func) {
   //  VLOG("F diag func %s\n", diagNames[func]);
 
   /* Send function and delay 1us until EBUS.data is stable */
   sendAndGetResult(nextReqTicks, (LL) (1000 / nsPerClock), dteDiagFunc, func);
 
   VLOG("F diag %s read\n", diagNames[func]);
-  W36 result = sendAndGetResult(nextReqTicks, DIAG_DURATION, dteDiagRead);
+  W36 result = sendAndGetResult(nextReqTicks, DIAG_DURATION, dteRead);
   VLOG("      result=%s\n", octW(result));
   return result;
 }
@@ -355,19 +323,19 @@ static void klMasterReset() {
   doDiagFunc(diagfCLR_RUN);
 
   // This is the first phase of DMRMRT table operations.
-  doDiagWrite(diagfCLR_CLK_SRC_RATE, 0);
+  doWrite(diagfCLR_CLK_SRC_RATE, 0);
   doDiagFunc(diagfSTOP_CLOCK);
   doDiagFunc(diagfSET_RESET);
-  doDiagWrite(diagfRESET_PAR_REGS, 0);
-  doDiagWrite(diagfCLR_MBOXDIS_PARCHK_ERRSTOP, 0);
-  doDiagWrite(diagfRESET_PAR_REGS, 0);
+  doWrite(diagfRESET_PAR_REGS, 0);
+  doWrite(diagfCLR_MBOXDIS_PARCHK_ERRSTOP, 0);
+  doWrite(diagfRESET_PAR_REGS, 0);
                                                   // PARITY CHECK, ERROR STOP ENABLE
-  doDiagWrite(diagfCLR_BURST_CTR_RH, 0);          // LOAD BURST COUNTER (8,4,2,1)
-  doDiagWrite(diagfCLR_BURST_CTR_LH, 0);          // LOAD BURST COUNTER (128,64,32,16)
-  doDiagWrite(diagfSET_EBOX_CLK_DISABLES, 0);     // LOAD EBOX CLOCK DISABLE
+  doWrite(diagfCLR_BURST_CTR_RH, 0);          // LOAD BURST COUNTER (8,4,2,1)
+  doWrite(diagfCLR_BURST_CTR_LH, 0);          // LOAD BURST COUNTER (128,64,32,16)
+  doWrite(diagfSET_EBOX_CLK_DISABLES, 0);     // LOAD EBOX CLOCK DISABLE
   doDiagFunc(diagfSTART_CLOCK);                   // START THE CLOCK
-  doDiagWrite(diagfINIT_CHANNELS, 0);             // INIT CHANNELS
-  doDiagWrite(diagfCLR_BURST_CTR_RH, 0);          // LOAD BURST COUNTER (8,4,2,1)
+  doWrite(diagfINIT_CHANNELS, 0);             // INIT CHANNELS
+  doWrite(diagfCLR_BURST_CTR_RH, 0);          // LOAD BURST COUNTER (8,4,2,1)
 
   // Loop up to three times:
   //   Do diag function 162 via $DFRD test (A CHANGE COMING A L)=EBUS[32]
@@ -377,7 +345,7 @@ static void klMasterReset() {
   for (int k = 0; k < 5; ++k) {
     waitFor(8);
 
-    if (doDiagRead(0162) & B32) {
+    if (doRead(0162) & B32) {
       printf("[success]\n");
       break;
     }
@@ -402,9 +370,9 @@ static void klMasterReset() {
     // Phase 2 from DMRMRT table operations.
     doDiagFunc(diagfCOND_STEP);          // CONDITIONAL SINGLE STEP
     doDiagFunc(diagfCLR_RESET);          // CLEAR RESET
-    doDiagWrite(diagfENABLE_KL, '0);     // ENABLE KL STL DECODING OF CODES & AC'S
-    doDiagWrite(diagfEBUS_LOAD, '0);     // SET KL10 MEM RESET FLOP
-    doDiagWrite(diagfWRITE_MBOX, 'o120); // WRITE M-BOX
+    doWrite(diagfENABLE_KL, '0);     // ENABLE KL STL DECODING OF CODES & AC'S
+    doWrite(diagfEBUS_LOAD, '0);     // SET KL10 MEM RESET FLOP
+    doWrite(diagfWRITE_MBOX, 'o120); // WRITE M-BOX
 
     $display($time, " DONE");
     */

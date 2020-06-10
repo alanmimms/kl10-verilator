@@ -1,10 +1,11 @@
 `timescale 1ns/1ps
+`include "ebox.svh"
+
 module dte(iCLK CLK,
            iDTE DTE,
            iEBUS.dte EBUS,
            output bit CROBAR);
 
-`include "dte.svh"
 
   import "DPI-C" function void DTEinitial();
   import "DPI-C" function void DTEfinal(input longint ns);
@@ -62,7 +63,7 @@ module dte(iCLK CLK,
     reqPending <= 0;           // No longer waiting to do request
   end
 
-  always @(posedge clk) if (reqPending && ticks >= reqTime && reqType == dteDiagWrite) begin
+  always @(posedge clk) if (reqPending && ticks >= reqTime && reqType == dteWrite) begin
     EBUS.ds <= 7'(diagReq);
     EBUS.diagStrobe <= '1;
 
@@ -84,7 +85,7 @@ module dte(iCLK CLK,
     reqPending <= 0;           // No longer waiting to do request
   end
 
-  always @(posedge clk) if (reqPending && ticks >= reqTime && reqType == dteDiagRead) begin
+  always @(posedge clk) if (reqPending && ticks >= reqTime && reqType == dteRead) begin
     $display("D %0d: %s", ticks, diagReq.name);
 
     DTEreply(ticks, reqType, diagReq, {28'b0, EBUS.data});
