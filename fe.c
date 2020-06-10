@@ -297,8 +297,8 @@ static LL sendAndGetResult(LL aTicks,
   len = read(toFE[0], &req, sizeof(req));
   if (len < sizeof(req)) fatalError("read from DTE pipe");
 
-  RLOG("F %lld: reply received from DTE: %s %lld\n",
-       nextReqTicks + req.time, reqTypeNames[req.type], req.data);
+  RLOG("F %lld: reply received from DTE: %s %s\n",
+       nextReqTicks + req.time, reqTypeNames[req.type], octW(req.data));
   nextReqTicks += duration;
   return req.data;
 }

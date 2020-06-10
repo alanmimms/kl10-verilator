@@ -20,7 +20,7 @@ TBOBJS = $(foreach F,$(CFILES:.c=.o) $(CXXFILES:.cc=.o),$(VOBJDIR)/$F)
 
 EXE = kl10pvtb
 
-DTE_INTERFACE = dte.svh dte.h
+DTE_INTF = dte.h dte.svh
 
 KILL_WARNINGS = -Wno-LITENDIAN \
 		-Wno-UNOPTFLAT
@@ -44,15 +44,12 @@ VFLAGS = \
 .PHONY:	all
 all:	$(EXE)
 
-$(EXE):	$(SVFILES) $(SVHFILES) $(CXXFILES) $(CFILES) $(HFILES) $(DTE_INTERFACE)
+$(EXE):	$(SVFILES) $(SVHFILES) $(CXXFILES) $(CFILES) $(HFILES) $(DTE_INTF)
 	$(VERILATOR) $(VFLAGS) $(filter-out %.h, $^) -o $(EXE)
 
-dte.svh: dte-interface.cpp
-	gcc -E -DGENERATE_SVH $^ -nostdinc -CC -P -o $@
-
-dte.h: dte-interface.cpp
-	gcc -E -DGENERATE_CXX $^ -nostdinc -CC -P -o $@
+$(DTE_INTF): dte-interface.js
+	node dte-interface.js -- $(DTE_INTF)
 
 .PHONY:	clean
 clean:
-	rm -rf $(VOBJDIR) $(DTE_INTERFACE)
+	rm -rf $(VOBJDIR) $(DTE_INTF)
