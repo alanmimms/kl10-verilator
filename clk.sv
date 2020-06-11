@@ -55,7 +55,7 @@ module clk(input bit clk,
   assign fastMemClk = CLK.EDP;
 
   bit delaysLocked;           // Watch for our clock delay mechanism to achieve lock
-  assign CLK.CROBAR = CROBAR & ~delaysLocked;
+  assign CLK.CROBAR = CROBAR | ~delaysLocked;
 
   // This is WEIRD. This assign here seems to not work all the time?
   // Later on in this module near e39 I display DIAG and it is zero

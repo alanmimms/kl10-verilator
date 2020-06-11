@@ -37,11 +37,12 @@ public: double nsPerClock;
   }
 
   virtual void opentrace(const char *vcdName) {
-      trace = new TRACECLASS;
-      mod->trace(trace, 99);
-      trace->spTrace()->set_time_resolution("ns");
-      trace->spTrace()->set_time_unit("ns");
-      trace->open(vcdName);
+    trace = new TRACECLASS;
+    mod->trace(trace, 99);
+    trace->spTrace()->set_time_resolution("ns");
+    trace->spTrace()->set_time_unit("ns");
+    trace->open(vcdName);
+    trace->dump(0);
   }
 
   virtual vluint64_t tick(void) {
@@ -72,7 +73,7 @@ TESTBENCH<Vtop> *tb;
 
 
 double sc_time_stamp () {       // Called by $time in Verilog
-  return tb->tickcount;
+  return tb->tickcount * tb->nsPerClock;
 }
 
 
@@ -101,6 +102,7 @@ int main(int argc, char **argv) {
   tb = new TESTBENCH<Vtop>();
   Verilated::traceEverOn(true);
   Vtop *top = tb->mod;
+
   tb->opentrace("kl10pv-trace.vcd");
 
   while (!tb->done) {

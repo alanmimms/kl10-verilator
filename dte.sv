@@ -19,6 +19,8 @@ module dte(iCLK CLK,
                                         input tDiagFunction diagReq,
                                         input longint replyData);
 
+  initial CROBAR = 1;
+
   bit clk;
   assign clk = CLK.MHZ16_FREE;
 
@@ -66,7 +68,7 @@ module dte(iCLK CLK,
       reqPending <= 0;           // No longer waiting to do request
     end else if (reqType == dteDiagFunc) begin
       EBUS.ds <= 7'(diagReq);
-      EBUS.diagStrobe <= '1;
+      EBUS.diagStrobe <= 1;
 
       DTEreply(ticks, reqType, diagReq, {28'b0, EBUS.data});
       reqPending <= 0;           // No longer waiting to do request
@@ -76,6 +78,7 @@ module dte(iCLK CLK,
     end else if (reqType == dteReleaseEBUSData) begin
       DTE.EBUSdriver.driving <= 0;
       DTE.EBUSdriver.data <= '0;
+      EBUS.diagStrobe <= 0;
 
       DTEreply(ticks, reqType, diagReq, {28'b0, EBUS.data});
       reqPending <= 0;           // No longer waiting to do request

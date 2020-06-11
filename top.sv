@@ -2,7 +2,8 @@
 `include "ebox.svh"
 
 module top(input clk);
-  bit CROBAR = '1;
+  bit CROBAR;
+
   bit EXTERNAL_CLK, clk30, clk31;
 
   bit [27:35] MBOX_GATE_VMA;

@@ -292,6 +292,7 @@ static void doMiscFunc(int func) {
 static void doDiagFunc(int func) {
   VLOG("F diag func %s\n", diagNames[func]);
   sendAndGetResult(nextReqTicks, DIAG_DURATION, dteDiagFunc, func);
+  sendAndGetResult(nextReqTicks, 1, dteReleaseEBUSData);
 }
 
 
@@ -306,6 +307,7 @@ static W36 doRead(int func) {
   VLOG("F diag %s read\n", diagNames[func]);
   W36 result = sendAndGetResult(nextReqTicks, DIAG_DURATION, dteRead);
   VLOG("      result=%s\n", octW(result));
+  sendAndGetResult(nextReqTicks, 1, dteReleaseEBUSData);
   return result;
 }
 
