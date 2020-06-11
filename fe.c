@@ -343,41 +343,30 @@ static void klMasterReset() {
   //   Do diag function 162 via $DFRD test (A CHANGE COMING A L)=EBUS[32]
   //   If not set, $DFXC(.SSCLK=002) to single step the MBOX
   printf("[step up to 5 clocks to synchronize MBOX]\n");
+  bool mboxInitSuccess = false;
 
   for (int k = 0; k < 5; ++k) {
     waitFor(8);
 
-    if (doRead(0162) & B32) {
+    if ((doRead(0162) & B32) == 0) {
       printf("[success]\n");
+      mboxInitSuccess = true;
       break;
     }
 
     waitFor(8);
     doDiagFunc(diagfSTEP_CLOCK);
   }
+
+  if (!mboxInitSuccess) printf("[WARNING: MBOX initializatin (A CHANGE COMING L) failed]\n");
   
-  /*
-
-    repeat (5) begin
-      #500 ;
-      if (!mbox0.mbc0.MBC.A_CHANGE_COMING) break;
-      #500 ;
-      doDiagFunc(diagfSTEP_CLOCK);
-    end
-
-    if (mbox0.mbc0.MBC.A_CHANGE_COMING) begin
-      $display($time, " ERROR: STEP of MBOX five times did not clear MBC.A_CHANGE_COMING");
-    end
-
-    // Phase 2 from DMRMRT table operations.
-    doDiagFunc(diagfCOND_STEP);          // CONDITIONAL SINGLE STEP
-    doDiagFunc(diagfCLR_RESET);          // CLEAR RESET
-    doWrite(diagfENABLE_KL, '0);     // ENABLE KL STL DECODING OF CODES & AC'S
-    doWrite(diagfEBUS_LOAD, '0);     // SET KL10 MEM RESET FLOP
-    doWrite(diagfWRITE_MBOX, 'o120); // WRITE M-BOX
-
-    $display($time, " DONE");
-    */
+  // Phase 2 from DMRMRT table operations.
+  doDiagFunc(diagfCOND_STEP);             // CONDITIONAL SINGLE STEP
+  doDiagFunc(diagfCLR_RESET);             // CLEAR RESET
+  doWrite(diagfENABLE_KL, 0);             // ENABLE KL STL DECODING OF CODES & AC'S
+  doWrite(diagfEBUS_LOAD, 0);             // SET KL10 MEM RESET FLOP
+  doWrite(diagfWRITE_MBOX, 0120);         // WRITE M-BOX
+  printf("[KL master reset complete]\n\n");
 }
 
 
