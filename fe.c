@@ -43,9 +43,9 @@
 #include <signal.h>
 #include <svdpi.h>
 
-static const int verbose = 1;
-static const int rVerbose = 1;
-static const int wVerbose = 1;
+static const int verbose = 0;
+static const int rVerbose = 0;
+static const int wVerbose = 0;
 
 // Probably we are building 64-bit anyway, but this emphasizes the
 // point. These are 64-bit typedefs.

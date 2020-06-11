@@ -20,7 +20,7 @@ module dte(iCLK CLK,
                                         input longint replyData);
 
   bit clk;
-  assign clk = CLK.EBUS_CLK;
+  assign clk = CLK.MHZ16_FREE;
 
   var tReqType reqType;
   var tDiagFunction diagReq;
@@ -38,69 +38,48 @@ module dte(iCLK CLK,
   initial DTEinitial();
   final DTEfinal(ticks);
 
-  always @(posedge reqPending, negedge reqPending)
-    $display("D %0d reqPending=%0d", ticks, reqPending);
-
   always @(posedge clk) ticks <= ticks + 1;
-  always @(posedge clk) if (reqPending) $display("D ticks=%0d reqTime=%0d", ticks, reqTime);
 
   always @(posedge clk) if (DTErequestIsPending()) begin
     DTEgetRequest(reqTime, reqType, diagReq, {28'b0, reqData});
-    $display("D %0d: DTEgetRequest %s/%s at %0d ==========",
-             ticks, reqType.name, diagReq.name, reqTime);
     reqPending <= 1;
   end
 
-  always @(posedge clk) if (reqPending && ticks >= reqTime && reqType == dteMisc) begin
+  always @(posedge clk) if (reqPending && ticks >= reqTime) begin
 
-    case (int'(diagReq))
-    clrCROBAR: CROBAR <= 0;
-    default: ;
-    endcase
+    if (reqType == dteMisc) begin
+      case (int'(diagReq))
+      clrCROBAR: CROBAR <= 0;
+      default: ;
+      endcase
 
-    DTEreply(ticks, reqType, diagReq, {28'b0, EBUS.data});
-    $display("D %0d: clear reqPending", ticks);
-    reqPending <= 0;           // No longer waiting to do request
-  end
+      DTEreply(ticks, reqType, diagReq, {28'b0, EBUS.data});
+      reqPending <= 0;           // No longer waiting to do request
+    end else if (reqType == dteWrite) begin
+      EBUS.ds <= 7'(diagReq);
+      EBUS.diagStrobe <= '1;
 
-  always @(posedge clk) if (reqPending && ticks >= reqTime && reqType == dteWrite) begin
-    EBUS.ds <= 7'(diagReq);
-    EBUS.diagStrobe <= '1;
+      DTE.EBUSdriver.driving <= 1;
+      DTE.EBUSdriver.data <= 36'(reqData);
 
-    DTE.EBUSdriver.driving <= 1;
-    DTE.EBUSdriver.data <= 36'(reqData);
-    $display("D %0d: %s %s", ticks, diagReq.name, octW(reqData));
+      DTEreply(ticks, reqType, diagReq, {28'b0, EBUS.data});
+      reqPending <= 0;           // No longer waiting to do request
+    end else if (reqType == dteDiagFunc) begin
+      EBUS.ds <= 7'(diagReq);
+      EBUS.diagStrobe <= '1;
 
-    DTEreply(ticks, reqType, diagReq, {28'b0, EBUS.data});
-    $display("D %0d: clear reqPending", ticks);
-    reqPending <= 0;           // No longer waiting to do request
-  end
+      DTEreply(ticks, reqType, diagReq, {28'b0, EBUS.data});
+      reqPending <= 0;           // No longer waiting to do request
+    end else if (reqType == dteRead) begin
+      DTEreply(ticks, reqType, diagReq, {28'b0, EBUS.data});
+      reqPending <= 0;           // No longer waiting to do request
+    end else if (reqType == dteReleaseEBUSData) begin
+      DTE.EBUSdriver.driving <= 0;
+      DTE.EBUSdriver.data <= '0;
 
-  always @(posedge clk) if (reqPending && ticks >= reqTime && reqType == dteDiagFunc) begin
-    EBUS.ds <= 7'(diagReq);
-    EBUS.diagStrobe <= '1;
-
-    DTEreply(ticks, reqType, diagReq, {28'b0, EBUS.data});
-    $display("D %0d: clear reqPending", ticks);
-    reqPending <= 0;           // No longer waiting to do request
-  end
-
-  always @(posedge clk) if (reqPending && ticks >= reqTime && reqType == dteRead) begin
-    $display("D %0d: %s", ticks, diagReq.name);
-
-    DTEreply(ticks, reqType, diagReq, {28'b0, EBUS.data});
-    $display("D %0d: clear reqPending", ticks);
-    reqPending <= 0;           // No longer waiting to do request
-  end
-
-  always @(posedge clk) if (reqPending && ticks >= reqTime && reqType == dteReleaseEBUSData) begin
-    $display("D %0d: %s", ticks, diagReq.name);
-    DTE.EBUSdriver.driving <= 0;
-    DTE.EBUSdriver.data <= '0;
-
-    DTEreply(ticks, reqType, diagReq, {28'b0, EBUS.data});
-    $display("D %0d: clear reqPending", ticks);
-    reqPending <= 0;           // No longer waiting to do request
+      DTEreply(ticks, reqType, diagReq, {28'b0, EBUS.data});
+      reqPending <= 0;           // No longer waiting to do request
+    end
   end
 
   function string octW(input bit [0:35] w);

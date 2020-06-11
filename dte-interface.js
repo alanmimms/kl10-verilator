@@ -109,7 +109,7 @@ function defCXXSparseEnum(enumName, items, w) {
 typedef enum {
   ${Object.keys(items).map(it => it + ' = ' +
      (+items[it]).toString(8).padStart(nDigits, '0')).join(',\n  ')}
-}`;
+} ${enumName}`;
 }
 
 
