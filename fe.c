@@ -43,9 +43,10 @@
 #include <signal.h>
 #include <svdpi.h>
 
-static const int verbose = 0;
-static const int rVerbose = 0;
-static const int wVerbose = 0;
+static const int feVerbose = 1;  /* Show FE progress */
+static const int regVerbose = 0; /* Show register operations */
+static const int rVerbose = 0;   /* Show diag reads */
+static const int wVerbose = 0;   /* Show diag writes */
 
 // Probably we are building 64-bit anyway, but this emphasizes the
 // point. These are 64-bit typedefs.
@@ -121,75 +122,6 @@ struct tPipeMessage {
   W36 data;
 };
 
-
-static const char *diagNames[] = {
-  /* 000 */ "STOP_CLOCK",
-  /* 001 */ "START_CLOCK",
-  /* 002 */ "STEP_CLOCK",
-  /* 003 */ 0,
-  /* 004 */ "COND_STEP",
-  /* 005 */ "BURST",
-  /* 006 */ "CLR_RESET",
-  /* 007 */ "SET_RESET",
-  /* 010 */ "CLR_RUN",
-  /* 011 */ "SET_RUN",
-  /* 012 */ "CONTINUE",
-  /* 013 */ 0,
-  /* 014 */ 0,
-  /* 015 */ 0,
-  /* 016 */ 0,
-  /* 017 */ 0,
-  /* 020 */ 0,
-  /* 021 */ 0,
-  /* 022 */ 0,
-  /* 023 */ 0,
-  /* 024 */ 0,
-  /* 025 */ 0,
-  /* 026 */ 0,
-  /* 027 */ 0,
-  /* 030 */ 0,
-  /* 031 */ 0,
-  /* 032 */ 0,
-  /* 033 */ 0,
-  /* 034 */ 0,
-  /* 035 */ 0,
-  /* 036 */ 0,
-  /* 037 */ 0,
-  /* 040 */ 0,
-  /* 041 */ 0,
-  /* 042 */ "CLR_BURST_CTR_RH",
-  /* 043 */ "CLR_BURST_CTR_LH",
-  /* 044 */ "CLR_CLK_SRC_RATE",
-  /* 045 */ "SET_EBOX_CLK_DISABLES",
-  /* 046 */ "RESET_PAR_REGS",
-  /* 047 */ "CLR_MBOXDIS_PARCHK_ERRSTOP",
-  /* 050 */ 0,
-  /* 051 */ "CLR_CRAM_DIAG_ADR_RH",
-  /* 052 */ "CLR_CRAM_DIAG_ADR_LH",
-  /* 053 */ 0,
-  /* 054 */ 0,
-  /* 055 */ 0,
-  /* 056 */ 0,
-  /* 057 */ 0,
-  /* 060 */ 0,
-  /* 061 */ 0,
-  /* 062 */ 0,
-  /* 063 */ 0,
-  /* 064 */ 0,
-  /* 065 */ 0,
-  /* 066 */ 0,
-  /* 067 */ "ENABLE_KL",
-  /* 070 */ "INIT_CHANNELS",
-  /* 071 */ "WRITE_MBOX",
-  /* 072 */ 0,
-  /* 073 */ 0,
-  /* 074 */ 0,
-  /* 075 */ 0,
-  /* 076 */ "EBUS_LOAD",
-  /* 077 */ "idle",
-};
-
-
 // Only one request can be outstanding at one time. The ticks value at
 // which it should execute is `nextReqTicks`.
 static LL nextReqTicks = 0;            /* Ticks count to do next request */
@@ -206,8 +138,12 @@ if (rVerbose) printf(__VA_ARGS__);              \
 if (wVerbose) printf(__VA_ARGS__);              \
 } while (0)                                     \
 
-#define VLOG(...) do {                          \
-if (verbose) printf(__VA_ARGS__);               \
+#define FELOG(FMT, ...) do {                                    \
+  if (feVerbose) printf("  " FMT __VA_OPT__(,) __VA_ARGS__);  \
+} while (0)
+
+#define REGLOG(...) do {                        \
+if (regVerbose) printf(__VA_ARGS__);            \
 } while (0)                                     \
 
 
@@ -258,7 +194,7 @@ static LL sendAndGetResult(LL aTicks,
   if (len < sizeof(req)) fatalError("write to DTE pipe");
   WLOG("F %lld: send %s %s %s\n",
        req.time, reqTypeNames[aType],
-       aType == dteMisc ? miscFuncNames[aDiag] : diagNames[aDiag],
+       aType == dteMisc ? miscFuncNames[aDiag] : diagFuncNames[aDiag],
        octW(aData));
 
   RLOG("F read(%s) %ld bytes\n", pipeN(toFE[0]), sizeof(req));
@@ -275,7 +211,7 @@ static LL sendAndGetResult(LL aTicks,
 //   Do an EBUS DS diagnostic write with DIAG on EBUS.DS and EBUS-DATA
 //   on EBUS.data.
 static void doWrite(int func, W36 value) {
-  VLOG("F diag write %s %s\n", diagNames[func], octW(value));
+  REGLOG("F diag write %s %s\n", diagFuncNames[func], octW(value));
   sendAndGetResult(nextReqTicks, DIAG_DURATION, dteWrite, func, value);
   sendAndGetResult(nextReqTicks, 1, dteReleaseEBUSData);
 }
@@ -283,14 +219,14 @@ static void doWrite(int func, W36 value) {
 
 //   Do a miscellaneous control function in DTE.
 static void doMiscFunc(int func) {
-  VLOG("F misc func %s\n", miscFuncNames[func]);
+  REGLOG("F misc func %s\n", miscFuncNames[func]);
   sendAndGetResult(nextReqTicks, 17, dteMisc, func);
 }
 
 
 //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS.
 static void doDiagFunc(int func) {
-  VLOG("F diag func %s\n", diagNames[func]);
+  REGLOG("F diag func %s\n", diagFuncNames[func]);
   sendAndGetResult(nextReqTicks, DIAG_DURATION, dteDiagFunc, func);
   sendAndGetResult(nextReqTicks, 1, dteReleaseEBUSData);
 }
@@ -299,21 +235,21 @@ static void doDiagFunc(int func) {
 //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS and return
 //   the resulting EBUS.data as part of the reply.
 static W36 doRead(int func) {
-  //  VLOG("F diag func %s\n", diagNames[func]);
+  //  REGLOG("F diag func %s\n", diagFuncNames[func]);
 
   /* Send function and delay 1us until EBUS.data is stable */
   sendAndGetResult(nextReqTicks, (LL) (1000 / nsPerClock), dteDiagFunc, func);
 
-  VLOG("F diag %s read\n", diagNames[func]);
+  REGLOG("F diag %s read\n", diagFuncNames[func]);
   W36 result = sendAndGetResult(nextReqTicks, DIAG_DURATION, dteRead);
-  VLOG("      result=%s\n", octW(result));
+  REGLOG("      result=%s\n", octW(result));
   sendAndGetResult(nextReqTicks, 1, dteReleaseEBUSData);
   return result;
 }
 
 
 static void waitFor(LL ticks) {
-  VLOG("F %lld: wait %lld ticks until %lld\n", nextReqTicks, ticks, nextReqTicks + ticks);
+  REGLOG("F %lld: wait %lld ticks until %lld\n", nextReqTicks, ticks, nextReqTicks + ticks);
   nextReqTicks += ticks;
 }
 
@@ -322,48 +258,67 @@ static void klMasterReset() {
   printf("[KL master reset]\n");
 
   // $DFXC(.CLRUN=010)    ; Clear run
+  FELOG("[clear RUN flag]\n");
   doDiagFunc(diagfCLR_RUN);
 
   // This is the first phase of DMRMRT table operations.
+  FELOG("[clear clock source rate]\n");
   doWrite(diagfCLR_CLK_SRC_RATE, 0);
+  FELOG("[stop clocks]\n");
   doDiagFunc(diagfSTOP_CLOCK);
+  FELOG("[set master reset]\n");
   doDiagFunc(diagfSET_RESET);
+  FELOG("[reset parity registers]\n");
   doWrite(diagfRESET_PAR_REGS, 0);
+  FELOG("[clear MBOX parity checkstops]\n");
   doWrite(diagfCLR_MBOXDIS_PARCHK_ERRSTOP, 0);
+  FELOG("[clear EBOX parity checkstops]\n");
   doWrite(diagfRESET_PAR_REGS, 0);
                                                   // PARITY CHECK, ERROR STOP ENABLE
+  FELOG("[clear clock burst counter RH]\n");
   doWrite(diagfCLR_BURST_CTR_RH, 0);          // LOAD BURST COUNTER (8,4,2,1)
+  FELOG("[clear clock burst counter LH]\n");
   doWrite(diagfCLR_BURST_CTR_LH, 0);          // LOAD BURST COUNTER (128,64,32,16)
+  FELOG("[load EBOX clock disable]\n");
   doWrite(diagfSET_EBOX_CLK_DISABLES, 0);     // LOAD EBOX CLOCK DISABLE
+  FELOG("[start clock]\n");
   doDiagFunc(diagfSTART_CLOCK);                   // START THE CLOCK
+  FELOG("[init channels]\n");
   doWrite(diagfINIT_CHANNELS, 0);             // INIT CHANNELS
+  FELOG("[clear clock burst counter RH]\n");
   doWrite(diagfCLR_BURST_CTR_RH, 0);          // LOAD BURST COUNTER (8,4,2,1)
 
   // Loop up to three times:
   //   Do diag function 162 via $DFRD test (A CHANGE COMING A L)=EBUS[32]
   //   If not set, $DFXC(.SSCLK=002) to single step the MBOX
-  printf("[step up to 5 clocks to synchronize MBOX]\n");
+  FELOG("[step up to 5 clocks to synchronize MBOX]\n");
   bool mboxInitSuccess = false;
 
   for (int k = 0; k < 5; ++k) {
     waitFor(8);
+    FELOG("[read EBUS 0162]\n");
 
     if ((doRead(0162) & B32) == 0) {
-      printf("[success]\n");
+      FELOG("[success]\n");
       mboxInitSuccess = true;
       break;
     }
 
     waitFor(8);
+    FELOG("[step clock]\n");
     doDiagFunc(diagfSTEP_CLOCK);
   }
 
   if (!mboxInitSuccess) printf("[WARNING: MBOX initializatin (A CHANGE COMING L) failed]\n");
   
   // Phase 2 from DMRMRT table operations.
+  FELOG("[conditional single step]\n");
   doDiagFunc(diagfCOND_STEP);             // CONDITIONAL SINGLE STEP
+  FELOG("[clear master reset]\n");
   doDiagFunc(diagfCLR_RESET);             // CLEAR RESET
+  FELOG("[enable KL instruction decode and ACs]\n");
   doWrite(diagfENABLE_KL, 0);             // ENABLE KL STL DECODING OF CODES & AC'S
+  FELOG("[reset MBOX]\n");
   doWrite(diagfEBUS_LOAD, 0);             // SET KL10 MEM RESET FLOP
   doWrite(diagfWRITE_MBOX, 0120);         // WRITE M-BOX
   printf("[KL master reset complete]\n\n");
@@ -439,7 +394,7 @@ extern "C" void DTEreply(LL aReplyTime, int aReplyType, LL aReplyData) {
   WLOG("S write(%s) %ld bytes\n", pipeN(toFE[1]), sizeof(reply));
   int st = write(toFE[1], &reply, sizeof(reply));
   if (st < 0) fatalError("write toFE");
-  //  VLOG("S %lld: reply sent to FE %s %lld\n",
+  //  REGLOG("S %lld: reply sent to FE %s %lld\n",
   //       aReplyTime, reqTypeNames[reply.type], reply.data);
 }
 
@@ -454,7 +409,7 @@ extern "C" void FEinitial(double aNsPerClock) {
   FD_SET(toDTE[0], &dteReadFDs);
 
   nsPerClock = aNsPerClock;
-  VLOG("[%g ns per DTE clock]\n", nsPerClock);
+  FELOG("[%g ns per DTE clock]\n", nsPerClock);
 
   pid_t pid = fork();
   if (pid < 0) fatalError("fork FE");
