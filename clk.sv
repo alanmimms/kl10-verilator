@@ -232,7 +232,7 @@ module clk(input bit clk,
                CLK.FUNC_EBOX_SS}),
            .S3(CROBAR),
            .CLK(MAIN_SOURCE),
-           .SEL(~{CLK.FUNC_GATE, CLK.FUNC_GATE | RATE_SELECTED}),
+           .SEL(~{CLK.FUNC_GATE, ~(CLK.FUNC_GATE | RATE_SELECTED)}),
            .Q(e42SR));
 
   assign GATED_EN = CLK.GO & RATE_SELECTED |
