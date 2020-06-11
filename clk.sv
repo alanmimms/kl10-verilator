@@ -73,10 +73,12 @@ module clk(input bit clk,
   assign DIAG_READ = EDP.DIAG_READ_FUNC_10x;
 
   // CLK1 p.168
-  mux e67(.en(1'b1),
-          .sel({CROBAR, CLK.SOURCE_SEL}),
-          .d({clk30, clk31, EXTERNAL_CLK, {5{clk30}}}),
-          .q(MAIN_SOURCE));
+  always_comb case ({CROBAR, CLK.SOURCE_SEL})
+              3'b001: MAIN_SOURCE = clk31;
+              3'b011: MAIN_SOURCE = clk31;
+              3'b010: MAIN_SOURCE = EXTERNAL_CLK;
+              default: MAIN_SOURCE = clk30;
+                endcase
 
   assign CLK.ERROR_STOP = ~CLK_ON & CLK.ERR_STOP_EN & CLK.FS_ERROR |
                           EBOX_CLK_ERROR & EBOX_SOURCE & ~CLK_ON & CLK.ERR_STOP_EN;
