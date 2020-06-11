@@ -1,20 +1,22 @@
 [*]
 [*] GTKWave Analyzer v3.3.101 (w)1999-2019 BSI
-[*] Thu Jun 11 16:23:20 2020
+[*] Thu Jun 11 16:44:58 2020
 [*]
 [dumpfile] "/home/alan/kl10-verilator/kl10pv-trace.vcd"
-[dumpfile_mtime] "Thu Jun 11 15:58:18 2020"
-[dumpfile_size] 22033069
+[dumpfile_mtime] "Thu Jun 11 16:38:25 2020"
+[dumpfile_size] 20508272
 [savefile] "/home/alan/kl10-verilator/clk-debug.gtkw"
-[timestart] 5342
+[timestart] 0
 [size] 1920 1051
-[pos] -1 -1
-*-7.344508 5916 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] -831 -452
+*-10.250895 4866 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] TOP.
 [treeopen] TOP.top.
 [treeopen] TOP.top.CLK.
 [treeopen] TOP.top.DTE.
 [treeopen] TOP.top.dte0.
+[treeopen] TOP.top.ebox0.
+[treeopen] TOP.top.MBZ.
 [sst_width] 211
 [signals_width] 240
 [sst_expanded] 1
@@ -25,10 +27,11 @@ TOP.top.CLK.MHZ16_FREE
 TOP.top.CLK.CRA
 TOP.top.CLK.EBUS_CLK
 TOP.top.CLK.EBUS_RESET
-@29
 TOP.top.dte0.EBUS.diagStrobe
 @30
 TOP.top.EBUS.ds[0:6]
+@22
+TOP.top.dte0.EBUS.data[0:35]
 @28
 TOP.top.CLK.FUNC_GATE
 TOP.top.CLK.FUNC_042
@@ -37,12 +40,15 @@ TOP.top.CLK.FUNC_044
 TOP.top.CLK.FUNC_045
 TOP.top.CLK.FUNC_046
 TOP.top.CLK.FUNC_047
+@22
+TOP.top.ebox0.CTL.DIAG[0:6]
+@28
 TOP.top.CTL.CONSOLE_CONTROL
 [color] 1
 TOP.top.CTL.DIAG_READ_FUNC_16x
+TOP.top.ebox0.MBC.A_CHANGE_COMING
 TOP.top.CLK.FUNC_CLR_RESET
 TOP.top.CLK.GO
-TOP.top.dte0.CROBAR
 TOP.top.CLK.APR
 TOP.top.CLK.CCL
 TOP.top.CLK.CCW
@@ -53,7 +59,6 @@ TOP.top.CLK.CRA
 TOP.top.CLK.CRAM_PAR_ERR
 TOP.top.CLK.CRC
 TOP.top.CLK.CRM
-TOP.top.CLK.CROBAR
 TOP.top.CLK.CSH
 TOP.top.CLK.DRAM_PAR_ERR
 TOP.top.CLK.EBOX_CYC_ABORT

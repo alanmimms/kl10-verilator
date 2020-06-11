@@ -1,32 +1,31 @@
 [*]
 [*] GTKWave Analyzer v3.3.101 (w)1999-2019 BSI
-[*] Mon Jun  8 02:03:20 2020
+[*] Thu Jun 11 16:54:11 2020
 [*]
 [dumpfile] "/home/alan/kl10-verilator/kl10pv-trace.vcd"
-[dumpfile_mtime] "Mon Jun  8 02:02:13 2020"
-[dumpfile_size] 74027251
+[dumpfile_mtime] "Thu Jun 11 16:51:09 2020"
+[dumpfile_size] 15884959
 [savefile] "/home/alan/kl10-verilator/cram-debug.gtkw"
-[timestart] 16
-[size] 1578 1051
-[pos] -1 -1
-*-7.675425 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[timestart] 0
+[size] 1920 1051
+[pos] -917 -452
+*-11.867519 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] TOP.
 [treeopen] TOP.top.
+[treeopen] TOP.top.CLK.
 [sst_width] 211
 [signals_width] 190
 [sst_expanded] 1
 [sst_vpaned_height] 296
 @28
 TOP.top.CROBAR
-TOP.top.CLK.MHZ16_FREE
-@29
-TOP.top.CLK.TENELEVEN_CLK
-@28
 TOP.top.CLK.MR_RESET
-@22
+TOP.top.CLK.MHZ16_FREE
+@30
 TOP.top.CRA.CRADR[0:10]
 @28
-TOP.top.CLK.CRA
+[color] 2
++{TOP.top.CLK.CRA} TOP.top.CLK.CRA
 TOP.top.CLK.EDP
 TOP.top.CLK.FUNC_GATE
 TOP.top.CLK.FUNC_CLR_RESET
