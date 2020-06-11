@@ -665,7 +665,7 @@ typedef struct packed {
   bit [0:1] SH;
   bit u51;
   bit [0:1] VMA;
-  bit [0:1] _TIME;
+  bit [0:1] TIME;
   bit [0:3] MEM;
   bit [0:5] COND;
   bit CALL;
@@ -693,7 +693,7 @@ interface iCRAM;
   bit FE;
   bit [0:1] SH;
   bit [0:1] VMA;
-  bit [0:1] _TIME;
+  bit [0:1] TIME;
   bit [0:3] MEM;
   bit [0:5] COND;
   bit CALL;
@@ -703,11 +703,11 @@ interface iCRAM;
   bit [0:8] MAGIC;
 
   modport crm(output J, AD, ADA, ADB, AR, ARX, BR, BRX, MQ, FMADR,
-              SCAD, SCADA, SCADB, SC, FE, SH, VMA, _TIME, MEM, COND,
+              SCAD, SCADA, SCADB, SC, FE, SH, VMA, TIME, MEM, COND,
               CALL, DISP, MARK, MAGIC);
 
   modport mod(input J, AD, ADA, ADB, AR, ARX, BR, BRX, MQ, FMADR,
-              SCAD, SCADA, SCADB, SC, FE, SH, VMA, _TIME, MEM, COND,
+              SCAD, SCADA, SCADB, SC, FE, SH, VMA, TIME, MEM, COND,
               CALL, DISP, MARK, MAGIC);
 endinterface
 

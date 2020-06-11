@@ -43,7 +43,7 @@ module mtr(iCHC CHC,
   bit [20:35] mtrEBUS_IN;
   bit [4:6] DS;
   bit [0:1] INCR_SEL;
-  bit [2:18] EBOX_COUNT, CACHE_COUNT, _TIME, PERF_COUNT;
+  bit [2:18] EBOX_COUNT, CACHE_COUNT, TIME, PERF_COUNT;
   bit [6:18] INTERVAL;
 
 
@@ -71,7 +71,7 @@ module mtr(iCHC CHC,
 
   assign EBOX_COUNT = {1'b0, EBOX_COUNT0.count};
   assign CACHE_COUNT = {1'b0, CACHE_COUNT0.count};
-  assign _TIME = {1'b0, TIME0.count};
+  assign TIME = {1'b0, TIME0.count};
   assign PERF_COUNT = {1'b0, PERF_COUNT0.count};
   assign INTERVAL = {1'b0, INTERVAL0.count};
 
@@ -286,7 +286,7 @@ module mtr(iCHC CHC,
     mtrEBUS[20:35] = mtrEBUS_IN;
   end
 
-  always_latch if (HOLD_INTERRUPT_SEL) e18D <= {_TIME[2],
+  always_latch if (HOLD_INTERRUPT_SEL) e18D <= {TIME[2],
                                                 PERF_COUNT[2],
                                                 EBOX_COUNT[2],
                                                 CACHE_COUNT[2],
@@ -306,97 +306,97 @@ module mtr(iCHC CHC,
 
   mux e23(.en(READ_MTR),
           .sel(DS),
-          .d({_TIME[2], PERF_COUNT[2], EBOX_COUNT[2], CACHE_COUNT[2],
+          .d({TIME[2], PERF_COUNT[2], EBOX_COUNT[2], CACHE_COUNT[2],
               3'b000, VECTOR_REQ}),
           .q(mtrEBUS_IN[20]));
 
   mux e22(.en(READ_MTR),
           .sel(DS),
-          .d({_TIME[3], PERF_COUNT[3], EBOX_COUNT[3], CACHE_COUNT[3],
+          .d({TIME[3], PERF_COUNT[3], EBOX_COUNT[3], CACHE_COUNT[3],
               1'b0, INTERVAL_ON, PI_ACCT_EN, INCR_SEL[0]}),
           .q(mtrEBUS_IN[21]));
 
   mux e17(.en(READ_MTR),
           .sel(DS),
-          .d({_TIME[4], PERF_COUNT[4], EBOX_COUNT[4], CACHE_COUNT[4],
+          .d({TIME[4], PERF_COUNT[4], EBOX_COUNT[4], CACHE_COUNT[4],
               1'b0, INTERVAL_DONE, EXEC_ACCT_EN, INCR_SEL[1]}),
           .q(mtrEBUS_IN[22]));
 
   mux e13(.en(READ_MTR),
           .sel(DS),
-          .d({_TIME[5], PERF_COUNT[5], EBOX_COUNT[5], CACHE_COUNT[5],
+          .d({TIME[5], PERF_COUNT[5], EBOX_COUNT[5], CACHE_COUNT[5],
               1'b0, INTERVAL_OVRFLO, ACCT_ON, 1'b0}),
           .q(mtrEBUS_IN[23]));
 
   mux e12(.en(READ_MTR),
           .sel(DS),
-          .d({_TIME[6], PERF_COUNT[6], EBOX_COUNT[6], CACHE_COUNT[6],
+          .d({TIME[6], PERF_COUNT[6], EBOX_COUNT[6], CACHE_COUNT[6],
               INTERVAL[6], PERIOD[6], 2'b00}),
           .q(mtrEBUS_IN[24]));
 
   mux e32(.en(READ_MTR),
           .sel(DS),
-          .d({_TIME[7], PERF_COUNT[7], EBOX_COUNT[7], CACHE_COUNT[7],
+          .d({TIME[7], PERF_COUNT[7], EBOX_COUNT[7], CACHE_COUNT[7],
               INTERVAL[7], PERIOD[7], TIME_ON, ~CONO_MTR}),
           .q(mtrEBUS_IN[25]));
 
   mux e27(.en(READ_MTR),
           .sel(DS),
-          .d({_TIME[8], PERF_COUNT[8], EBOX_COUNT[8], CACHE_COUNT[8],
+          .d({TIME[8], PERF_COUNT[8], EBOX_COUNT[8], CACHE_COUNT[8],
               INTERVAL[8], PERIOD[8], 2'b00}),
           .q(mtrEBUS_IN[26]));
 
   mux e33(.en(READ_MTR),
           .sel(DS),
-          .d({_TIME[9], PERF_COUNT[9], EBOX_COUNT[9], CACHE_COUNT[9],
+          .d({TIME[9], PERF_COUNT[9], EBOX_COUNT[9], CACHE_COUNT[9],
               INTERVAL[9], PERIOD[9], 2'b00}),
           .q(mtrEBUS_IN[27]));
 
   mux e73(.en(READ_MTR),
           .sel(DS),
-          .d({_TIME[10], PERF_COUNT[10], EBOX_COUNT[10], CACHE_COUNT[10],
+          .d({TIME[10], PERF_COUNT[10], EBOX_COUNT[10], CACHE_COUNT[10],
               INTERVAL[10], PERIOD[10], 2'b00}),
           .q(mtrEBUS_IN[28]));
 
   mux e62(.en(READ_MTR),
           .sel(DS),
-          .d({_TIME[11], PERF_COUNT[11], EBOX_COUNT[11], CACHE_COUNT[11],
+          .d({TIME[11], PERF_COUNT[11], EBOX_COUNT[11], CACHE_COUNT[11],
               INTERVAL[11], PERIOD[11], 2'b00}),
           .q(mtrEBUS_IN[29]));
 
   mux e68(.en(READ_MTR),
           .sel(DS),
-          .d({_TIME[12], PERF_COUNT[12], EBOX_COUNT[12], CACHE_COUNT[12],
+          .d({TIME[12], PERF_COUNT[12], EBOX_COUNT[12], CACHE_COUNT[12],
               INTERVAL[12], PERIOD[12], 2'b00}),
           .q(mtrEBUS_IN[30]));
 
   mux e67(.en(READ_MTR),
           .sel(DS),
-          .d({_TIME[13], PERF_COUNT[13], EBOX_COUNT[13], CACHE_COUNT[13],
+          .d({TIME[13], PERF_COUNT[13], EBOX_COUNT[13], CACHE_COUNT[13],
               INTERVAL[13], PERIOD[13], 2'b00}),
           .q(mtrEBUS_IN[31]));
 
   mux e77(.en(READ_MTR),
           .sel(DS),
-          .d({_TIME[14], PERF_COUNT[14], EBOX_COUNT[14], CACHE_COUNT[14],
+          .d({TIME[14], PERF_COUNT[14], EBOX_COUNT[14], CACHE_COUNT[14],
               INTERVAL[14], PERIOD[14], 2'b00}),
           .q(mtrEBUS_IN[32]));
 
   mux e83(.en(READ_MTR),
           .sel(DS),
-          .d({_TIME[15], PERF_COUNT[15], EBOX_COUNT[15], CACHE_COUNT[15],
+          .d({TIME[15], PERF_COUNT[15], EBOX_COUNT[15], CACHE_COUNT[15],
               INTERVAL[15], PERIOD[15], PIC.MTR_PIA[0], 1'b0}),
           .q(mtrEBUS_IN[33]));
 
   mux e79(.en(READ_MTR),
           .sel(DS),
-          .d({_TIME[16], PERF_COUNT[16], EBOX_COUNT[16], CACHE_COUNT[16],
+          .d({TIME[16], PERF_COUNT[16], EBOX_COUNT[16], CACHE_COUNT[16],
               INTERVAL[16], PERIOD[16], PIC.MTR_PIA[1], 1'b0}),
           .q(mtrEBUS_IN[34]));
 
   mux e78(.en(READ_MTR),
           .sel(DS),
-          .d({_TIME[17], PERF_COUNT[17], EBOX_COUNT[17], CACHE_COUNT[17],
+          .d({TIME[17], PERF_COUNT[17], EBOX_COUNT[17], CACHE_COUNT[17],
               INTERVAL[17], PERIOD[17], PIC.MTR_PIA[2], 1'b0}),
           .q(mtrEBUS_IN[35]));
 endmodule

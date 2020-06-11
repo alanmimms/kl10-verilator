@@ -50,7 +50,7 @@ module crm(iCLK CLK,
   assign CRAM.FE = CRAMdata[47:47];
   assign CRAM.SH = CRAMdata[49:50];
   assign CRAM.VMA = CRAMdata[52:53];
-  assign CRAM._TIME = CRAMdata[54:55];
+  assign CRAM.TIME = CRAMdata[54:55];
   assign CRAM.MEM = CRAMdata[56:59];
   assign CRAM.COND = CRAMdata[60:65];
   assign CRAM.CALL = CRAMdata[66:66];
