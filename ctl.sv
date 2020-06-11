@@ -227,7 +227,7 @@ module ctl(iAPR APR,
   assign CTL.DIAG_LD_FUNC_076   = CTL.DIAG_LOAD_FUNC_07x && EBUS.ds[4:6] == 3'b110;
   assign CTL.DIAG_CLK_EDP       = CTL.DIAG_LOAD_FUNC_07x && EBUS.ds[4:6] == 3'b111;
 
-  assign en1xx = CTL.DIAG[0] & CTL.READ_STROBE;
+  assign en1xx = CTL.DS[0] & CTL.READ_STROBE;
   assign EDP.DIAG_READ_FUNC_10x = en1xx && CTL.DIAG[1:3] == 3'b000;
   assign CTL.DIAG_READ_FUNC_11x = en1xx && CTL.DIAG[1:3] == 3'b001;
   assign CTL.DIAG_READ_FUNC_12x = en1xx && CTL.DIAG[1:3] == 3'b010;
