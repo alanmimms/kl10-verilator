@@ -46,25 +46,19 @@ public: double nsPerClock;
   }
 
   virtual vluint64_t tick(void) {
-    // Make sure any combinatorial logic depending upon
-    // inputs that may have changed before we called tick()
-    // has settled before the rising edge of the clock.
-    mod->clk = 0;
-    mod->eval();
-
     // Toggle the clock
     // Rising edge
     mod->clk = 1;
-    ++tickcount;
     mod->eval();
+    if (trace) trace->dump(tickcount * nsPerClock);
 
     // Falling edge
     mod->clk = 0;
     mod->eval();
-    if (trace) trace->dump(tickcount * nsPerClock);
+    if (trace) trace->dump(((double) tickcount + 0.5) * nsPerClock);
 
     if (Verilated::gotFinish()) done = true;
-    return tickcount;
+    return ++tickcount;
   }
 };
 
