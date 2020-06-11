@@ -49,7 +49,7 @@ const diagFuncTypes = `\
       .split(/,\s*/)
       .reduce((cur, t) => {
         const [name, value] = t.split(/\s*=\s*/);
-        return Object.assign(cur, {[`diagf${name}`]: value});
+        return Object.assign(cur, {[`diagf${name}`]: +value});
       }, {});
 
 
@@ -104,7 +104,7 @@ static const char *${arrayName}[] = {
 
 
 function defCXXSparseEnum(enumName, items, w) {
-  const nDigits = Math.ceil(w / 3);
+  const nDigits = Math.ceil(w / 3) + 1; // +1 to assure leading zero to make it octal
   return `\
 typedef enum {
   ${Object.keys(items).map(it => it + ' = ' +
@@ -115,17 +115,21 @@ typedef enum {
 
 function defCXXSparseNames(arrayName, items) {
   const inverted = invert(items);
-  const values = Object.values(items);
-  const min = Math.min(...values);
+  const values = Object.keys(inverted);
   const max = Math.max(...values);
-  const notSparse = new Array(max); // Presumes `min` >= 0
+  const nDigits = Math.ceil(Math.log2(max) / 3) + 1; // +1 for leading zero for octal
+  const notSparse = [];
 
-  for (let k = min; k <= max; ++k) notSparse[k] = inverted[k];
+  for (let k = 0; k <= max; ++k) notSparse[k] = inverted[k];
 
   return `\
 static const char *${arrayName}[] = {
   ` +
-    notSparse.map(x => `  /* ${x} */ "${inverted[x]}"`).join(',\n  ')
+    notSparse.map((name, x) => {
+      const oct = x.toString(8).padStart(nDigits, '0');
+      return `\
+  /* ${oct} */ "${inverted[x] || '???diagf' + oct + '???'}"`;
+    }).join(',\n  ')
   + `
 }`;
 }
@@ -143,6 +147,6 @@ typedef enum ${typedef} {
 
 function invert(items) {
   return Object.entries(items)
-    .reduce((cur, [name, value]) => Object.assign(cur, {[parseInt(value)]: name}),
+    .reduce((cur, [name, value]) => Object.assign(cur, {[+value]: name}),
             {});
 }
