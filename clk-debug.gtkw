@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.101 (w)1999-2019 BSI
-[*] Fri Jun 12 01:54:08 2020
+[*] Fri Jun 12 04:55:16 2020
 [*]
 [dumpfile] "/home/alan/kl10-verilator/kl10pv-trace.vcd"
-[dumpfile_mtime] "Fri Jun 12 01:53:43 2020"
-[dumpfile_size] 24782223
+[dumpfile_mtime] "Fri Jun 12 04:53:29 2020"
+[dumpfile_size] 19024062
 [savefile] "/home/alan/kl10-verilator/clk-debug.gtkw"
-[timestart] 8363
+[timestart] 8788
 [size] 1920 1051
 [pos] -1 -1
-*-7.573267 8710 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-6.573267 8883 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] TOP.
 [treeopen] TOP.top.
 [treeopen] TOP.top.CLK.
@@ -17,8 +17,9 @@
 [treeopen] TOP.top.ebox0.MTR.
 [treeopen] TOP.top.mbox0.
 [treeopen] TOP.top.memory0.
+[treeopen] TOP.top.memory0.bPhase.
 [sst_width] 211
-[signals_width] 210
+[signals_width] 220
 [sst_expanded] 1
 [sst_vpaned_height] 297
 @28
@@ -32,30 +33,32 @@ TOP.top.ebox0.CRAM.TIME[0:1]
 TOP.top.ebox0.CLK.SYNC_EN
 TOP.top.ebox0.CLK.SYNC
 TOP.top.ebox0.CLK.EBOX_SYNC
-TOP.top.ebox0.clk0.MBOX_CLK
-TOP.top.ebox0.clk0.CON.MBOX_WAIT
 @29
-TOP.top.mbox0.CLK.SBUS_CLK
+TOP.top.CLK.CRA
+@30
+TOP.top.CRA.CRADR[0:10]
 @28
+TOP.top.ebox0.clk0.MBOX_CLK
+TOP.top.ebox0.MBC.A_PHASE_COMING
+TOP.top.mbox0.MBOX.PHASE_CHANGE_COMING
+TOP.top.MBC.A_CHANGE_COMING
+TOP.top.MBC.B_CHANGE_COMING
+TOP.top.ebox0.clk0.CON.MBOX_WAIT
+TOP.top.mbox0.CLK.SBUS_CLK
 TOP.top.memory0.aClk
 TOP.top.memory0.bClk
-TOP.top.ebox0.MBC.A_PHASE_COMING
 TOP.top.mbox0.MBOX.MEM_BUSY
-TOP.top.ebox0.MBC.MEM_START
-TOP.top.mbox0.MBOX.MEM_START_A
-TOP.top.memory0.SBUS.START_A
-TOP.top.mbox0.MBOX.MEM_START_B
-TOP.top.memory0.SBUS.START_B
-TOP.top.memory0.SBUS.RQ[0:3]
-TOP.top.memory0.SBUS.RD_RQ
-@30
-TOP.top.memory0.SBUS.ADR[14:35]
-TOP.top.memory0.SBUS.D[0:35]
-@28
-TOP.top.mbox0.MBOX.MEM_DATA_VALID_A
-TOP.top.mbox0.mbc0.MEM_START_RD
 TOP.top.mbox0.mbc0.MEM_START_SET
 TOP.top.mbox0.mbc0.MEM_START_CLR
+TOP.top.ebox0.MBC.MEM_START
+TOP.top.mbox0.mbc0.MEM_START_RD
+TOP.top.mbox0.MBOX.MEM_START_A
+TOP.top.memory0.aPhase.clk
+TOP.top.memory0.SBUS.START_A
+TOP.top.memory0.aPhase.toAck[0:3]
+TOP.top.memory0.aPhase.ACKN
+TOP.top.mbox0.MBOX.MEM_START_B
+TOP.top.memory0.SBUS.START_B
 TOP.top.ebox0.CSH.MBOX_RESP_IN
 TOP.top.ebox0.clk0.CLK.RESP_MBOX
 TOP.top.ebox0.csh0.EBOX_T0
