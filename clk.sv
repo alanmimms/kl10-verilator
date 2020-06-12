@@ -141,9 +141,9 @@ module clk(input bit CROBAR,
   assign ODD = CLK_ON;
 
   // Figure3-28 in EBOX UG shows MBOX clock ~16ns delayed from
-  // CLK.ODD. That's simply one 60MHz edge delay.
+  // CLK.ODD. That's simply one 30MHz edge delay.
   initial MBOX = 0;
-  always_ff @(negedge clk60) MBOX <= ~MBOX;
+  always_ff @(negedge clk30) MBOX <= ~MBOX;
   assign CLK_OUT = MBOX;
 
   assign CLK.CCL = CLK_OUT | DIAG_CHANNEL_CLK_STOP;
@@ -295,7 +295,7 @@ module clk(input bit CROBAR,
 //  assign CLK_OUT = MBOX;
 
   // 125ns is a guess for round trip delay of clock signal across backplane.
-  assign CLK_DELAYED = CLK_OUT;
+  assign CLK_DELAYED = ~CLK_OUT;
 
   assign MBOX_CLK = CLK_DELAYED;
 
