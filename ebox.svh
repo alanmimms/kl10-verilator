@@ -853,7 +853,7 @@ interface iCLK;
   bit [0:1] RATE_SEL;
   bit [0:1] SOURCE_SEL;
   bit [7:10] PF_DISP;
-  bit _1777_EN;
+  bit u1777_EN;
   tEBUSdriver EBUSdriver;
 endinterface
 

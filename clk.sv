@@ -480,7 +480,7 @@ module clk(input bit CROBAR,
            .Q(e12SR));
 
   assign EBOX_SRC_EN = CLK.SYNC & e17q3;
-  assign EBOX_CLK_EN = EBOX_SRC_EN | CLK._1777_EN;
+  assign EBOX_CLK_EN = EBOX_SRC_EN | CLK.u1777_EN;
 
   assign CLK.CRM = e12SR[0];
   assign CLK.CRA = e12SR[0];
@@ -537,12 +537,12 @@ module clk(input bit CROBAR,
   always @(posedge ODD) CLK.PF_DLYD_B <= CLK.PF_DLYD_A;
 
   assign CLK.PAGE_ERROR = CLK.PAGE_FAIL_EN | CLK.INSTR_1777;
-  assign CLK._1777_EN = CLK.FORCE_1777 & CLK.SBR_CALL;
+  assign CLK.u1777_EN = CLK.FORCE_1777 & CLK.SBR_CALL;
   always @(posedge MBOX_CLK)
     CLK.PAGE_FAIL_EN <= ~CLK.INSTR_1777 &
                         (CSH.PAGE_FAIL_HOLD | (CLK.PAGE_FAIL_EN & ~CLK.RESET));
 
-  always @(posedge MBOX_CLK) CLK.INSTR_1777 <= CLK._1777_EN | (~EBOX_CLK_EN & CLK.INSTR_1777);
+  always @(posedge MBOX_CLK) CLK.INSTR_1777 <= CLK.u1777_EN | (~EBOX_CLK_EN & CLK.INSTR_1777);
   always @(posedge MBOX_CLK) CLK.FORCE_1777 <= CLK.PF_DLYD_A;
   always @(posedge MBOX_CLK) CLK.SBR_CALL <= CLK.PF_DLYD_B;
 
@@ -581,7 +581,7 @@ module clk(input bit CROBAR,
                                             CLK.MB_XFER,
                                             ~EBOX_CLK,
                                             CLK.PAGE_ERROR,
-                                            CLK._1777_EN};
+                                            CLK.u1777_EN};
       3'b100: CLK.EBUSdriver.data[30:35] = {CLK.CRAM_PAR_ERR,
                                             ~EBOX_SS,
                                             CLK.SOURCE_SEL[0],
