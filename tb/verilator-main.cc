@@ -50,12 +50,12 @@ public: double nsPerClock;
     // Rising edge
     mod->clk60 = 1;
     mod->eval();
-    if (trace) trace->dump(tickcount * nsPerClock/2.0);
+    if (trace) trace->dump(tickcount * nsPerClock);
 
     // Falling edge
     mod->clk60 = 0;
     mod->eval();
-    if (trace) trace->dump(((double) tickcount + 0.5) * nsPerClock/2.0);
+    if (trace) trace->dump(((double) tickcount + 0.5) * nsPerClock);
 
     if (Verilated::gotFinish()) done = true;
     return ++tickcount;
