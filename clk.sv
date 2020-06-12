@@ -6,9 +6,9 @@
 // HUGE thanks to Rich Alderson of Living Computers Museum for a
 // gorgeous 600 DPI scan of the MP00301 p. 170 in which original scan
 // was obscured in a few places.
-module clk(input bit clk,
-           input bit CROBAR,
+module clk(input bit CROBAR,
            input bit EXTERNAL_CLK,
+           input bit clk60,
            input bit clk30,
            input bit clk31,
 
@@ -139,7 +139,11 @@ module clk(input bit clk,
   assign SOURCE_DELAYED = ~GATED;
   assign CLK_ON = (~CLK.ERROR_STOP | DESKEW_CLK) & (SOURCE_DELAYED | DESKEW_CLK);
   assign ODD = CLK_ON;
-  assign MBOX = CLK_ON;
+
+  // Figure3-28 in EBOX UG shows MBOX clock ~16ns delayed from
+  // CLK.ODD. That's simply one 60MHz edge delay.
+  initial MBOX = 0;
+  always_ff @(negedge clk60) MBOX <= ~MBOX;
   assign CLK_OUT = MBOX;
 
   assign CLK.CCL = CLK_OUT | DIAG_CHANNEL_CLK_STOP;

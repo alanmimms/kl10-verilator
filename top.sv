@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 `include "ebox.svh"
 
-module top(input clk);
+module top(input clk60);
   bit CROBAR;
 
   bit EXTERNAL_CLK, clk30, clk31;
@@ -68,10 +68,13 @@ module top(input clk);
   var int nSteps;
 
 `ifdef VERILATOR
-  assign masterClk = clk;
-  assign EXTERNAL_CLK = clk;
-  assign clk30 = clk;
-  assign clk31 = clk;
+
+  initial clk30 = 0;
+  initial clk31 = 0;
+  always_ff @(posedge clk60) clk30 <= ~clk30;
+  always_ff @(posedge clk60) clk31 <= ~clk31; // For Verilator 31MHz = 30MHz
+  assign masterClk = clk30;
+  assign EXTERNAL_CLK = clk30;
 
   initial $readmemh("images/DRAM.mem", ebox0.ir0.dram.mem);
   initial $readmemh("images/CRAM.mem", ebox0.crm0.cram.mem);

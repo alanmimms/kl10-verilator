@@ -48,14 +48,14 @@ public: double nsPerClock;
   virtual vluint64_t tick(void) {
     // Toggle the clock
     // Rising edge
-    mod->clk = 1;
+    mod->clk60 = 1;
     mod->eval();
-    if (trace) trace->dump(tickcount * nsPerClock);
+    if (trace) trace->dump(tickcount * nsPerClock/2.0);
 
     // Falling edge
-    mod->clk = 0;
+    mod->clk60 = 0;
     mod->eval();
-    if (trace) trace->dump(((double) tickcount + 0.5) * nsPerClock);
+    if (trace) trace->dump(((double) tickcount + 0.5) * nsPerClock/2.0);
 
     if (Verilated::gotFinish()) done = true;
     return ++tickcount;

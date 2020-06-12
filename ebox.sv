@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 `include "ebox.svh"
 
-module ebox(input bit clk,
+module ebox(input bit clk60,
             input bit clk30,
             input bit clk31,
             input bit EXTERNAL_CLK,
