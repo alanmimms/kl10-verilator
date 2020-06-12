@@ -20,13 +20,13 @@ module memory(input bit CROBAR,
   bit [0:35] mem[`MEM_SIZE];
 
   bit aClk, bClk;
-  bit [0:35] aD, bD;
+  bit [0:35] aData, bData;
   bit aParity, bParity;
 
   assign aClk = ~SBUS.CLK_INT;
   assign bClk =  SBUS.CLK_INT;
 
-  assign SBUS.D = aClk ? aD : bD;
+  assign SBUS.D = aClk ? aData : bData;
   assign SBUS.DATA_PAR = aClk ? aParity : bParity;
 
   memPhase aPhase(.clk(aClk),
@@ -34,7 +34,7 @@ module memory(input bit CROBAR,
                   .START(SBUS.START_A),
                   .ACKN(SBUS.ACKN_A),
                   .VALID(SBUS.DATA_VALID_A),
-                  .D(aD),
+                  .D(aData),
                   .PARITY(aParity),
                   .*);
   memPhase bPhase(.clk(bClk),
@@ -42,7 +42,7 @@ module memory(input bit CROBAR,
                   .START(SBUS.START_B),
                   .ACKN(SBUS.ACKN_B),
                   .VALID(SBUS.DATA_VALID_B),
-                  .D(bD),
+                  .D(bData),
                   .PARITY(bParity),
                   .*);
 `else
@@ -84,7 +84,8 @@ module memPhase(input bit CROBAR,
     addr <= '0;
     wo <= '0;
     toAck <= '0;
-  end else if (START) begin     // A transfer is starting or continuing
+  end else if (START && toAck == '0) begin     // A transfer is starting
+    $display($time, " memPhase START, SBUS.RQ=%4b", SBUS.RQ);
     addr <= SBUS.ADR;           // Address of first word we do
     wo <= SBUS.ADR[34:35];      // Word offset we increment mod 4
     toAck <= SBUS.RQ;           // Addresses remaining to ACK
