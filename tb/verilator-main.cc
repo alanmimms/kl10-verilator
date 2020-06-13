@@ -88,7 +88,7 @@ void DTEfinal(LL ns) {
 }
 
 
-static const double endTime = 1.5 * 1000 * 1000 * 1000; // 1.5 seconds
+static const double endTime = 1.5 * 1000 * 1000; // 1.5 ms
 
 
 int main(int argc, char **argv) {
@@ -103,10 +103,10 @@ int main(int argc, char **argv) {
     LL ticks = tb->tick();
     double ns = ticks * tb->nsPerClock;
 
-    if (ns >= endTime) break;
+    if ((LL) ns % 500000 == 0)
+      std::cout << (ns/1000.0) << "us" << std::endl;
 
-    if ((LL) ns % 1000000 == 0)
-      std::cout << (ns/1000) << "us" << std::endl;
+    if (ns >= endTime) break;
   }
 
   exit(EXIT_SUCCESS);

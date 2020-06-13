@@ -331,7 +331,7 @@ static void klBoot(void) {
 
 
 static void HUPhandler(int sig) {
-  printf("\n[SIGHUP from parent - exiting]\n");
+  printf("\n[FE process got SIGHUP from parent - exiting]\n");
   exit(-1);
 }
 
