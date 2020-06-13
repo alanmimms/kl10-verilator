@@ -50,6 +50,15 @@ module clk(input bit CROBAR,
   ebox_clocks ebox_clocks0(.clk_in1(clk));
 `endif
 
+
+`ifdef VERILATOR
+  bit [3:0] ring60;
+  initial ring60 = 4'b1000;     // First tick provides ring60[0] posedge
+
+  // Infinitely left-recirculating ring
+  always_ff @(negedge clk60) ring60 <= {ring60[2:0], ring60[3]};
+`endif
+
   // XXX this is for sim but probably won't work in hardware.
   bit fastMemClk;
   assign fastMemClk = CLK.EDP;
@@ -140,10 +149,12 @@ module clk(input bit CROBAR,
   assign CLK_ON = (~CLK.ERROR_STOP | DESKEW_CLK) & (SOURCE_DELAYED | DESKEW_CLK);
   assign ODD = CLK_ON;
 
-  // Figure3-28 in EBOX UG shows MBOX clock ~16ns delayed from
-  // CLK.ODD. That's simply one 30MHz edge delay.
-  initial MBOX = 0;
-  always_ff @(negedge clk30) MBOX <= ~MBOX;
+ `ifdef VERILATOR
+    assign MBOX = ring60[1];
+ `else
+    assign MBOX = ~ODD;
+ `endif
+    
   assign CLK_OUT = MBOX;
 
   assign CLK.CCL = CLK_OUT | DIAG_CHANNEL_CLK_STOP;
@@ -295,8 +306,7 @@ module clk(input bit CROBAR,
 //  assign CLK_OUT = MBOX;
 
   // 125ns is a guess for round trip delay of clock signal across backplane.
-  assign CLK_DELAYED = ~CLK_OUT;
-
+  assign CLK_DELAYED = CLK_OUT;
   assign MBOX_CLK = CLK_DELAYED;
 
   bit e32q2;
