@@ -438,10 +438,12 @@ module clk(input bit CROBAR,
 
   bit e31B;
   // Note CLK3 has active LOW symbol for E25 and E31. I am treating
-  // the .D() inputs to E31 and Q output of E31 as active HIGH.
-  mux e31(.en(~CLK.SYNC_HOLD),
-          .sel({e25Count[0] | e25Count[1],
-                e25Count[2:3]}),
+  // the .D() inputs to E31 and Q output of E31 as active HIGH. Note
+  // the negative logic E31 used its `.en()` pin to force ASSERT its
+  // output. So we have to OR e31B with ~CLK.SYNC_HOLD to achieve the
+  // same effect.
+  mux e31(.en(1'b1),
+          .sel({e25Count[0] | e25Count[1], e25Count[2:3]}),
           .d({~CRAM.TIME[0] & ~CRAM.TIME[1],
               ~CRAM.TIME[0],
               ~CRAM.TIME[1],
@@ -449,7 +451,7 @@ module clk(input bit CROBAR,
               {4{~e25COUT}}}),
           .q(e31B));
 
-  assign CLK.SYNC_EN = EBOX_SS & ~EBOX_CLK_EN | e31B & ~EBOX_CLK_EN;
+  assign CLK.SYNC_EN = EBOX_SS & ~EBOX_CLK_EN | (e31B | ~CLK.SYNC_HOLD) & ~EBOX_CLK_EN;
 
   bit e10FF;                    // Merged into single FF
   assign CLK.SYNC = e10FF;      // XXX slashed signals
