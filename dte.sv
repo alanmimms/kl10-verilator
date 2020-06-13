@@ -4,6 +4,10 @@
 module dte(iCLK CLK,
            iDTE DTE,
            iEBUS.dte EBUS,
+           input bit [0:5] ucodeMajor,
+           input bit [6:8] ucodeMinor,
+           input bit [0:8] ucodeEdit,
+           input bit [18:35] hwOptions,
            output bit CROBAR);
 
 
@@ -13,11 +17,10 @@ module dte(iCLK CLK,
   import "DPI-C" function void DTEgetRequest(output longint reqTime,
                                              output tReqType reqType,
                                              output tDiagFunction diagReq,
-                                             output longint reqData);
-  import "DPI-C" function void DTEreply(input longint t,
-                                        input tReqType reqType,
-                                        input tDiagFunction diagReq,
-                                        input longint replyData);
+                                             output [0:35] reqData);
+  import "DPI-C" function void DTEreply(input longint replyTime,
+                                        input int replyLH,
+                                        input int replyRH);
 
   initial CROBAR = 1;
 
@@ -26,7 +29,7 @@ module dte(iCLK CLK,
 
   var tReqType reqType;
   var tDiagFunction diagReq;
-  var bit [0:35] reqData, replyData;
+  var bit [0:35] reqData;
 
   var longint reqTime;
   initial reqTime = '0;
@@ -43,44 +46,51 @@ module dte(iCLK CLK,
   always @(posedge clk) ticks <= ticks + 1;
 
   always @(posedge clk) if (DTErequestIsPending()) begin
-    DTEgetRequest(reqTime, reqType, diagReq, {28'b0, reqData});
+    DTEgetRequest(reqTime, reqType, diagReq, reqData);
     reqPending <= 1;
   end
+
+  var int lh;
+  var int rh;
 
   always @(posedge clk) if (reqPending && ticks >= reqTime) begin
 
     if (reqType == dteMisc) begin
+
       case (int'(diagReq))
       clrCROBAR: CROBAR <= 0;
+      getAPRID: ;               // Just reply
       default: ;
       endcase
 
-      DTEreply(ticks, reqType, diagReq, {28'b0, EBUS.data});
+      lh = 32'({ucodeMajor, ucodeMinor, ucodeEdit});
+      rh = 32'(hwOptions);
+      DTEreply(ticks, lh, rh);
       reqPending <= 0;           // No longer waiting to do request
     end else if (reqType == dteWrite) begin
       EBUS.ds <= 7'(diagReq);
       EBUS.diagStrobe <= '1;
 
       DTE.EBUSdriver.driving <= 1;
-      DTE.EBUSdriver.data <= 36'(reqData);
+      DTE.EBUSdriver.data <= reqData;
 
-      DTEreply(ticks, reqType, diagReq, {28'b0, EBUS.data});
+      DTEreply(ticks, 32'(EBUS.data[0:17]), 32'(EBUS.data[18:35]));
       reqPending <= 0;           // No longer waiting to do request
     end else if (reqType == dteDiagFunc) begin
       EBUS.ds <= 7'(diagReq);
       EBUS.diagStrobe <= 1;
 
-      DTEreply(ticks, reqType, diagReq, {28'b0, EBUS.data});
+      DTEreply(ticks, 32'(EBUS.data[0:17]), 32'(EBUS.data[18:35]));
       reqPending <= 0;           // No longer waiting to do request
     end else if (reqType == dteRead) begin
-      DTEreply(ticks, reqType, diagReq, {28'b0, EBUS.data});
+      DTEreply(ticks, 32'(EBUS.data[0:17]), 32'(EBUS.data[18:35]));
       reqPending <= 0;           // No longer waiting to do request
     end else if (reqType == dteReleaseEBUSData) begin
       DTE.EBUSdriver.driving <= 0;
       DTE.EBUSdriver.data <= '0;
       EBUS.diagStrobe <= 0;
 
-      DTEreply(ticks, reqType, diagReq, {28'b0, EBUS.data});
+      DTEreply(ticks, 32'(EBUS.data[0:17]), 32'(EBUS.data[18:35]));
       reqPending <= 0;           // No longer waiting to do request
     end
   end

@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.101 (w)1999-2019 BSI
-[*] Sat Jun 13 19:37:37 2020
+[*] Sat Jun 13 20:32:35 2020
 [*]
 [dumpfile] "/home/alan/kl10-verilator/kl10pv-trace.vcd"
-[dumpfile_mtime] "Sat Jun 13 19:37:20 2020"
-[dumpfile_size] 22024716
+[dumpfile_mtime] "Sat Jun 13 19:45:08 2020"
+[dumpfile_size] 15043448
 [savefile] "/home/alan/kl10-verilator/clk-debug.gtkw"
-[timestart] 14003
+[timestart] 14262
 [size] 1920 1051
 [pos] -1 -1
-*-9.573267 16716 8708 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-10.573267 16379 8708 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [ruler] 8708 175
 [treeopen] TOP.
 [treeopen] TOP.top.
@@ -33,7 +33,7 @@ TOP.top.CLK.MR_RESET
 @28
 TOP.top.ebox0.CRAM.TIME[0:1]
 TOP.top.ebox0.CLK.EBOX_SYNC
-@c00201
+@c00200
 -all-clocks
 @28
 TOP.top.clk60
@@ -60,7 +60,7 @@ TOP.top.ebox0.clk0.CLK_DELAYED
 TOP.top.ebox0.clk0.MBOX_CLK
 TOP.top.CLK.MCL
 TOP.top.CLK.MBZ
-@1401201
+@1401200
 -all-clocks
 @28
 [color] 2
@@ -103,9 +103,12 @@ TOP.top.ebox0.clk0.e25Count[0:3]
 @28
 TOP.top.ebox0.CSH.MBOX_RESP_IN
 TOP.top.ebox0.clk0.CLK.RESP_MBOX
+@22
+TOP.top.memory0.SBUS.D[0:35]
+TOP.top.memory0.SBUS.ADR[14:35]
 @30
 TOP.top.ebox0.VMA.VMA[12:35]
-@c00200
+@c00201
 -ERRs
 @28
 [color] 1
@@ -118,7 +121,7 @@ TOP.top.mbox0.MBOX.MB_PAR_ERR
 TOP.top.mbox0.MBOX.MBOX_ADR_PAR_ERR
 [color] 1
 TOP.top.mbox0.MBOX.MEM_ADR_PAR_ERR
-@1401200
+@1401201
 -ERRs
 [pattern_trace] 1
 [pattern_trace] 0

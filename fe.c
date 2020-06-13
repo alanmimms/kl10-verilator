@@ -1,6 +1,6 @@
 // The FE protocol is communicated via shared memory form from the
 // fork to this same code running in Verilator simulation process.
-// Every message FE->TB and TB->FE is tPipeMessage.
+// Every message FE->TB and TB->FE is tPipeRequest.
 //
 // Time in measured in terms of 10/11 clocks - 60ns per tick. The
 // request time specifies the ticks count to do the action or is zero
@@ -22,7 +22,7 @@
 //   Do an EBUS DS diagnostic write with DIAG on EBUS.DS and EBUS-DATA
 //   on EBUS.data.
 //
-// Every operation returns a reply TB->FE tPipeMessage.
+// Every operation returns a reply TB->FE tPipeRequest.
 //
 // Where `time` is the tick count of when the operation actually
 // executed.
@@ -114,12 +114,19 @@ static pid_t fePID;
 
 #include "dte.h"
 
-// Struct used in both directions on the pipe.
-struct tPipeMessage {
+// Struct used to make a request from FE to DTE on the pipe.
+struct tPipeRequest {
   LL time;
   tReqType type;
-  int diag;
+  unsigned short diag;
   W36 data;
+};
+
+// Struct used to reply from DTE to FE on the pipe.
+struct tPipeReply {
+  LL time;
+  unsigned long lh;
+  unsigned long rh;
 };
 
 // Only one request can be outstanding at one time. The ticks value at
@@ -153,12 +160,12 @@ static void fatalError(const char *msgP) {
 }
 
 
-static LL LH(LL w) {
-  return (w >> 36) & HALF;
+static W36 LH(LL w) {
+  return (w >> 18) & HALF;
 }
 
 
-static LL RH(LL w) {
+static W36 RH(LL w) {
   return w & HALF;
 }
 
@@ -179,12 +186,12 @@ static const char *pipeN(int fd) {
 }
 
 
-static LL sendAndGetResult(LL aTicks,
-                           LL duration,
-                           tReqType aType,
-                           int aDiag = diagfIdle,
-                           W36 aData = 0) {
-  tPipeMessage req;
+static W36 sendAndGetResult(LL aTicks,
+                            LL duration,
+                            tReqType aType,
+                            int aDiag = diagfIdle,
+                            W36 aData = 0) {
+  tPipeRequest req;
   req.time = aTicks;
   req.type = aType;
   req.diag = aDiag;
@@ -197,14 +204,16 @@ static LL sendAndGetResult(LL aTicks,
        aType == dteMisc ? miscFuncNames[aDiag] : diagFuncNames[aDiag],
        octW(aData));
 
-  RLOG("F read(%s) %ld bytes\n", pipeN(toFE[0]), sizeof(req));
-  len = read(toFE[0], &req, sizeof(req));
-  if (len < sizeof(req)) fatalError("read from DTE pipe");
+  tPipeReply reply;
+  RLOG("F read(%s) %ld bytes\n", pipeN(toFE[0]), sizeof(reply));
+  len = read(toFE[0], &reply, sizeof(reply));
+  if (len < sizeof(reply)) fatalError("read from DTE pipe");
 
-  RLOG("F %lld: reply received from DTE: %s %s\n",
-       nextReqTicks + req.time, reqTypeNames[req.type], octW(req.data));
+  LL result = ((LL) reply.lh << 18) | reply.rh;
+  REGLOG("F %lld: reply received from DTE: %06lo,,%06lo  result=%llo\n",
+         nextReqTicks + reply.time, reply.lh, reply.rh, result);
   nextReqTicks += duration;
-  return req.data;
+  return result;
 }
 
 
@@ -217,10 +226,10 @@ static void doWrite(int func, W36 value) {
 }
 
 
-//   Do a miscellaneous control function in DTE.
-static void doMiscFunc(int func) {
+//   Do a miscellaneous control function in DTE and return (option) result.
+static W36 doMiscFunc(int func) {
   REGLOG("F misc func %s\n", miscFuncNames[func]);
-  sendAndGetResult(nextReqTicks, 17, dteMisc, func);
+  return sendAndGetResult(nextReqTicks, 1, dteMisc, func);
 }
 
 
@@ -321,12 +330,35 @@ static void klMasterReset() {
   FELOG("[reset MBOX]\n");
   doWrite(diagfEBUS_LOAD, 0);             // SET KL10 MEM RESET FLOP
   doWrite(diagfWRITE_MBOX, 0120);         // WRITE M-BOX
-  printf("[KL master reset complete]\n\n");
+  printf("[KL master reset complete t=%lld]\n\n", nextReqTicks);
 }
 
 
 static void klBoot(void) {
-  printf("[KL boot goes here]\n");
+  printf("\n");
+  printf("KLISIM -- VERSION 0.0.1 RUNNING\n");
+
+  // LQSHDO: Get hardware options from RH(APRID)
+  const W36 aprid = doMiscFunc(getAPRID);
+  const unsigned ucodeVersion = LH(aprid);
+  const unsigned ucodeMajor = ucodeVersion >> 12;
+  const unsigned ucodeMinor = (ucodeVersion >> 9) & 7;
+  const unsigned ucodeEdit = ucodeVersion & 0777;
+  const unsigned hwo = RH(aprid);
+  printf("aprid=%s = %llo\n", octW(aprid), aprid);
+  printf("hwo=%s\n", octW(hwo));
+  printf("KLISIM -- KL10 S/N: %0lld., MODEL B, %0d HERTZ\n",
+         hwo & (B22 - 1), (hwo & B18) ? 50 : 60);
+  printf("KLISIM -- KL10 HARDWARE ENVIRONMENT\n");
+  if (hwo & B22) printf("   MOS MASTER OSCILLATOR\n");
+  if (hwo & B21) printf("   EXTENDED ADDRESSING\n");
+  if (hwo & B20) printf("   INTERNAL CHANNELS\n");
+  if (hwo & B19) printf("   CACHE\n");
+  printf("\n");
+
+  printf("KLISIM -- MICROCODE VERSION %0o.%0o(%0o) LOADED\n",
+         ucodeMajor, ucodeMinor, ucodeEdit);
+  printf("\n");
 }
 
 
@@ -374,7 +406,7 @@ extern "C" bool DTErequestIsPending(void) {
 // this if `DTErequestIsPending()` returns `true` or you'll block.
 extern "C" void DTEgetRequest(LL *reqTimeP, int *reqTypeP, int *diagReqP, LL *reqDataP) {
   // If we get here we have a message in the pipe. Read it.
-  tPipeMessage req;
+  tPipeRequest req;
   RLOG("S read(%s) %ld bytes\n", pipeN(toDTE[0]), sizeof(req));
   int st = read(toDTE[0], &req, sizeof(req));
   if (st < 0) fatalError("DTEgetRequest pipe read");
@@ -386,12 +418,13 @@ extern "C" void DTEgetRequest(LL *reqTimeP, int *reqTypeP, int *diagReqP, LL *re
 
 
 // This function runs in sim context.
-extern "C" void DTEreply(LL aReplyTime, int aReplyType, LL aReplyData) {
-  struct tPipeMessage reply;
+extern "C" void DTEreply(LL aReplyTime, int replyLH, int replyRH) {
+  struct tPipeReply reply;
   reply.time = aReplyTime;
-  reply.type = (tReqType) aReplyType;
-  reply.data = aReplyData;
-  WLOG("S write(%s) %ld bytes\n", pipeN(toFE[1]), sizeof(reply));
+  reply.lh = replyLH;
+  reply.rh = replyRH;
+  WLOG("S write(%s) result=%06o,,%06o of %ld bytes\n",
+       pipeN(toFE[1]), replyLH, replyRH, sizeof(reply));
   int st = write(toFE[1], &reply, sizeof(reply));
   if (st < 0) fatalError("write toFE");
   //  REGLOG("S %lld: reply sent to FE %s %lld\n",

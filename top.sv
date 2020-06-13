@@ -67,6 +67,10 @@ module top(input clk60);
   var string indent = "";
   var int nSteps;
 
+  bit [0:5] ucodeMajor;
+  bit [6:8] ucodeMinor;
+  bit [0:8] ucodeEdit;
+
 `ifdef VERILATOR
 
   initial clk30 = 0;
@@ -76,10 +80,18 @@ module top(input clk60);
   assign masterClk = clk30;
   assign EXTERNAL_CLK = clk30;
 
-  initial $readmemh("images/DRAM.mem", ebox0.ir0.dram.mem);
-  initial $readmemh("images/CRAM.mem", ebox0.crm0.cram.mem);
+  tCRAM cram136, cram137;
 
   initial begin
+    $readmemh("images/DRAM.mem", ebox0.ir0.dram.mem);
+    $readmemh("images/CRAM.mem", ebox0.crm0.cram.mem);
+
+    cram136 = ebox0.crm0.cram.mem['o136];
+    cram137 = ebox0.crm0.cram.mem['o137];
+    ucodeMajor = cram136.MAGIC[0:5];
+    ucodeMinor = cram136.MAGIC[6:8];
+    ucodeEdit  = cram137.MAGIC[0:8];
+
     // Initialize our memories
     // Based on KLINIT.L20 $ZERAC subroutine.
     // Zero all ACs, including the ones in block #7 (microcode's ACs).

@@ -10,7 +10,7 @@ const FEreqTypes = `None,DiagFunc,Read,Write,Misc,ReleaseEBUSData`
       .split(/,\s*/)
       .map(t => `dte${t}`);
 
-const miscFuncTypes = `clrCROBAR`
+const miscFuncTypes = `clrCROBAR,getAPRID`
       .split(/,\s*/)
       .map(t => t);
 
