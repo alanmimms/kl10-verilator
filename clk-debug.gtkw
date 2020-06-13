@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.101 (w)1999-2019 BSI
-[*] Fri Jun 12 05:12:42 2020
+[*] Fri Jun 12 17:47:08 2020
 [*]
 [dumpfile] "/home/alan/kl10-verilator/kl10pv-trace.vcd"
 [dumpfile_mtime] "Fri Jun 12 05:12:29 2020"
 [dumpfile_size] 20892599
 [savefile] "/home/alan/kl10-verilator/clk-debug.gtkw"
-[timestart] 8428
+[timestart] 8214
 [size] 1920 1051
 [pos] -1 -1
-*-7.573267 8883 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-7.573267 8716 8708 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [ruler] 8708 175
 [treeopen] TOP.
 [treeopen] TOP.top.
@@ -33,7 +33,32 @@ TOP.top.CLK.MR_RESET
 @28
 TOP.top.ebox0.CRAM.TIME[0:1]
 TOP.top.ebox0.CLK.EBOX_SYNC
+TOP.top.clk60
+@29
+TOP.top.clk30
+@28
+[color] 2
+TOP.top.ebox0.clk0.MAIN_SOURCE
+[color] 2
+TOP.top.ebox0.clk0.GATED
+[color] 2
+TOP.top.ebox0.clk0.EBUS_CLK_SOURCE
+[color] 2
+TOP.top.ebox0.clk0.CLK_ON
+[color] 2
+TOP.top.ebox0.clk0.ODD
+[color] 2
+TOP.top.ebox0.clk0.SOURCE_DELAYED
+[color] 2
+TOP.top.ebox0.clk0.CLK_OUT
+[color] 2
+TOP.top.ebox0.clk0.CLK_DELAYED
+[color] 2
 TOP.top.ebox0.clk0.MBOX_CLK
+[color] 2
+TOP.top.ebox0.CLK.EDP
+[color] 2
+TOP.top.ebox0.CLK.APR
 TOP.top.mbox0.CLK.SBUS_CLK
 TOP.top.ebox0.clk0.CON.MBOX_WAIT
 TOP.top.mbox0.MBOX.MEM_BUSY
@@ -53,14 +78,11 @@ TOP.top.ebox0.clk0.MBOX_CLK
 TOP.top.ebox0.CLK.SYNC_EN
 TOP.top.ebox0.CLK.SYNC
 TOP.top.ebox0.clk0.EBOX_CLK_EN
-@29
 TOP.top.ebox0.CLK.u1777_EN
-@28
 TOP.top.ebox0.clk0.e25COUT
 @22
 TOP.top.ebox0.clk0.e25Count[0:3]
 @28
-TOP.top.ebox0.clk0.ODD
 TOP.top.ebox0.CSH.MBOX_RESP_IN
 TOP.top.ebox0.clk0.CLK.RESP_MBOX
 @30
