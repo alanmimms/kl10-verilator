@@ -150,7 +150,7 @@ module clk(input bit CROBAR,
   assign ODD = CLK_ON;
 
  `ifdef VERILATOR
-    assign MBOX = ring60[1];
+    assign MBOX = ring60[1] | ring60[3];
  `else
     assign MBOX = ~ODD;
  `endif
