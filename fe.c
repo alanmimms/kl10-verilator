@@ -278,7 +278,7 @@ static void klMasterReset() {
   printf("[KL master reset]\n");
 
   // $DFXC(.CLRUN=010)    ; Clear run
-  FELOG("[clear RUN flag]\n");
+  FELOG("[clear RUN flop]\n");
   doDiagFunc(diagfCLR_RUN);
 
   // This is the first phase of DMRMRT table operations.
@@ -355,7 +355,8 @@ static W36 fileWordToWord(unsigned char fw[]) {
 }
 
 
-static void loadBootstrap() {
+// Load the BOOT.EXE into memory and return the boot address.
+static W36 loadBootstrap() {
   printf("\n[Loading BOOT.EXE]\n");
 
   FILE *f = fopen("./images/boot/boot.exe", "rb");
@@ -387,12 +388,78 @@ static void loadBootstrap() {
   }
 
   printf("[loaded]\n");
-  printf("[start instruction is %s]\n", octW(w));
-  printf("[start instruction deposited in mem[0]\n");
   printf("[boot image minAddr: %6llo]\n", minAddr);
   printf("[boot image maxAddr: %6llo]\n", maxAddr);
-  printf("\n");
+  printf("[start instruction is %s]\n", octW(w));
+
   doWriteMemory(0, w);
+  printf("[start instruction deposited in mem[0]\n\n");
+  return w;
+}
+
+
+/*
+// Based on KLINIT.T20 $LDAR routine. PUT THE MICROCODE INTO THE HALT
+// LOOP, STOP IT, PHASE THE CLOCKS, AND LOAD THE AR REGISTER WITH AN
+// INSTRUCTION OR STARTING ADDRESS.
+//
+// We can actually assume we are already in the HALT loop and stopped.
+// So we don't bother with the clock phasing shit. We just stop the KL
+// clock, load AR with our starting PC, and reset the CRADR to zero
+// (the START entry point) and go. This differs from DTE20 FE but its
+// end effect is the same.
+static void loadARandResetCRADR(W36 newAR) {
+  FELOG("[stop clocks]\n");
+  doDiagFunc(diagfSTOP_CLOCK);
+
+  FELOG("[load AR with %s]\n", octW(newAR));
+  doMiscFunc(loadAR, LH(newAR), RH(newAR));
+
+  FELOG("[zero CRADR]\n");
+  doMiscFunc(loadAR, loadCRADR, 0ull);
+}
+*/
+
+
+// Derived from KLINIT.T20 $TENST and $STRKL functions. XXX for now,
+// use all zero (which is already loaded to AC0 by clearing all ACs)
+// for .KLIWD to indicate we want dialog with KL boot process.
+//
+// $STRKL: START THE KL AT THE 22 BIT ADDRESS POINTED TO BY R0. THIS
+// IS DONE BY LOADING THE AR WITH THE ADDRESS, PUSHING THE RUN AND
+// CONTINUE BUTTONS, AND STARTING THE CLOCK. WE STEP THE MICROCODE OUT
+// OF THE HALT LOOP TO MAKE SURE IT IS RUNNING BEFORE WE LEAVE.
+static void startKL(W36 bootAddr) {
+  bootAddr &= (1ul << 23) - 1ul; /* Mask to just 22 bits of start address */
+
+  // Load bootAddr into AR and reset CRAM address to 0 (START).
+  //  loadARandResetCRADR(bootAddr);
+  // XXX for now we depend on mem[0] containing our start instruction.
+
+  // Set the RUN flop.
+  FELOG("[set RUN flop]\n");
+  doDiagFunc(diagfSET_RUN);
+
+  // Set the CONTINUE button.
+  FELOG("[set CONTINUE]\n");
+  doDiagFunc(diagfCONTINUE);
+
+  // Single step the MBOX clock up to 1000 times waiting for
+  // indication the KL microcode is out of its HALT loop by checking
+  // for RUN being set in its status.
+  int nStepsToRUN = 1000;
+
+  while (--nStepsToRUN) {
+    doDiagFunc(diagfSTEP_CLOCK);
+    W36 diag1 = doMiscFunc(getDiagWord1);
+    if ((diag1 & 1) == 0) break;       /* HALT flag is clear */
+  }
+
+  if (!nStepsToRUN) printf("WARNING: KL didn't exit HALT loop after 1000 clocks\n");
+
+  // Start the KL clock running.
+  FELOG("[start clock]\n");
+  doDiagFunc(diagfSTART_CLOCK);                   // START THE CLOCK
 }
 
 
@@ -417,7 +484,8 @@ static void klBoot(void) {
   printf("\nKLISIM -- MICROCODE VERSION %0o.%0o(%0o) LOADED\n\n",
          ucodeMajor, ucodeMinor, ucodeEdit);
 
-  loadBootstrap();
+  W36 bootAddr = loadBootstrap();
+  startKL(bootAddr);
 }
 
 

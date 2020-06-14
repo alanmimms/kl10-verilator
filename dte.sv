@@ -2,8 +2,10 @@
 `include "ebox.svh"
 
 module dte(iCLK CLK,
+           iCRA CRA,
            iDTE DTE,
            iEBUS.dte EBUS,
+           iEDP EDP,
            input bit [0:5] ucodeMajor,
            input bit [6:8] ucodeMinor,
            input bit [0:8] ucodeEdit,
@@ -60,14 +62,28 @@ module dte(iCLK CLK,
 
       case (int'(diagReq))
       clrCROBAR: CROBAR <= 0;
-      getAPRID: ;               // Just reply
+
+      getAPRID: begin
+        lh = 32'({ucodeMajor, ucodeMinor, ucodeEdit});
+        rh = 32'(hwOptions);
+      end
+      
       // XXX fix this to use size of mem to adjust width of index.
       writeMemory: memory0.mem[reqData1[18:35]] <= reqData2;
+
+      getDiagWord1: begin       // We don't bother being bit level compatible with DTE20
+        lh = '0;
+        rh = {30'b0, CON.RUN, CON.EBOX_HALTED};
+      end
+
+/*
+      loadAR: EDP.AR <= {reqData1[18:35], reqData2[18:35]};
+      loadCRADR: CRA.CRADR <= reqData1[25:35];
+*/
+
       default: ;
       endcase
 
-      lh = 32'({ucodeMajor, ucodeMinor, ucodeEdit});
-      rh = 32'(hwOptions);
       DTEreply(ticks, lh, rh);
       reqPending <= 0;           // No longer waiting to do request
     end else if (reqType == dteWrite) begin
