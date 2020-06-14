@@ -119,7 +119,8 @@ struct tPipeRequest {
   LL time;
   tReqType type;
   unsigned short diag;
-  W36 data;
+  W36 data1;
+  W36 data2;
 };
 
 // Struct used to reply from DTE to FE on the pipe.
@@ -170,8 +171,9 @@ static W36 RH(LL w) {
 }
 
 
-static char *octW(LL w) {
-  static char buf[64];
+static char octWbuf[8];
+
+static char *octW(LL w, char *buf = octWbuf) {
   sprintf(buf, "%06llo,,%06llo", LH(w), RH(w));
   return buf;
 }
@@ -190,19 +192,22 @@ static W36 sendAndGetResult(LL aTicks,
                             LL duration,
                             tReqType aType,
                             int aDiag = diagfIdle,
-                            W36 aData = 0) {
+                            W36 aData1 = 0,
+                            W36 aData2 = 0) {
   tPipeRequest req;
   req.time = aTicks;
   req.type = aType;
   req.diag = aDiag;
-  req.data = aData;
+  req.data1 = aData1;
+  req.data2 = aData2;
   WLOG("F write(%s) %ld bytes\n", pipeN(toDTE[1]), sizeof(req));
   int len = write(toDTE[1], &req, sizeof(req));
   if (len < sizeof(req)) fatalError("write to DTE pipe");
-  WLOG("F %lld: send %s %s %s\n",
+  char octWbuf2[8];
+  WLOG("F %lld: send %s %s %s %s\n",
        req.time, reqTypeNames[aType],
        aType == dteMisc ? miscFuncNames[aDiag] : diagFuncNames[aDiag],
-       octW(aData));
+       octW(aData1), octW(aData2, octWbuf2));
 
   tPipeReply reply;
   RLOG("F read(%s) %ld bytes\n", pipeN(toFE[0]), sizeof(reply));
@@ -230,6 +235,12 @@ static void doWrite(int func, W36 value) {
 static W36 doMiscFunc(int func) {
   REGLOG("F misc func %s\n", miscFuncNames[func]);
   return sendAndGetResult(nextReqTicks, 1, dteMisc, func);
+}
+
+
+static W36 doWriteMemory(W36 addr, W36 w) {
+  REGLOG("F write memory [%6llo]=%s\n", addr, octW(w));
+  return sendAndGetResult(nextReqTicks, 1, dteMisc, writeMemory, addr, w);
 }
 
 
@@ -334,9 +345,59 @@ static void klMasterReset() {
 }
 
 
-static void klBoot(void) {
+static W36 fileWordToWord(unsigned char fw[]) {
+  return
+    ((W36) fw[0] << 28) |
+    ((W36) fw[1] << 20) |
+    ((W36) fw[2] << 12) |
+    ((W36) fw[3] <<  4) |
+    ((W36) fw[4] >> 4);
+}
+
+
+static void loadBootstrap() {
+  printf("\n[Loading BOOT.EXE]\n");
+
+  FILE *f = fopen("./images/boot/boot.exe", "rb");
+  if (!f) fatalError("opening images/boot/boot.exe");
+  W36 minAddr = (1ull << 36) - 1;
+  W36 maxAddr = 0;
+  W36 w;
+
+  for (;;) {
+    unsigned char fw[5];
+    size_t len = fread(&fw, 1, sizeof(fw), f);
+    if (len < sizeof(fw)) fatalError("reading images/boot/boot.exe");
+    w = fileWordToWord(fw);
+    unsigned nww = LH(w);
+    unsigned addr = RH(w);
+    if (nww < B18) break;
+
+    int nWords = B17 - nww;     /* Negate RH */
+
+    for (int wn = nWords; wn; --wn) {
+      len = fread(fw, 1, sizeof(fw), f);
+      if (len < sizeof(fw)) fatalError("reading images/boot/boot.exe");
+      w = fileWordToWord(fw);
+      if (addr < minAddr) minAddr = addr;
+      if (addr > maxAddr) maxAddr = addr;
+      doWriteMemory(addr, w);
+      ++addr;
+    }
+  }
+
+  printf("[loaded]\n");
+  printf("[start instruction is %s]\n", octW(w));
+  printf("[start instruction deposited in mem[0]\n");
+  printf("[boot image minAddr: %6llo]\n", minAddr);
+  printf("[boot image maxAddr: %6llo]\n", maxAddr);
   printf("\n");
-  printf("KLISIM -- VERSION 0.0.1 RUNNING\n");
+  doWriteMemory(0, w);
+}
+
+
+static void klBoot(void) {
+  printf("\nKLISIM -- VERSION 0.0.1 RUNNING\n");
 
   // LQSHDO: Get hardware options from RH(APRID)
   const W36 aprid = doMiscFunc(getAPRID);
@@ -345,8 +406,6 @@ static void klBoot(void) {
   const unsigned ucodeMinor = (ucodeVersion >> 9) & 7;
   const unsigned ucodeEdit = ucodeVersion & 0777;
   const unsigned hwo = RH(aprid);
-  printf("aprid=%s = %llo\n", octW(aprid), aprid);
-  printf("hwo=%s\n", octW(hwo));
   printf("KLISIM -- KL10 S/N: %0lld., MODEL B, %0d HERTZ\n",
          hwo & (B22 - 1), (hwo & B18) ? 50 : 60);
   printf("KLISIM -- KL10 HARDWARE ENVIRONMENT\n");
@@ -354,11 +413,11 @@ static void klBoot(void) {
   if (hwo & B21) printf("   EXTENDED ADDRESSING\n");
   if (hwo & B20) printf("   INTERNAL CHANNELS\n");
   if (hwo & B19) printf("   CACHE\n");
-  printf("\n");
 
-  printf("KLISIM -- MICROCODE VERSION %0o.%0o(%0o) LOADED\n",
+  printf("\nKLISIM -- MICROCODE VERSION %0o.%0o(%0o) LOADED\n\n",
          ucodeMajor, ucodeMinor, ucodeEdit);
-  printf("\n");
+
+  loadBootstrap();
 }
 
 
@@ -404,7 +463,8 @@ extern "C" bool DTErequestIsPending(void) {
 
 // This function runs in sim context and is called from RTL. Only call
 // this if `DTErequestIsPending()` returns `true` or you'll block.
-extern "C" void DTEgetRequest(LL *reqTimeP, int *reqTypeP, int *diagReqP, LL *reqDataP) {
+extern "C" void DTEgetRequest(LL *reqTimeP, int *reqTypeP, int *diagReqP,
+                              LL *reqData1P, LL *reqData2P) {
   // If we get here we have a message in the pipe. Read it.
   tPipeRequest req;
   RLOG("S read(%s) %ld bytes\n", pipeN(toDTE[0]), sizeof(req));
@@ -413,7 +473,8 @@ extern "C" void DTEgetRequest(LL *reqTimeP, int *reqTypeP, int *diagReqP, LL *re
   *reqTimeP = req.time;
   *reqTypeP = (int) req.type;
   *diagReqP = (int) req.diag;
-  *reqDataP = req.data;
+  *reqData1P = req.data1;
+  *reqData2P = req.data1;
 }
 
 

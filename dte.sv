@@ -17,7 +17,8 @@ module dte(iCLK CLK,
   import "DPI-C" function void DTEgetRequest(output longint reqTime,
                                              output tReqType reqType,
                                              output tDiagFunction diagReq,
-                                             output [0:35] reqData);
+                                             output [0:35] reqData1,
+                                             output [0:35] reqData2);
   import "DPI-C" function void DTEreply(input longint replyTime,
                                         input int replyLH,
                                         input int replyRH);
@@ -29,7 +30,7 @@ module dte(iCLK CLK,
 
   var tReqType reqType;
   var tDiagFunction diagReq;
-  var bit [0:35] reqData;
+  var bit [0:35] reqData1, reqData2;
 
   var longint reqTime;
   initial reqTime = '0;
@@ -46,7 +47,7 @@ module dte(iCLK CLK,
   always @(posedge clk) ticks <= ticks + 1;
 
   always @(posedge clk) if (DTErequestIsPending()) begin
-    DTEgetRequest(reqTime, reqType, diagReq, reqData);
+    DTEgetRequest(reqTime, reqType, diagReq, reqData1, reqData2);
     reqPending <= 1;
   end
 
@@ -60,6 +61,8 @@ module dte(iCLK CLK,
       case (int'(diagReq))
       clrCROBAR: CROBAR <= 0;
       getAPRID: ;               // Just reply
+      // XXX fix this to use size of mem to adjust width of index.
+      writeMemory: memory0.mem[reqData1[18:35]] <= reqData2;
       default: ;
       endcase
 
@@ -72,7 +75,7 @@ module dte(iCLK CLK,
       EBUS.diagStrobe <= '1;
 
       DTE.EBUSdriver.driving <= 1;
-      DTE.EBUSdriver.data <= reqData;
+      DTE.EBUSdriver.data <= reqData1;
 
       DTEreply(ticks, 32'(EBUS.data[0:17]), 32'(EBUS.data[18:35]));
       reqPending <= 0;           // No longer waiting to do request
