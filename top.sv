@@ -60,7 +60,7 @@ module top(input clk60);
                            1'b1,      // [20] Internal channels
                            1'b1,      // [21] Extended KL
                            1'b0,      // [22] Has master oscillator (not needed here)
-                           13'd4001}; // [23:35] Serial number
+                           13'd4012}; // [23:35] Serial number (octal 7654)
 
   bit masterClk;
 
