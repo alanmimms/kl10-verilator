@@ -845,7 +845,6 @@ interface iCLK;
   bit SBR_CALL;
   bit SBUS_CLK;
   bit SCD;
-  bit SYNC;
   bit SYNC_EN;
   bit SYNC_HOLD;
   bit TENELEVEN_CLK;

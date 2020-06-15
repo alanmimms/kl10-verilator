@@ -45,6 +45,7 @@ module clk(input bit CROBAR,
   bit BURST, CLK_DELAYED, MBOX_CLK, MAIN_SOURCE, GATED, GATED_EN, ODD, CLK_ON;
   bit [0:7] burstCounter;
   bit BURST_CNTeq0;
+  bit SYNC;
 
 `ifndef KL10PV_TB
   ebox_clocks ebox_clocks0(.clk_in1(clk));
@@ -145,16 +146,16 @@ module clk(input bit CROBAR,
 
   assign GATED = e56q2 & MAIN_SOURCE;
   assign EBUS_CLK_SOURCE = ~GATED;
-  assign SOURCE_DELAYED = ~GATED;
   assign CLK_ON = (~CLK.ERROR_STOP | DESKEW_CLK) & (SOURCE_DELAYED | DESKEW_CLK);
-  assign ODD = CLK_ON;
+  assign MBOX = ~ODD;
 
  `ifdef VERILATOR
-    assign MBOX = ~(ring60[1] | ring60[3]);
+    assign SOURCE_DELAYED = ~(ring60[0] | ring60[2]);
  `else
-    assign MBOX = ~ODD;
+    assign SOURCE_DELAYED = ~GATED;
  `endif
     
+  assign ODD = CLK_ON;
   assign CLK_OUT = MBOX;
 
   assign CLK.CCL = CLK_OUT | DIAG_CHANNEL_CLK_STOP;
@@ -243,7 +244,7 @@ module clk(input bit CROBAR,
   USR4 e42(.S0(1'b1),
            .D({CLK.FUNC_SINGLE_STEP,
                CLK.FUNC_EBOX_SS,
-               CLK.FUNC_EBOX_SS & ~CLK.SYNC,
+               CLK.FUNC_EBOX_SS & ~SYNC,
                CLK.FUNC_EBOX_SS}),
            .S3(CROBAR),
            .CLK(MAIN_SOURCE),
@@ -297,7 +298,7 @@ module clk(input bit CROBAR,
 
   assign CLK.RESET = ~e66SRFF;
   assign CLK.MR_RESET = CLK.RESET;
-  assign CLK.SYNC_HOLD = CLK.MR_RESET | CLK.SYNC;
+  assign CLK.SYNC_HOLD = CLK.MR_RESET | SYNC;
 
   // In real KL, CLK_OUT is routed to far end of backplane and back as
   // CLK1 CLK DELAYED according to EBOX-UD Logical Delays and Skew,
@@ -454,7 +455,7 @@ module clk(input bit CROBAR,
   assign CLK.SYNC_EN = EBOX_SS & ~EBOX_CLK_EN | (e31B | ~CLK.SYNC_HOLD) & ~EBOX_CLK_EN;
 
   bit e10FF;                    // Merged into single FF
-  assign CLK.SYNC = e10FF;      // XXX slashed signals
+  assign SYNC = e10FF;          // XXX slashed signals
 
   // Note CLK.EBOX_SYNC is described in EK-EBUS-UD-006 "3.2.4 EBox
   // Clock Control" p. 178. This signal is the "... MBOX Sync Point
@@ -482,16 +483,16 @@ module clk(input bit CROBAR,
   assign e17q3 = ~CON.MBOX_WAIT | CLK.RESP_MBOX | VMA.AC_REF | EBOX_SS | CLK.RESET;
 
   USR4 e12(.S0(CLK.PF_DLYD_A),
-           .D({CLK.SYNC & e17q3 & notHoldAB & ~EBOX_CRM_DIS,
-               CLK.SYNC & e17q3 & notHoldAB & ~EBOX_EDP_DIS,
-               CLK.SYNC & e17q3 & notHoldAB & ~EBOX_CTL_DIS,
+           .D({SYNC & e17q3 & notHoldAB & ~EBOX_CRM_DIS,
+               SYNC & e17q3 & notHoldAB & ~EBOX_EDP_DIS,
+               SYNC & e17q3 & notHoldAB & ~EBOX_CTL_DIS,
                EBOX_SRC_EN}),
            .S3(1'b0),
            .SEL({CLK.PAGE_FAIL, CLK.PF_DLYD_A}),
            .CLK(ODD),
            .Q(e12SR));
 
-  assign EBOX_SRC_EN = CLK.SYNC & e17q3;
+  assign EBOX_SRC_EN = SYNC & e17q3;
   assign EBOX_CLK_EN = EBOX_SRC_EN | CLK.u1777_EN;
 
   assign CLK.CRM = e12SR[0];
@@ -521,7 +522,7 @@ module clk(input bit CROBAR,
                         CLK.EBOX_REQ & ~VMA.AC_REF |
                         CSH.EBOX_RETRY_REQ & ~VMA.AC_REF |
                         CLK.SYNC_EN & MCL.MBOX_CYC_REQ |
-                        CLK.SYNC & MCL.MBOX_CYC_REQ) // E1q2
+                        SYNC & MCL.MBOX_CYC_REQ) // E1q2
                       |
                       ~(~CLK.PAGE_FAIL_EN &
                         ~CSH.EBOX_T0_IN &
@@ -585,7 +586,7 @@ module clk(input bit CROBAR,
       3'b010: CLK.EBUSdriver.data[30:35] = {CLK.ERROR_STOP,
                                             ~CLK.GO,
                                             CLK.EBOX_REQ,
-                                            CLK.SYNC,
+                                            SYNC,
                                             CLK.PAGE_FAIL_EN,
                                             CLK.FORCE_1777};
       3'b011: CLK.EBUSdriver.data[30:35] = {CLK.DRAM_PAR_ERR,
