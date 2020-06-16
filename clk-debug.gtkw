@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.101 (w)1999-2019 BSI
-[*] Mon Jun 15 07:15:00 2020
+[*] Tue Jun 16 04:56:41 2020
 [*]
 [dumpfile] "/home/alan/kl10-verilator/kl10pv-trace.vcd"
-[dumpfile_mtime] "Mon Jun 15 07:13:29 2020"
-[dumpfile_size] 24977198
+[dumpfile_mtime] "Tue Jun 16 04:53:26 2020"
+[dumpfile_size] 22271900
 [savefile] "/home/alan/kl10-verilator/clk-debug.gtkw"
-[timestart] 15134
+[timestart] 636401
 [size] 1920 1051
 [pos] -1 -1
-*-8.771627 16725 8708 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-8.771627 637825 8708 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [ruler] 8708 175
 [treeopen] TOP.
 [treeopen] TOP.top.
@@ -18,9 +18,11 @@
 [treeopen] TOP.top.ebox0.CLK.
 [treeopen] TOP.top.ebox0.crm0.
 [treeopen] TOP.top.ebox0.MTR.
+[treeopen] TOP.top.ebox0.vma0.
 [treeopen] TOP.top.EDP.
 [treeopen] TOP.top.mbox0.
 [treeopen] TOP.top.memory0.
+[treeopen] TOP.top.memory0.aPhase.
 [treeopen] TOP.top.memory0.bPhase.
 [sst_width] 211
 [signals_width] 233
@@ -30,8 +32,6 @@
 TOP.top.CLK.MR_RESET
 [color] 2
 +{TOP.top.CLK.CRA} TOP.top.CLK.CRA
-@29
-TOP.top.ebox0.CLK.VMA
 @30
 +{CRADR} TOP.top.CRA.CRADR[0:10]
 TOP.top.ebox0.EDP.AR[0:35]
@@ -91,7 +91,17 @@ TOP.top.ebox0.CRAM.VMA[0:1]
 @1401200
 -CRAM
 @28
+[color] 2
+TOP.top.ebox0.clk0.ODD
+[color] 2
+TOP.top.ebox0.clk0.MBOX
+[color] 2
+TOP.top.ebox0.clk0.CLK_OUT
+[color] 2
+TOP.top.ebox0.clk0.MBOX_CLK
+TOP.top.ebox0.clk0.EBOX_SOURCE
 TOP.top.ebox0.CLK.EBOX_SYNC
+TOP.top.ebox0.clk0.EBOX_SRC_EN
 @c00200
 -all-clocks
 @28
@@ -113,10 +123,6 @@ TOP.top.ebox0.clk0.ring60[3:0]
 -group_end
 @28
 [color] 2
-TOP.top.ebox0.clk0.ODD
-[color] 2
-TOP.top.ebox0.clk0.MBOX
-[color] 2
 TOP.top.clk30
 [color] 2
 TOP.top.ebox0.clk0.MAIN_SOURCE
@@ -127,11 +133,7 @@ TOP.top.ebox0.clk0.CLK_ON
 [color] 2
 TOP.top.ebox0.clk0.SOURCE_DELAYED
 [color] 2
-TOP.top.ebox0.clk0.CLK_OUT
-[color] 2
 TOP.top.ebox0.clk0.CLK_DELAYED
-[color] 2
-TOP.top.ebox0.clk0.MBOX_CLK
 [color] 2
 TOP.top.ebox0.clk0.EBUS_CLK_SOURCE
 [color] 2
@@ -151,36 +153,28 @@ TOP.top.ebox0.CLK.EDP
 @28
 TOP.top.ebox0.CSH.MBOX_RESP_IN
 TOP.top.ebox0.clk0.CLK.RESP_MBOX
+@29
 TOP.top.ebox0.clk0.CON.MBOX_WAIT
+@28
 TOP.top.mbox0.MBOX.MEM_BUSY
 @22
 [color] 3
 TOP.top.mbox0.PMA.PA[14:35]
 @28
-TOP.top.mbox0.MBX.RQ_IN[0:3]
-TOP.top.mbox0.mbc0.RQ_HOLD
-TOP.top.mbox0.MBOX.MEM_RQ[0:3]
 +{SBUS_RQ} TOP.top.memory0.SBUS.RQ[0:3]
 @30
 +{SBUS_D} TOP.top.memory0.SBUS.D[0:35]
 [color] 3
 +{SBUS_ADR} TOP.top.memory0.SBUS.ADR[14:35]
-TOP.top.ebox0.vma0.VMA_IN[12:17]
-@28
-TOP.top.ebox0.MCL.VMA_AD
-@30
-TOP.top.ebox0.vma0.VMA_AD[18:35]
-TOP.top.mbox0.VMA.PC[12:35]
-TOP.top.ebox0.vma0.vmaMux[18:35]
-[color] 3
-TOP.top.ebox0.VMA.VMA[12:35]
 @800200
 -memA
 @28
 TOP.top.memory0.aPhase.START
 TOP.top.memory0.aPhase.toAck[0:3]
-TOP.top.memory0.aPhase.VALID
 TOP.top.memory0.aPhase.ACKN
+TOP.top.memory0.aPhase.VALID
+@22
+TOP.top.memory0.aPhase.D[0:35]
 @1000200
 -memA
 @28
@@ -191,8 +185,10 @@ TOP.top.mbox0.SBUS.CLK_INT
 @28
 TOP.top.memory0.bPhase.START
 TOP.top.memory0.bPhase.toAck[0:3]
-TOP.top.memory0.bPhase.VALID
 TOP.top.memory0.bPhase.ACKN
+TOP.top.memory0.bPhase.VALID
+@22
+TOP.top.memory0.bPhase.D[0:35]
 @1000200
 -memB
 -MBOX

@@ -21,7 +21,7 @@ module mbx(iAPR APR,
            iPMA PMA
 );
 
-  bit clk;
+  bit clk /*noverilator clocker*/;
   bit E_CORE_RD_RQ, EBOX_DIAG_CYC, C_DIR_PAR_ERR, ANY_VAL_HOLD, READY_TO_GO;
   bit EBOX_PAGED, CCA_CYC_DONE, RESET, CSH_CCA_CYC, CSH_CCA_ONE_PAGE;
   bit CCA_HOLD_ADR, MB_WR_RQ_ANY, MB_WR_RQ_P1, MB_WR_RQ_P2, CTOMB_LOAD;

@@ -36,8 +36,6 @@ module ebox(input bit clk60,
             iVMA VMA,
             iEBUS.mod EBUS);
 
-  bit mboxClk;
-
   apr apr0(.*);
   clk clk0(.*);
   con con0(.*);

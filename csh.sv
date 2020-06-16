@@ -23,7 +23,7 @@ module csh(iAPR APR,
            iVMA VMA
            );
 
-  bit clk;
+  bit clk /*noverilator clocker*/;
   bit MB_REQ, CHAN_REQ_EN, CYC_TYPE_HOLD, WRITEBACK_T2;
   bit EBOX_REQ_EN, NON_EBOX_REQ_GRANT;
   bit CACHE_IDLE_IN_A, CACHE_IDLE_IN_B, CACHE_IDLE_IN_C, CACHE_IDLE_IN_D, CACHE_IDLE_IN;

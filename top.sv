@@ -1,15 +1,13 @@
 `timescale 1ns/1ps
 `include "ebox.svh"
 
-module top(input clk60);
+module top(input clk60 /*noverilator clocker*/);
   bit CROBAR;
 
   bit EXTERNAL_CLK, clk30, clk31;
 
   bit [27:35] MBOX_GATE_VMA;
   bit [10:12] CACHE_CLEARER;
-
-  bit mboxClk;
 
   // TEMPORARY?
   bit PWR_WARN;

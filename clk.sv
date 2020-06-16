@@ -7,10 +7,10 @@
 // gorgeous 600 DPI scan of the MP00301 p. 170 in which original scan
 // was obscured in a few places.
 module clk(input bit CROBAR,
-           input bit EXTERNAL_CLK,
-           input bit clk60,
-           input bit clk30,
-           input bit clk31,
+           input bit EXTERNAL_CLK /*noverilator clocker*/,
+           input bit clk60 /*noverilator clocker*/,
+           input bit clk30 /*noverilator clocker*/,
+           input bit clk31 /*noverilator clocker*/,
 
            iAPR APR,
            iCLK CLK,
@@ -26,9 +26,7 @@ module clk(input bit CROBAR,
            iSCD SCD,
            iSHM SHM,
            iVMA VMA,
-
-           iEBUS.mod EBUS
-           );
+           iEBUS.mod EBUS);
 
   bit DESKEW_CLK = 0;
   bit SYNCHRONIZE_CLK;
@@ -39,13 +37,27 @@ module clk(input bit CROBAR,
 
   bit CRAM_PAR_CHECK, FM_PAR_CHECK, DRAM_PAR_CHECK, FS_CHECK;
   bit FS_EN_A, FS_EN_B, FS_EN_C, FS_EN_D, FS_EN_E, FS_EN_F, FS_EN_G;
-  bit EBOX_SOURCE, EBOX_SRC_EN, MBOX, EBOX_SS;
-  bit RATE_SELECTED, EBUS_CLK_SOURCE, SOURCE_DELAYED, CLK_OUT, EBOX_CLK;
+  bit EBOX_SOURCE /*nonoverilator clocker*/;
+  bit EBOX_SRC_EN;
+  bit MBOX /*noverilator clocker*/;
+  bit EBOX_SS;
+  bit RATE_SELECTED;
+  bit EBUS_CLK_SOURCE /*noverilator clocker*/;
+  bit SOURCE_DELAYED /*noverilator clocker*/;
+  bit CLK_OUT /*noverilator clocker*/;
+  bit EBOX_CLK;
   bit EBOX_CLK_EN, EBOX_CLK_ERROR, EBOX_EDP_DIS, EBOX_CRM_DIS, EBOX_CTL_DIS;
-  bit BURST, CLK_DELAYED, MBOX_CLK, MAIN_SOURCE, GATED, GATED_EN, ODD, CLK_ON;
+  bit BURST;
+  bit CLK_DELAYED /*noverilator clocker*/;
+  bit MBOX_CLK /*noverilator clocker*/;
+  bit MAIN_SOURCE /*noverilator clocker*/;
+  bit GATED /*noverilator clocker*/;
+  bit GATED_EN;
+  bit ODD /*noverilator clocker*/;
+  bit CLK_ON;
   bit [0:7] burstCounter;
   bit BURST_CNTeq0;
-  bit SYNC;
+  bit SYNC /*noverilator clocker*/;
 
 `ifndef KL10PV_TB
   ebox_clocks ebox_clocks0(.clk_in1(clk));
@@ -147,7 +159,7 @@ module clk(input bit CROBAR,
   assign GATED = e56q2 & MAIN_SOURCE;
   assign EBUS_CLK_SOURCE = ~GATED;
   assign CLK_ON = (~CLK.ERROR_STOP | DESKEW_CLK) & (SOURCE_DELAYED | DESKEW_CLK);
-  assign MBOX = ~ODD;
+  assign MBOX = ODD;
 
  `ifdef VERILATOR
     assign SOURCE_DELAYED = ~(ring60[0] | ring60[2]);
@@ -323,8 +335,7 @@ module clk(input bit CROBAR,
   bit e52COUT;
   assign CLK.EBUS_RESET = e52Count[0];
 
-  UCR4 e52(.RESET(1'b0),
-           .CIN(1'b1),            // Always count
+  UCR4 e52(.CIN(1'b1),            // Always count
            .SEL({1'b0, ~e52COUT | CROBAR | CON.CONO_200000}),
            .CLK(CLK.MHZ16_FREE),
            .D('0),
@@ -429,8 +440,7 @@ module clk(input bit CROBAR,
   bit [0:3] e25Count;
   bit e25COUT;
   // NOTE: Active-low schematic symbol
-  UCR4 e25(.RESET(1'b0),
-           .CIN(1'b1),
+  UCR4 e25(.CIN(1'b1),
            .SEL({~EBOX_CLK_EN, 1'b0}),
            .CLK(MBOX_CLK),
            .D('0),
@@ -576,6 +586,7 @@ module clk(input bit CROBAR,
       CLK.EBUSdriver.driving = 1;
       CLK.EBUSdriver.data = '0;
 
+      /* verilator lint_off CLKDATA */
       case (EBUS.ds[4:6])
       3'b000: CLK.EBUSdriver.data[30:35] = {CLK.EBUS_CLK,
                                             CLK.SBUS_CLK,
@@ -620,6 +631,7 @@ module clk(input bit CROBAR,
                                             ~FS_CHECK,
                                             ~CLK.ERR_STOP_EN};
       endcase
+      /* verilator lint_on CLKDATA */
     end else begin
       CLK.EBUSdriver.driving = 0;
       CLK.EBUSdriver.data[30:35] = '0;
@@ -633,8 +645,7 @@ module clk(input bit CROBAR,
   assign BURST_CNTeq0 = burstCounter == '0;
 
   // NOTE: Active-low schematic symbol
-  UCR4 e15(.RESET(1'b0),
-           .CIN(burstLSBcarry),
+  UCR4 e15(.CIN(burstLSBcarry),
            .SEL(~{BURST | CLK.FUNC_043, CLK.FUNC_043}),
            .D(EBUS.data[32:35]),
            .COUT(),
@@ -642,8 +653,7 @@ module clk(input bit CROBAR,
            .CLK(MAIN_SOURCE));
 
   // NOTE: Active-low schematic symbol
-  UCR4 e21(.RESET(1'b0),
-           .CIN(~BURST_CNTeq0),
+  UCR4 e21(.CIN(~BURST_CNTeq0),
            .SEL(~{CLK.FUNC_042 | RATE_SELECTED | BURST, CLK.FUNC_042}),
            .COUT(burstLSBcarry),
            .D(EBUS.data[32:35]),

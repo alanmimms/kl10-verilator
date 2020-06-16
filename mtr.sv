@@ -16,10 +16,15 @@ module mtr(iCHC CHC,
            iEBUS.mod EBUS
            );
 
-  bit clk, RESET, MBOX_CLK;
-  bit EBOX_CNT_CLK, CACHE_CNT_CLK, TIME_CLK, PERF_CNT_CLK, INTERVAL_CLK;
+  bit clk  /*noverilator clocker*/;
+  bit RESET;
+  bit MBOX_CLK;
+  bit EBOX_CNT_CLK, CACHE_CNT_CLK, TIME_CLK, PERF_CNT_CLK;
+  bit INTERVAL_CLK;
   bit CLR_EBOX_CNT, CLR_CACHE_CNT, CLR_TIME, CLR_PERF_CNT, CLR_INTERVAL;
-  bit INTERVAL_CRY, EBOX_HALF_COUNT, TIME_ON, CONO_MTR, CONO_TIM;
+  bit INTERVAL_CRY, EBOX_HALF_COUNT, TIME_ON;
+  bit CONO_MTR;
+  bit CONO_TIM;
   bit TEN_USEC, COUNT_TEN_USEC;
   bit EBOX_CNT_EN, CACHE_CNT_EN, PI_ACCT_EN, EXEC_ACCT_EN, ACCT_ON;
   bit [0:2] PI_LEVEL;
@@ -27,7 +32,11 @@ module mtr(iCHC CHC,
   bit NO_MATCH_06to09, NO_MATCH_10to13, NO_MATCH_14to17, INTERVAL_MATCH;
   bit INTERVAL_MATCH_INH, INTERVAL_ON, INTERVAL_OFF, RESET_INTERVAL;
   bit INTERVAL_OVRFLO, INTERVAL_DONE;
-  bit RESET_TIME, RESET_PLSD, LOAD_PA_LEFT, LOAD_PA_RIGHT, RESET_PERF;
+  bit RESET_TIME;
+  bit RESET_PLSD;
+  bit LOAD_PA_LEFT;
+  bit LOAD_PA_RIGHT;
+  bit RESET_PERF;
   bit [0:7] PI_PA_EN;
   bit NO_PI_PA_EN, USER_PA_EN, MODE_PA_DONT_CARE, PA_EVENT_MODE, CURRENT_PI_PA_EN;
   bit CACHE_REF_PA_EN, CACHE_FILL_PA_EN, CACHE_EWB_PA_EN, CACHE_SWB_PA_EN;
@@ -113,8 +122,7 @@ module mtr(iCHC CHC,
   always_ff @(posedge CONO_MTR, posedge RESET) if (RESET) TIME_ON <= 0;
                                                else TIME_ON <= TIME_ON & ~mtrEBUS[24] | mtrEBUS[25];
 
-  UCR4 e88(.RESET(1'b0),
-           .CIN(1'b1),
+  UCR4 e88(.CIN(1'b1),
            .SEL({1'b0, COUNT_TEN_USEC}),
            .D({4{~RESET}}),
            .CLK(INTERVAL_CLK),
@@ -122,8 +130,7 @@ module mtr(iCHC CHC,
            .COUT(TEN_USEC));
 
   bit e60COUT;
-  UCR4 e60(.RESET(1'b0),
-           .CIN(1'b1),
+  UCR4 e60(.CIN(1'b1),
            .CLK(MBOX_CLK),
            .SEL({RESET | MTR._1_MHZ, 1'b0}),
            .D(4'b0000),         // Note assumes MBOX_CLK of 33MHz
@@ -131,8 +138,7 @@ module mtr(iCHC CHC,
            .COUT(e60COUT));
 
   bit [1:3] e59Unused;
-  UCR4 e59(.RESET(1'b0),
-           .CIN(e60COUT),
+  UCR4 e59(.CIN(e60COUT),
            .COUT(),
            .SEL({RESET | MTR._1_MHZ, 1'b0}),
            .CLK(MBOX_CLK),
@@ -268,8 +274,7 @@ module mtr(iCHC CHC,
           .q(e66Q));
 
   bit [2:3] unusedE71;
-  UCR4 e71(.RESET(1'b0),
-           .CIN(1'b1),
+  UCR4 e71(.CIN(1'b1),
            .SEL({e66Q | |CHAN_BUSY[0:1], e66Q | RESET}),
            .CLK(MBOX.CH_T1),
            .D({4{e66Q}}),
@@ -334,11 +339,13 @@ module mtr(iCHC CHC,
               INTERVAL[6], PERIOD[6], 2'b00}),
           .q(mtrEBUS_IN[24]));
 
+  /* verilator lint_off CLKDATA */
   mux e32(.en(READ_MTR),
           .sel(DS),
           .d({TIME[7], PERF_COUNT[7], EBOX_COUNT[7], CACHE_COUNT[7],
               INTERVAL[7], PERIOD[7], TIME_ON, ~CONO_MTR}),
           .q(mtrEBUS_IN[25]));
+  /* verilator lint_on CLKDATA */
 
   mux e27(.en(READ_MTR),
           .sel(DS),

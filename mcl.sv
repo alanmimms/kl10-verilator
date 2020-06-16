@@ -17,7 +17,7 @@ module mcl(iAPR APR,
            iVMA VMA
 );
 
-  bit clk;
+  bit clk /*noverilator clocker*/;
   assign clk = CLK.MCL;
 
   // MCL1 p.371

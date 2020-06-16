@@ -27,7 +27,7 @@ module dte(iCLK CLK,
 
   initial CROBAR = 1;
 
-  bit clk;
+  bit clk /*notverilator notclocker*/;
   assign clk = CLK.MHZ16_FREE;
 
   var tReqType reqType;

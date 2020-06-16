@@ -152,7 +152,7 @@ module scd(iAPR APR,
   assign SCD.SC_36_TO_63 = SCD.SC[4] & |SCD.SC[5:7];
   assign SCD.SC_GE_36 = |SCD.SC[0:3];
 
-  bit clk;
+  bit clk /*noverilator clocker*/;
   assign clk = CLK.SCD;
 
   bit [0:9] SCM;

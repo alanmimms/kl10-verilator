@@ -13,7 +13,7 @@ module mb0(iCCL CCL,
            iPAG PAG
            );
 
-  bit clk;
+  bit clk /*noverilator clocker*/;
   bit PT_IN_SEL_AR, CH_BUF_MB_SEL;
   bit [2:1] MB_SEL;
   bit [0:35] CH_BUF, CH_BUF_IN, MB_IN_A, MB_IN, MB_CH_BUF, CH_REG;

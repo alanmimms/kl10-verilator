@@ -31,7 +31,8 @@ module pi(iAPR APR,
   bit [0:7] e88Q;
   bit [5:6] DIAG;
 
-  bit DIAG_10, LOAD, WAIT1, WAIT2, TEST, CP_BUS_EN, EBUS_CP_GRANT, EBUS_PI_GRANT;
+  bit DIAG_10, LOAD, WAIT1, WAIT2, TEST, CP_BUS_EN, EBUS_CP_GRANT;
+  bit EBUS_PI_GRANT;
   bit EBUS_REQ, PI_DISABLE;
   bit BUS_EN;                   // BUS_EN is "PIC4 BUS EN" sheesh!
   bit BUS_EN_5;                 // BUS_EN_5 is "PIC5 BUS EN"
@@ -162,8 +163,7 @@ module pi(iAPR APR,
            .Q({TRAN_REC, ignoredE3}));
 
   bit e10COUT;
-  UCR4 e10(.RESET(1'b0),
-           .CIN(~(TIM[5] & ~TRAN_REC)),
+  UCR4 e10(.CIN(~(TIM[5] & ~TRAN_REC)),
            .SEL({~(TIMER_DONE | EBUS_RETURN | CYC_START), 1'b0}),
            .D({TIM[1] | TIM[2] | TIM[6],
                TIM[2] | TIM[6] | CYC_START | TIM[3],
@@ -173,8 +173,7 @@ module pi(iAPR APR,
            .COUT(e10COUT),
            .Q());
 
-  UCR4 e15(.RESET(1'b0),
-           .CIN(e10COUT),
+  UCR4 e15(.CIN(e10COUT),
            .SEL({~(TIMER_DONE | EBUS_RETURN | CYC_START), 1'b0}),
            .D({2'b00, TIM[7], ~TIM[1]}),
            .CLK(clk),
@@ -252,12 +251,14 @@ module pi(iAPR APR,
              .B0(DIAG_10),
              .B1(PIC.EBUSdriver.data[11]));
 
+  /* verilator lint_off CLKDATA */
   mux2x4 e27(.EN(BUS_EN),
              .SEL(DIAG),
              .D0({ON[2], GEN[2], EBUS.cs[6], EBUS_PI_GRANT}),
              .D1({ON[3], GEN[3], EBUS.demand, STATE_HOLD}),
              .B0(PIC.EBUSdriver.data[12]),
              .B1(PIC.EBUSdriver.data[13]));
+  /* verilator lint_on CLKDATA */
 
   mux2x4 e33(.EN(BUS_EN),
              .SEL(DIAG),
@@ -300,8 +301,7 @@ module pi(iAPR APR,
   always_ff @(posedge e1Q[0] or posedge e6SET) if (e6SET) e6q14 <= 1;
                                                else e6q14 <= 0;
 
-  UCR4  e1(.RESET(1'b0),
-           .CIN(~TIM[2]),
+  UCR4  e1(.CIN(~TIM[2]),
            .SEL({EBUS.demand & ~TRAN_REC, 1'b0}),
            .D(4'b0000),
            .CLK(~MTR._1_MHZ),

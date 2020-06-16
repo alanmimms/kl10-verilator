@@ -38,7 +38,7 @@ module cra(iAPR APR,
   bit ret;
   bit WRITE_00_19, WRITE_20_39, WRITE_40_59, WRITE_60_79;
 
-  bit clk;
+  bit clk /*noverilator clocker*/;
   assign clk = CLK.CRA;
 
   bit RESET;

@@ -23,7 +23,8 @@ EXE = kl10pvtb
 DTE_INTF = dte.h dte.svh
 
 KILL_WARNINGS = -Wno-LITENDIAN \
-		-Wno-UNOPTFLAT
+		-Wno-UNOPTFLAT \
+		-Wno-CLKDATA
 
 INCDIR = $(VERILATOR_ROOT)/include
 CFLAGS += -I$(VOBJDIR) -I$(INCDIR) -I$(INCDIR)/vltstd -std=gnu++14 $(DEBUG)

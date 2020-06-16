@@ -1,7 +1,6 @@
 `timescale 1ns/1ps
 `include "ebox.svh"
-module mbox(input bit mboxClk,
-            input bit CROBAR,
+module mbox(input bit CROBAR,
             iAPR APR,
             iCCL CCL,
             iCCW CCW,

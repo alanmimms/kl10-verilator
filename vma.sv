@@ -18,7 +18,7 @@ module vma(iAPR APR,
            iVMA VMA
 );
 
-  bit clk;
+  bit clk /*noverilator clocker*/;
   assign clk = CLK.VMA;
 
   // VMA1 p.354
@@ -117,49 +117,43 @@ module vma(iAPR APR,
   bit [18:35] vmaMux;
   assign vmaMux = MCL.VMA_AD ? EDP.AD[18:35] : VMA_AD[18:35];
 
-  UCR4 e11(.RESET(1'b0),
-           .D(VMA_IN[12:15]),
+  UCR4 e11(.D(VMA_IN[12:15]),
            .CIN(CRY_16),
            .SEL(~CON.VMA_SEL),
            .CLK(clk),
            .Q(VMA.VMA[12:15]),
            .COUT());
 
-  UCR4 e6 (.RESET(1'b0),
-           .D({VMA_IN[16:17], vmaMux[18:19]}),
+  UCR4 e6 (.D({VMA_IN[16:17], vmaMux[18:19]}),
            .CIN(CRY_20),
            .SEL(~CON.VMA_SEL),
            .CLK(clk),
            .Q(VMA.VMA[16:19]),
            .COUT(CRY_16));
 
-  UCR4 e21(.RESET(1'b0),
-           .D(vmaMux[20:23]),
+  UCR4 e21(.D(vmaMux[20:23]),
            .CIN(CRY_24),
            .SEL(~CON.VMA_SEL),
            .CLK(clk),
            .Q(VMA.VMA[20:23]),
            .COUT(CRY_20));
 
-  UCR4 e25(.RESET(1'b0),
-           .D(vmaMux[24:27]),
+  UCR4 e25(.D(vmaMux[24:27]),
            .CIN(CRY_28),
            .SEL(~CON.VMA_SEL),
            .CLK(clk),
            .Q(VMA.VMA[24:27]),
            .COUT(CRY_24));
 
-  UCR4 e64(.RESET(1'b0),
-           .D(vmaMux[28:31]),
+  UCR4 e64(.D(vmaMux[28:31]),
            .CIN(CRY_32),
            .SEL(~CON.VMA_SEL),
            .CLK(clk),
            .Q(VMA.VMA[28:31]),
            .COUT(CRY_28));
 
-  UCR4 e58(.RESET(1'b0),
-           .D(vmaMux[32:35]),
-           .CIN(1'b0),
+  UCR4 e58(.D(vmaMux[32:35]),
+           .CIN(1'b1),
            .SEL(~CON.VMA_SEL),
            .CLK(clk),
            .Q(VMA.VMA[32:35]),

@@ -20,7 +20,7 @@ module con(iAPR APR,
 
            iEBUS.mod EBUS);
 
-  bit clk;
+  bit clk /*noverilator clocker*/;
   bit DIAG_READ;
 
   bit NICOND, CONO_APR, WR_EVEN_PAR_DATA, WR_EVEN_PAR_DIR, INSTR_GO;

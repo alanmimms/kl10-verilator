@@ -19,7 +19,7 @@ module apr(iAPR APR,
 
            input bit PWR_WARN
            );
-  bit clk /*verilator clocker*/;
+  bit clk /*noverilator clocker*/;
   bit RESET;
   bit [4:6] DIAG, DS;
   bit READ_110_117;

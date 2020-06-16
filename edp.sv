@@ -36,7 +36,7 @@ module edp(iAPR APR,
   bit [0:36] ADX_CRY;
   bit [-2:33] AD_EX;
 
-  bit clk;
+  bit clk /*noverilator clocker*/;
   assign clk = CLK.EDP;         // Saves typing
 
   assign EDP.AD_CRY[36] = CTL.AD_CRY_36;
