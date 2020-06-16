@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.101 (w)1999-2019 BSI
-[*] Tue Jun 16 04:56:41 2020
+[*] Tue Jun 16 17:16:04 2020
 [*]
 [dumpfile] "/home/alan/kl10-verilator/kl10pv-trace.vcd"
-[dumpfile_mtime] "Tue Jun 16 04:53:26 2020"
-[dumpfile_size] 22271900
+[dumpfile_mtime] "Tue Jun 16 17:14:04 2020"
+[dumpfile_size] 22271841
 [savefile] "/home/alan/kl10-verilator/clk-debug.gtkw"
-[timestart] 636401
+[timestart] 15534
 [size] 1920 1051
 [pos] -1 -1
-*-8.771627 637825 8708 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-8.771627 17091 8708 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [ruler] 8708 175
 [treeopen] TOP.
 [treeopen] TOP.top.
@@ -18,7 +18,6 @@
 [treeopen] TOP.top.ebox0.CLK.
 [treeopen] TOP.top.ebox0.crm0.
 [treeopen] TOP.top.ebox0.MTR.
-[treeopen] TOP.top.ebox0.vma0.
 [treeopen] TOP.top.EDP.
 [treeopen] TOP.top.mbox0.
 [treeopen] TOP.top.memory0.
@@ -153,9 +152,28 @@ TOP.top.ebox0.CLK.EDP
 @28
 TOP.top.ebox0.CSH.MBOX_RESP_IN
 TOP.top.ebox0.clk0.CLK.RESP_MBOX
-@29
 TOP.top.ebox0.clk0.CON.MBOX_WAIT
+TOP.top.mbox0.mbz0.MEM_START_C
+TOP.top.mbox0.mbz0.CORE_BUSY_IN
+TOP.top.mbox0.mbz0.CORE_RD_IN_PROG
+TOP.top.mbox0.CSH.MB_WR_RQ_CLR_NXT
+@22
+TOP.top.mbox0.mbx0.wd[0:3]
 @28
+TOP.top.mbox0.MBOX.MB_SEL[2:1]
+TOP.top.mbox0.MBC.MEM_START
+@29
+TOP.top.mbox0.MBOX.MB_SEL_HOLD
+@28
+TOP.top.mbox0.mbx0.MB_WR_RQ_CLR
+TOP.top.mbox0.mbx0.MB_WR_RQ_CLR_FF
+@22
+TOP.top.mbox0.mbx0.MB_WR_RQ[0:3]
+@28
+TOP.top.mbox0.mbx0.MB_WR_RQ_ANY
+TOP.top.mbox0.mbx0.MB_SEL_HOLD_FF_IN
+TOP.top.mbox0.mbx0.MB_SEL_HOLD_FF
+TOP.top.mbox0.MBOX.MB_REQ_HOLD
 TOP.top.mbox0.MBOX.MEM_BUSY
 @22
 [color] 3

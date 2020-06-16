@@ -19,8 +19,8 @@ module dte(iCLK CLK,
   import "DPI-C" function void DTEgetRequest(output longint reqTime,
                                              output tReqType reqType,
                                              output tDiagFunction diagReq,
-                                             output [0:35] reqData1,
-                                             output [0:35] reqData2);
+                                             output longint reqData1,
+                                             output longint reqData2);
   import "DPI-C" function void DTEreply(input longint replyTime,
                                         input int replyLH,
                                         input int replyRH);
@@ -32,7 +32,7 @@ module dte(iCLK CLK,
 
   var tReqType reqType;
   var tDiagFunction diagReq;
-  var bit [0:35] reqData1, reqData2;
+  var longint reqData1, reqData2;
 
   var longint reqTime;
   initial reqTime = '0;
@@ -61,25 +61,32 @@ module dte(iCLK CLK,
     if (reqType == dteMisc) begin
 
       case (int'(diagReq))
-      clrCROBAR: CROBAR <= 0;
+      clrCROBAR: CROBAR = 0;
 
       getAPRID: begin
-        lh <= 32'({ucodeMajor, ucodeMinor, ucodeEdit});
-        rh <= 32'(hwOptions);
+        lh = 32'({ucodeMajor, ucodeMinor, ucodeEdit});
+        rh = 32'(hwOptions);
       end
       
-      // XXX fix this to use size of mem to adjust width of index.
-      readMemory: {lh, rh} <= 64'(memory0.mem[reqData1[18:35]]);
-      writeMemory: memory0.mem[reqData1[18:35]] <= reqData2;
+      // XXX fix these to use size of mem to adjust width of index.
+      readMemory: begin
+        lh = 32'(memory0.mem[18'(reqData1)][0:17]);
+        rh = 32'(memory0.mem[18'(reqData1)][18:35]);
+      end
+
+      writeMemory: begin
+        memory0.mem[18'(reqData1)] = 36'(reqData2);
+        $display($time, " DTE: write mem[%09o]=%s", 22'(reqData1), octW(36'(reqData2)));
+      end
 
       getDiagWord1: begin       // We don't bother being bit level compatible with DTE20
-        lh <= '0;
-        rh <= {30'b0, CON.RUN, CON.EBOX_HALTED};
+        lh = '0;
+        rh = {30'b0, CON.RUN, CON.EBOX_HALTED};
       end
 
 /*
-      loadAR: EDP.AR <= {reqData1[18:35], reqData2[18:35]};
-      loadCRADR: CRA.CRADR <= reqData1[25:35];
+      loadAR: EDP.AR = {reqData1[18:35], reqData2[18:35]};
+      loadCRADR: CRA.CRADR = reqData1[25:35];
 */
 
       default: ;
@@ -92,7 +99,7 @@ module dte(iCLK CLK,
       EBUS.diagStrobe <= '1;
 
       DTE.EBUSdriver.driving <= 1;
-      DTE.EBUSdriver.data <= reqData1;
+      DTE.EBUSdriver.data <= 36'(reqData1);
 
       DTEreply(ticks, 32'(EBUS.data[0:17]), 32'(EBUS.data[18:35]));
       reqPending <= 0;           // No longer waiting to do request

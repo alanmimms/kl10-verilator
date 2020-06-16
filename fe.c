@@ -45,8 +45,7 @@
 
 static const int feVerbose = 1;  /* Show FE progress */
 static const int regVerbose = 0; /* Show register operations */
-static const int rVerbose = 0;   /* Show diag reads */
-static const int wVerbose = 0;   /* Show diag writes */
+static const int pipeVerbose = 0;   /* Show pipe messages */
 
 // Probably we are building 64-bit anyway, but this emphasizes the
 // point. These are 64-bit typedefs.
@@ -138,12 +137,12 @@ static double nsPerClock;       /* Nanoseconds in each of our ticks */
 
 
 #define RLOG(...) do {                          \
-if (rVerbose) printf(__VA_ARGS__);              \
+if (pipeVerbose) printf(__VA_ARGS__);           \
 } while (0)                                     \
 
 
 #define WLOG(...) do {                          \
-if (wVerbose) printf(__VA_ARGS__);              \
+if (pipeVerbose) printf(__VA_ARGS__);           \
 } while (0)                                     \
 
 #define FELOG(FMT, ...) do {                                    \
@@ -171,7 +170,7 @@ static W36 RH(LL w) {
 }
 
 
-static char octWbuf[8];
+static char octWbuf[64];
 
 static char *octW(LL w, char *buf = octWbuf) {
   sprintf(buf, "%06llo,,%06llo", LH(w), RH(w));
@@ -203,7 +202,7 @@ static W36 sendAndGetResult(LL aTicks,
   WLOG("F write(%s) %ld bytes\n", pipeN(toDTE[1]), sizeof(req));
   int len = write(toDTE[1], &req, sizeof(req));
   if (len < sizeof(req)) fatalError("write to DTE pipe");
-  char octWbuf2[8];
+  char octWbuf2[32];
   WLOG("F %lld: send %s %s %s %s\n",
        req.time, reqTypeNames[aType],
        aType == dteMisc ? miscFuncNames[aDiag] : diagFuncNames[aDiag],
@@ -239,7 +238,7 @@ static W36 doMiscFunc(int func) {
 
 
 static W36 doWriteMemory(W36 addr, W36 w) {
-  REGLOG("F write memory [%6llo]=%s\n", addr, octW(w));
+  FELOG("F write memory [%08llo]=%s\n", addr, octW(w));
   return sendAndGetResult(nextReqTicks, 1, dteMisc, writeMemory, addr, w);
 }
 
@@ -397,10 +396,10 @@ static W36 loadBootstrap() {
   printf("[boot image minAddr: %6llo]\n", minAddr);
   printf("[boot image maxAddr: %6llo]\n", maxAddr);
 
-  doWriteMemory(0, w);
+  doWriteMemory(0ull, w);
   printf("[start instruction %s deposited in mem[0] ]\n", octW(w));
 
-  printf("[mem[0]=%s\n", octW(doReadMemory(0)));
+  printf("read back mem[0]=%s\n", octW(doReadMemory(0)));
   return w;
 }
 
@@ -531,7 +530,7 @@ extern "C" bool DTErequestIsPending(void) {
   struct timeval justPollTimeVal = {0, 0};
   fd_set fds = dteReadFDs;
   int st = select(dteReadNFDs, &fds, NULL, NULL, &justPollTimeVal);
-  if (st < 0) fatalError("DTEgetRequest select");
+  if (st < 0) fatalError("DTErequestIsPending select");
   return st != 0 && FD_ISSET(toDTE[0], &fds);
 }
 
@@ -549,7 +548,7 @@ extern "C" void DTEgetRequest(LL *reqTimeP, int *reqTypeP, int *diagReqP,
   *reqTypeP = (int) req.type;
   *diagReqP = (int) req.diag;
   *reqData1P = req.data1;
-  *reqData2P = req.data1;
+  *reqData2P = req.data2;
 }
 
 
