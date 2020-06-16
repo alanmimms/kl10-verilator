@@ -74,9 +74,9 @@ module memPhase(input bit CROBAR,
 
   always_comb if (VALID) begin
     D = memory[{addr[36 - $clog2(`MEM_SIZE):33], wo}];
-    $display("mem[%o] data=%o",
+    $display("mem[%o] data=%s",
              {addr[36 - $clog2(`MEM_SIZE):33], wo},
-             memory[{addr[36 - $clog2(`MEM_SIZE):33], wo}]);
+             octW(memory[{addr[36 - $clog2(`MEM_SIZE):33], wo}]));
     PARITY = ^memory[{addr[36 - $clog2(`MEM_SIZE):33], wo}];
   end else begin
     D = '0;
@@ -98,4 +98,9 @@ module memPhase(input bit CROBAR,
     wo <= wo + 1;
     toAck <= toAck << 1;
   end
+
+
+  function string octW(input bit [0:35] w);
+    $sformat(octW, "%06o,,%06o", w[0:17], w[18:35]);
+  endfunction
 endmodule
