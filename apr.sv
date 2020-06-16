@@ -19,7 +19,7 @@ module apr(iAPR APR,
 
            input bit PWR_WARN
            );
-  bit clk;
+  bit clk /*verilator clocker*/;
   bit RESET;
   bit [4:6] DIAG, DS;
   bit READ_110_117;
@@ -37,8 +37,8 @@ module apr(iAPR APR,
   bit IO_PF_ERR_INT_EN, IO_PF_ERR_EN_IN;
   bit MB_PAR_ERR_INT_EN, MB_PAR_ERR_EN_IN;
   bit MB_PAR_ERR_EN, MB_PAR_ERR_IN;
-  bit IO_PF_ERR, IO_PF_ERR_IN, IO_PF_ERR_EN;
-  bit NXM_ERR, NXM_ERR_IN, NXM_ERR_EN;
+  bit SET_IO_PF_ERR, IO_PF_ERR_IN, IO_PF_ERR_EN;
+  bit NXM_ERR_IN, NXM_ERR_EN;
   bit SWEEP_BUSY_EN, SWEEP_BUSY;
   bit C_DIR_P_ERR_INT_EN, C_DIR_P_ERR_EN_IN, C_DIR_P_ERR_EN, C_DIR_P_ERR_IN;
   bit S_ADR_P_ERR_INT_EN, S_ADR_P_ERR_EN_IN, S_ADR_P_ERR_EN, S_ADR_P_ERR_IN;
@@ -48,46 +48,54 @@ module apr(iAPR APR,
   bit SWEEP_DONE, SWEEP_DONE_IN, SWEEP_DONE_EN;
   bit F02_EN, REG_FUNC_EN;
 
-// I wanted to use nested modules for this but they broke xelab (SIGSEGV)
-`define APRInt(clk, m, e, i) \
-  assign i = CON.SEL_EN & EBUS.data[m] | i & ~RESET & CON.SEL_DIS & EBUS.data[m]; \
-  always_ff @(posedge clk) e <= i;
+// I wanted to use nested modules for this but they broke xelab (SIGSEGV).
+// `m` is the EBUS.data[m] bit number.
+// `e` is the Q output of the flop (XXX_INT_EN).
+// `i` is the combinatorial output (XXX_EN_IN).
+`define APRInt(m, e, i) \
+  assign i = CON.SEL_EN & EBUS.data[m] | e & ~RESET & CON.SEL_DIS & EBUS.data[m]; \
+  always_ff @(posedge clk) e <= i
 
-`define APREvent(clk, m, o, e, i) \
-  assign i = CON.SEL_SET & EBUS.data[m] | ~CON.SEL_CLR & e & ~RESET | e & ~EBUS.data[m] & ~RESET | o; \
-  always_ff @(posedge clk) e <= i;
+// `m` is the EBUS.data[m] bit number.
+// `o` is the singleton OR condition at the bottom of the combinatorial junk.
+// `e` is the Q output of the flop (XXX_ERR).
+// `i` is the combinatorial output (XXX_IN).
+`define APREvent(m, o, e, i) \
+  assign i = CON.SEL_SET & EBUS.data[m] | \
+            ~CON.SEL_CLR & e & ~RESET | \
+             e & ~EBUS.data[m] & ~RESET | \
+             o; \
+  always_ff @(posedge clk) e <= i
 
-   // APR1 p.382
-  `APRInt(clk, 6, SBUS_ERR_INT_EN, SBUS_ERR_EN_IN);
-  `APREvent(clk, 6, MBOX.SBUS_ERR, SBUS_ERR_EN, SBUS_ERR_IN);
+  // APR1 p.382
+  `APRInt(6, SBUS_ERR_INT_EN, SBUS_ERR_EN_IN);
+  `APREvent(6, MBOX.SBUS_ERR, APR.SBUS_ERR, SBUS_ERR_IN);
 
-  `APRInt(clk, 7, NXM_ERR_INT_EN, NXM_ERR_EN_IN);
-  `APREvent(clk, 7, MBOX.NXM_ERR, NXM_ERR_EN, NXM_ERR_IN);
+  `APRInt(7, NXM_ERR_INT_EN, NXM_ERR_EN_IN);
+  `APREvent(7, MBOX.NXM_ERR, APR.NXM_ERR, NXM_ERR_IN);
 
-  `APRInt(clk, 8, IO_PF_ERR_INT_EN, IO_PF_ERR_EN_IN);
-  `APREvent(clk, 8, APR.SET_IO_PF_ERR, IO_PF_ERR_EN, IO_PF_ERR_IN);
+  `APRInt(8, IO_PF_ERR_INT_EN, IO_PF_ERR_EN_IN);
+  `APREvent(8, SET_IO_PF_ERR, APR.IO_PF_ERR, IO_PF_ERR_IN);
 
-  `APRInt(clk, 9, MB_PAR_ERR_INT_EN, MB_PAR_ERR_EN_IN);
-  `APREvent(clk, 9, MBOX.MB_PAR_ERR, MB_PAR_ERR_EN, MB_PAR_ERR_IN);
+  `APRInt(9, MB_PAR_ERR_INT_EN, MB_PAR_ERR_EN_IN);
+  `APREvent(9, MBOX.MB_PAR_ERR, APR.MB_PAR_ERR, MB_PAR_ERR_IN);
 
   // APR2 p.383
-  `APRInt(clk, 10, C_DIR_P_ERR_INT_EN, C_DIR_P_ERR_EN_IN);
-  `APREvent(clk, 10, MBOX.CSH_ADR_PAR_ERR, C_DIR_P_ERR_EN, C_DIR_P_ERR_IN);
+  `APRInt(10, C_DIR_P_ERR_INT_EN, C_DIR_P_ERR_EN_IN);
+  `APREvent(10, MBOX.CSH_ADR_PAR_ERR, APR.C_DIR_P_ERR, C_DIR_P_ERR_IN);
 
-  `APRInt(clk, 11, S_ADR_P_ERR_INT_EN, S_ADR_P_ERR_EN_IN);
-  `APREvent(clk, 11, MBOX.MBOX_ADR_PAR_ERR, S_ADR_P_ERR_EN, S_ADR_P_ERR_IN);
+  `APRInt(11, S_ADR_P_ERR_INT_EN, S_ADR_P_ERR_EN_IN);
+  `APREvent(11, MBOX.MBOX_ADR_PAR_ERR, APR.S_ADR_P_ERR, S_ADR_P_ERR_IN);
 
-  `APRInt(clk, 12, PWR_FAIL_INT_EN, PWR_FAIL_EN_IN);
-  `APREvent(clk, 12, PWR_WARN, PWR_FAIL, PWR_FAIL_IN);
+  `APRInt(12, PWR_FAIL_INT_EN, PWR_FAIL_EN_IN);
+  `APREvent(12, PWR_WARN, PWR_FAIL, PWR_FAIL_IN);
 
-  `APRInt(clk, 13, SWEEP_DONE_INT_EN, SWEEP_DONE_EN_IN);
-  `APREvent(clk, 13,
-                   ~APR.SWEEP_BUSY & APR.SWEEP_BUSY,
-                   SWEEP_DONE_EN, SWEEP_DONE_IN);
+  `APRInt(13, SWEEP_DONE_INT_EN, SWEEP_DONE_EN_IN);
+  `APREvent(13, ~SWEEP_BUSY_EN & SWEEP_BUSY, SWEEP_DONE, SWEEP_DONE_IN);
 
   assign APR.APR_INTERRUPT = APR.SBUS_ERR & SBUS_ERR_INT_EN |
                              APR.NXM_ERR & NXM_ERR_INT_EN |
-                             IO_PF_ERR & IO_PF_ERR_INT_EN |
+                             APR.IO_PF_ERR & IO_PF_ERR_INT_EN |
                              APR.MB_PAR_ERR & MB_PAR_ERR_INT_EN |
                              APR.C_DIR_P_ERR & C_DIR_P_ERR_INT_EN |
                              APR.S_ADR_P_ERR & S_ADR_P_ERR_INT_EN |
@@ -97,11 +105,13 @@ module apr(iAPR APR,
                               CON.WR_EVEN_PAR_ADR &
                               ~MBOX.MBOX_ADR_PAR_ERR;
 
-  always_ff @(posedge clk) APR.ANY_EBOX_ERR_FLG <= NXM_ERR_IN | MB_PAR_ERR_IN | S_ADR_P_ERR_IN;
+  always_ff @(posedge clk)
+    APR.ANY_EBOX_ERR_FLG <= NXM_ERR_IN | MB_PAR_ERR_IN | S_ADR_P_ERR_IN;
 
   // APR3 p.384
   bit [0:3] e14SR;
-  always_ff @(posedge clk) if (CON.COND_EBUS_CTL | RESET) e14SR <= {CRAM.MAGIC[0:1], CRAM.MAGIC[3:4]};
+  always_ff @(posedge clk)
+    if (CON.COND_EBUS_CTL | RESET) e14SR <= {CRAM.MAGIC[0:1], CRAM.MAGIC[3:4]};
 
   bit [0:2] e2Latch;
   always_latch if (e14SR[3]) e2Latch <= CRAM.MAGIC[5] ?
@@ -273,7 +283,7 @@ module apr(iAPR APR,
            .Q({ignoreE29, APR.VMA_BLOCK}));
 
   assign APR.SET_PAGE_FAIL = CRAM.MAGIC[1] & CON.COND_MBOX_CTL;
-  assign APR.SET_IO_PF_ERR = CRAM.MAGIC[2] & CON.COND_MBOX_CTL;
+  assign SET_IO_PF_ERR = CRAM.MAGIC[2] & CON.COND_MBOX_CTL;
   assign APR.PT_DIR_WR = CRAM.MAGIC[4] & CON.COND_MBOX_CTL;
   assign APR.PT_WR = CRAM.MAGIC[5] & CON.COND_MBOX_CTL;
 
@@ -288,7 +298,7 @@ module apr(iAPR APR,
 
   mux e13(.en(READ_110_117),
           .sel(DS),
-          .d({NXM_ERR, APR.CURRENT_BLOCK[1], NXM_ERR_EN_IN, 1'b0,
+          .d({APR.NXM_ERR, APR.CURRENT_BLOCK[1], NXM_ERR_EN_IN, 1'b0,
               APR.MBOX_CTL[3], APR.MBOX_CTL[6],
               APR.WR_PT_SEL_0, APR.WR_PT_SEL_1}),
           .q(APR.EBUSdriver.data[7]));
