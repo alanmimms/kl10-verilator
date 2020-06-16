@@ -244,6 +244,12 @@ static W36 doWriteMemory(W36 addr, W36 w) {
 }
 
 
+static W36 doReadMemory(W36 addr) {
+  REGLOG("F read memory [%6llo]\n", addr);
+  return sendAndGetResult(nextReqTicks, 1, dteMisc, readMemory, addr);
+}
+
+
 //   Do an EBUS DS diagnostic function with DIAG on EBUS.DS.
 static void doDiagFunc(int func) {
   REGLOG("F diag func %s\n", diagFuncNames[func]);
@@ -390,10 +396,11 @@ static W36 loadBootstrap() {
   printf("[loaded]\n");
   printf("[boot image minAddr: %6llo]\n", minAddr);
   printf("[boot image maxAddr: %6llo]\n", maxAddr);
-  printf("[start instruction is %s]\n", octW(w));
 
   doWriteMemory(0, w);
-  printf("[start instruction deposited in mem[0]\n\n");
+  printf("[start instruction %s deposited in mem[0] ]\n", octW(w));
+
+  printf("[mem[0]=%s\n", octW(doReadMemory(0)));
   return w;
 }
 

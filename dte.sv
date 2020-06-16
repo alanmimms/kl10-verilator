@@ -64,16 +64,17 @@ module dte(iCLK CLK,
       clrCROBAR: CROBAR <= 0;
 
       getAPRID: begin
-        lh = 32'({ucodeMajor, ucodeMinor, ucodeEdit});
-        rh = 32'(hwOptions);
+        lh <= 32'({ucodeMajor, ucodeMinor, ucodeEdit});
+        rh <= 32'(hwOptions);
       end
       
       // XXX fix this to use size of mem to adjust width of index.
+      readMemory: {lh, rh} <= 64'(memory0.mem[reqData1[18:35]]);
       writeMemory: memory0.mem[reqData1[18:35]] <= reqData2;
 
       getDiagWord1: begin       // We don't bother being bit level compatible with DTE20
-        lh = '0;
-        rh = {30'b0, CON.RUN, CON.EBOX_HALTED};
+        lh <= '0;
+        rh <= {30'b0, CON.RUN, CON.EBOX_HALTED};
       end
 
 /*
