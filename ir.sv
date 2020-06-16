@@ -80,9 +80,9 @@ module ir(iIR IR,
   // Latch-mux es
   bit EN_AC, EN_IO_JRST;
   bit [1:10] DRAM_J;
-  always_latch if (HOLD_DRAM) IR.DRAM_J[1:4] = ~JRST ? DRAM_J[1:4] : {DRAM_J[1:3], 1'b0};
-  always_latch if (HOLD_DRAM) IR.DRAM_J[7:10] = ~JRST ? IR.IR[9:12] : DRAM_PAR_J[7:10];
-  always_latch if (HOLD_DRAM) IR.AC[9:12] = ~EN_AC ? 4'b0000 : IR.IR[9:12];
+  always_latch if (HOLD_DRAM) IR.DRAM_J[1:4] <= ~JRST ? DRAM_J[1:4] : {DRAM_J[1:3], 1'b0};
+  always_latch if (HOLD_DRAM) IR.DRAM_J[7:10] <= ~JRST ? IR.IR[9:12] : DRAM_PAR_J[7:10];
+  always_latch if (HOLD_DRAM) IR.AC[9:12] <= ~EN_AC ? 4'b0000 : IR.IR[9:12];
 
   bit INSTR_7xx, e75q2;
   assign INSTR_7xx = |IR.IR[0:2] | EN_IO_JRST;
@@ -97,7 +97,7 @@ module ir(iIR IR,
   assign IR.ACeq0 = IR.IR[9:12] == 4'b0;
 
   // The actual IR register is built out of 10173 latch-muxes.
-  always_latch if (HOLD_IR) IR.IR[0:12] = CLK.MB_XFER ? MBOX.CACHE_DATA[0:12] : EDP.AD[0:12];
+  always_latch if (HOLD_IR) IR.IR[0:12] <= CLK.MB_XFER ? MBOX.CACHE_DATA[0:12] : EDP.AD[0:12];
 
 
   // IR2 p.129
