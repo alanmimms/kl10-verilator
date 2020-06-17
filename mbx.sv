@@ -21,17 +21,17 @@ module mbx(iAPR APR,
            iPMA PMA
 );
 
-  bit clk /*noverilator clocker*/;
+  bit clk /*verilator clocker*/;
   bit E_CORE_RD_RQ, EBOX_DIAG_CYC, C_DIR_PAR_ERR, ANY_VAL_HOLD, READY_TO_GO;
   bit EBOX_PAGED, CCA_CYC_DONE, RESET, CSH_CCA_CYC, CSH_CCA_ONE_PAGE;
   bit CCA_HOLD_ADR, MB_WR_RQ_ANY, MB_WR_RQ_P1, MB_WR_RQ_P2, CTOMB_LOAD;
-  bit MB_WR_RQ_CLR, MB_WR_RQ_CLR_FF, MB_SEL_HOLD_FF_IN;
+  bit MB_WR_RQ_CLR, MB_WR_RQ_CLR_FF_L, MB_SEL_HOLD_FF_IN;
   bit MB_REQ_ALLOW, MB_REQ_ALLOW_FF, CORE_BUSY;
   bit [0:3] MB_WR_RQ, CTOMB_WD_RQ, CSH_TO_MB_WD, WD_NEEDED, CSH_WD_VAL;
   bit [0:3] CORE_WD_COMING;     // Larger to drop 4MSBs off E18
   bit SBUS_DIAG_0, SBUS_DIAG_1, SBUS_DIAG_2, SBUS_DIAG_3, SBUS_DIAG_CYC;
   bit CSH_CHAN_CYC, CACHE_TO_MB_T1, CACHE_TO_MB_T3, CACHE_TO_MB_CONT;
-  bit RD_NON_VAL_WDS, DIAG_EN, CACHE_TO_MB_DONE, MB_SEL_HOLD_FF, ONE_WORD_RD;
+  bit RD_NON_VAL_WDS, DIAG_EN, CACHE_TO_MB_DONE, ONE_WORD_RD;
   bit [4:6] DIAG;
   bit [0:2] MB_IN_SEL;
   bit CORE_DATA_VALIDminus1, CORE_DATA_VALID, EBOX_LOAD_REG, CHAN_READ;
@@ -117,17 +117,23 @@ module mbx(iAPR APR,
                         MBOX.CHAN_READ |
                         MBOX.MB_SEL_HOLD & MBC.MEM_START |
                         MBOX.MB_SEL_HOLD & ~CSH.E_CACHE_WR_CYC & ~PMA.CSH_WRITEBACK_CYC;
-  assign MB_SEL_HOLD_FF_IN = ~MB_WR_RQ_CLR_FF & (MB_WR_RQ_ANY | MBOX.MB_SEL_HOLD);
+  assign MB_SEL_HOLD_FF_IN = MB_WR_RQ_CLR_FF_L & (MB_WR_RQ_ANY | MBOX.MB_SEL_HOLD);
   assign MBOX.MB_SEL_2_EN = (CCL.CH_MB_SEL[2] | ~CHAN_READ) &
                             (MB_WR_RQ_P2 | CHAN_READ);
   assign MBOX.MB_SEL_1_EN = (CCL.CH_MB_SEL[1] | ~CHAN_READ) &
                             (MB_WR_RQ_P1 | CHAN_READ);
   assign MBOX.MB_SEL_HOLD = (~MBOX.ACKN_PULSE | MBOX.MEM_RD_RQ) &
-                            MB_SEL_HOLD_FF &
+                            MBX.MB_SEL_HOLD_FF &
                             (~SBUS_DIAG_2 & ~RESET) &
                             // -MBX3 CORE BUSY 1A H on MBX2 A3.
                             (MBOX.MEM_RD_RQ | ~CORE_DATA_VALID | ~CORE_BUSY);
   assign CHAN_READ = MBOX.CHAN_READ;
+
+  always_ff @(posedge clk) ANY_VAL_HOLD <= CSH.ANY_VAL_HOLD_IN;
+  always_ff @(posedge clk) MB_WR_RQ_CLR_FF_L <= ~CSH.MB_WR_RQ_CLR_NXT;
+  always_ff @(posedge clk) MBOX.MB_REQ_HOLD <= MB_WR_RQ_ANY | MB_SEL_HOLD_FF_IN;
+  always_ff @(posedge clk) MBX.MB_SEL_HOLD_FF <= MB_SEL_HOLD_FF_IN;
+  
   // MBX2 MB SEL 2{A,B} and MBX2 MB SEL 1{A,B} use MBOX.MB_SEL[0:1] respectively.
 
   bit e41Ignored, e4Ignored;
@@ -167,12 +173,6 @@ module mbx(iAPR APR,
               .Q(MB_WR_RQ),
               .CLK(clk));
                
-
-  always_ff @(posedge clk) ANY_VAL_HOLD <= CSH.ANY_VAL_HOLD_IN;
-  always_ff @(posedge clk) MB_WR_RQ_CLR_FF <= CSH.MB_WR_RQ_CLR_NXT;
-  always_ff @(posedge clk) MBOX.MB_REQ_HOLD <= MB_WR_RQ_ANY | MB_SEL_HOLD_FF_IN;
-  always_ff @(posedge clk) MBX.MB_SEL_HOLD_FF <= MB_SEL_HOLD_FF_IN;
-  
 
   // MBX3 p.180
   //
