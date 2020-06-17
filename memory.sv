@@ -14,10 +14,9 @@
 // * Support ACKN of next word while VALID on current word
 module memory(input bit CROBAR,
               iSBUS.memory SBUS);
-`define MEM_SIZE (256*1024)
 
 `ifdef KL10PV_TB
-  bit [0:35] mem[`MEM_SIZE];
+  bit [0:35] mem[`MEMSIZE];
 
   bit aClk, bClk;
   bit [0:35] aData, bData;
@@ -29,8 +28,13 @@ module memory(input bit CROBAR,
   assign SBUS.D = aClk ? aData : bData;
   assign SBUS.DATA_PAR = aClk ? aParity : bParity;
 
+  iRAM ramIntf();
+
+  assign ramIntf.data = mem[$clog2(`MEMSIZE)'(ramIntf.addr)];
+  always @(posedge ramIntf.we) mem[$clog2(`MEMSIZE)'(ramIntf.addr)] <= ramIntf.writeData;
+
   memPhase aPhase(.clk(aClk),
-                  .memory(mem),
+                  .mem(ramIntf),
                   .START(SBUS.START_A),
                   .ACKN(SBUS.ACKN_A),
                   .VALID(SBUS.DATA_VALID_A),
@@ -38,7 +42,7 @@ module memory(input bit CROBAR,
                   .PARITY(aParity),
                   .*);
   memPhase bPhase(.clk(bClk),
-                  .memory(mem),
+                  .mem(ramIntf),
                   .START(SBUS.START_B),
                   .ACKN(SBUS.ACKN_B),
                   .VALID(SBUS.DATA_VALID_B),
@@ -46,6 +50,7 @@ module memory(input bit CROBAR,
                   .PARITY(bParity),
                   .*);
 `else
+`error "this needs implementing"
 `endif
 endmodule
 
@@ -57,7 +62,7 @@ endmodule
 // are still finishing up the VALID pulses for the current one.
 module memPhase(input bit CROBAR,
                 input bit clk,
-                ref bit [0:35] memory[`MEM_SIZE],
+                iRAM mem,
                 iSBUS.memory SBUS,
                 output bit [0:35] D,
                 output bit PARITY,
@@ -73,11 +78,9 @@ module memPhase(input bit CROBAR,
   assign VALID = toAck[0];
 
   always_comb if (VALID) begin
-    D = memory[{addr[36 - $clog2(`MEM_SIZE):33], wo}];
-    $display("mem[%o] data=%s",
-             {addr[36 - $clog2(`MEM_SIZE):33], wo},
-             octW(memory[{addr[36 - $clog2(`MEM_SIZE):33], wo}]));
-    PARITY = ^memory[{addr[36 - $clog2(`MEM_SIZE):33], wo}];
+    mem.addr = {addr[36 - $clog2(`MEMSIZE):33], wo};
+    D = mem.data;
+    PARITY = ^D;
   end else begin
     D = '0;
     PARITY = 0;
@@ -88,7 +91,6 @@ module memPhase(input bit CROBAR,
     wo <= '0;
     toAck <= '0;
   end else if (START && toAck == '0) begin     // A transfer is starting
-    $display($time, " memPhase START, SBUS.RQ=%4b", SBUS.RQ);
     addr <= SBUS.ADR;           // Address of first word we do
     wo <= SBUS.ADR[34:35];      // Word offset we increment mod 4
     toAck <= SBUS.RQ;           // Addresses remaining to ACK
@@ -98,9 +100,4 @@ module memPhase(input bit CROBAR,
     wo <= wo + 1;
     toAck <= toAck << 1;
   end
-
-
-  function string octW(input bit [0:35] w);
-    $sformat(octW, "%06o,,%06o", w[0:17], w[18:35]);
-  endfunction
 endmodule

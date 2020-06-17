@@ -70,11 +70,11 @@ module dte(iCLK CLK,
       
       // XXX fix these to use size of mem to adjust width of index.
       readMemory: begin
-        lh = 32'(memory0.mem[18'(reqData1)][0:17]);
-        rh = 32'(memory0.mem[18'(reqData1)][18:35]);
+        lh = 32'(memory0.mem[$clog2(`MEMSIZE)'(reqData1)][0:17]);
+        rh = 32'(memory0.mem[$clog2(`MEMSIZE)'(reqData1)][18:35]);
       end
 
-      writeMemory: memory0.mem[18'(reqData1)] = 36'(reqData2);
+      writeMemory: memory0.mem[$clog2(`MEMSIZE)'(reqData1)] = 36'(reqData2);
 
       getDiagWord1: begin       // We don't bother being bit level compatible with DTE20
         lh = '0;

@@ -6,6 +6,18 @@
 typedef enum bit [0:1] {usrLOAD, usrSHL, usrSHR, usrHOLD} tUSRfunc;
 
 
+////////////////////////////////////////////////////////////////
+// Interface we pass to our phases for access to the shared memory.
+`define MEMSIZE (256*1024)   // In words
+interface iRAM;
+  typedef bit [0:$clog2(`MEMSIZE)-1] tAddr;
+  tAddr addr;
+  bit [0:35] data;              // Always driven with data at addr
+  bit [0:35] writeData;         // Data word to write
+  bit we;                       // Write on rising edge
+endinterface
+
+
 ///////////////////////////////////////////////////////////////
 // EBUS
 typedef enum bit [0:2] {
