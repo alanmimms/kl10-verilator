@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.101 (w)1999-2019 BSI
-[*] Wed Jun 17 16:13:49 2020
+[*] Wed Jun 17 17:51:01 2020
 [*]
 [dumpfile] "/home/alan/kl10-verilator/kl10pv-trace.vcd"
-[dumpfile_mtime] "Wed Jun 17 16:13:08 2020"
-[dumpfile_size] 44490661
+[dumpfile_mtime] "Wed Jun 17 17:48:26 2020"
+[dumpfile_size] 45374242
 [savefile] "/home/alan/kl10-verilator/clk-debug.gtkw"
-[timestart] 15551
+[timestart] 682535
 [size] 1920 1051
 [pos] -1 -1
-*-8.771627 17025 8708 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-8.686001 639850 8708 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [ruler] 8708 175
 [treeopen] TOP.
 [treeopen] TOP.top.
@@ -27,7 +27,7 @@
 [sst_width] 211
 [signals_width] 233
 [sst_expanded] 1
-[sst_vpaned_height] 409
+[sst_vpaned_height] 410
 @28
 TOP.top.CLK.MR_RESET
 [color] 2
@@ -153,68 +153,25 @@ TOP.top.ebox0.CLK.EDP
 TOP.top.ebox0.CSH.MBOX_RESP_IN
 TOP.top.ebox0.clk0.CLK.RESP_MBOX
 TOP.top.ebox0.clk0.CON.MBOX_WAIT
-@c00201
--debug-stuck-MEM_BUSY
-@28
-TOP.top.mbox0.mbz0.MEM_START_C
-TOP.top.mbox0.mbz0.CORE_BUSY_IN
-TOP.top.mbox0.mbz0.CORE_RD_IN_PROG
-TOP.top.mbox0.CSH.MB_WR_RQ_CLR_NXT
-@22
-TOP.top.mbox0.mbx0.wd[0:3]
-@28
-TOP.top.mbox0.MBOX.MB_SEL[2:1]
-TOP.top.mbox0.MBC.MEM_START
-@22
-TOP.top.mbox0.mbx0.CORE_WD_COMING[0:3]
-TOP.top.mbox0.mbx0.e9.D[0:3]
-@28
-TOP.top.mbox0.MBOX.MB_SEL_1_EN
-TOP.top.mbox0.MBOX.MB_SEL_2_EN
-TOP.top.mbox0.MBOX.MB_SEL[2:1]
-[color] 3
-TOP.top.mbox0.mbx0.MB_WR_RQ_CLR
-[color] 3
-TOP.top.mbox0.mbx0.CORE_BUSY
-TOP.top.mbox0.mbx0.CORE_DATA_VALID
-TOP.top.mbox0.mbx0.MBOX.MEM_RD_RQ
-TOP.top.mbox0.mbx0.MBOX.ACKN_PULSE
-[color] 3
-TOP.top.mbox0.MBOX.MB_SEL_HOLD
-TOP.top.mbox0.mbx0.clk
-TOP.top.mbox0.mbx0.MB_SEL_HOLD_FF_IN
-TOP.top.mbox0.MBOX.CHAN_READ
-TOP.top.mbox0.MBC.MEM_START
-TOP.top.mbox0.MBOX.MB_SEL_HOLD
-TOP.top.mbox0.CSH.E_CACHE_WR_CYC
-TOP.top.mbox0.PMA.CSH_WRITEBACK_CYC
-@22
-TOP.top.mbox0.mbx0.MB_WR_RQ[0:3]
-@28
-TOP.top.mbox0.mbx0.MB_WR_RQ_ANY
-TOP.top.mbox0.MBOX.MB_REQ_HOLD
-TOP.top.mbox0.MBOX.MEM_BUSY
-@1401201
--debug-stuck-MEM_BUSY
-@22
+@31
 [color] 3
 TOP.top.mbox0.PMA.PA[14:35]
 @28
 +{SBUS_RQ} TOP.top.memory0.SBUS.RQ[0:3]
-@30
+@31
 +{SBUS_D} TOP.top.memory0.SBUS.D[0:35]
 [color] 3
 +{SBUS_ADR} TOP.top.memory0.SBUS.ADR[14:35]
-@c00200
+@800200
 -memA
 @28
 TOP.top.memory0.aPhase.START
 TOP.top.memory0.aPhase.toAck[0:3]
 TOP.top.memory0.aPhase.ACKN
 TOP.top.memory0.aPhase.VALID
-@22
+@31
 TOP.top.memory0.aPhase.D[0:35]
-@1401200
+@1000200
 -memA
 @28
 [color] 2
@@ -226,7 +183,7 @@ TOP.top.memory0.bPhase.START
 TOP.top.memory0.bPhase.toAck[0:3]
 TOP.top.memory0.bPhase.ACKN
 TOP.top.memory0.bPhase.VALID
-@22
+@31
 TOP.top.memory0.bPhase.D[0:35]
 @1000200
 -memB
