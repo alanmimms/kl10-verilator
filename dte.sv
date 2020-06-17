@@ -74,10 +74,7 @@ module dte(iCLK CLK,
         rh = 32'(memory0.mem[18'(reqData1)][18:35]);
       end
 
-      writeMemory: begin
-        memory0.mem[18'(reqData1)] = 36'(reqData2);
-        $display($time, " DTE: write mem[%09o]=%s", 22'(reqData1), octW(36'(reqData2)));
-      end
+      writeMemory: memory0.mem[18'(reqData1)] = 36'(reqData2);
 
       getDiagWord1: begin       // We don't bother being bit level compatible with DTE20
         lh = '0;

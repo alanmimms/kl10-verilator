@@ -238,7 +238,7 @@ static W36 doMiscFunc(int func) {
 
 
 static W36 doWriteMemory(W36 addr, W36 w) {
-  FELOG("F write memory [%08llo]=%s\n", addr, octW(w));
+  REGLOG("F write memory [%08llo]=%s\n", addr, octW(w));
   return sendAndGetResult(nextReqTicks, 1, dteMisc, writeMemory, addr, w);
 }
 
