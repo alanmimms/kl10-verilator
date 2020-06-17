@@ -4,3 +4,4 @@ obj_dir
 *.vcd
 dte.h
 dte.svh
+*.idx
