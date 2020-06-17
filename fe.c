@@ -397,9 +397,7 @@ static W36 loadBootstrap() {
   printf("[boot image maxAddr: %6llo]\n", maxAddr);
 
   doWriteMemory(0ull, w);
-  printf("[start instruction %s deposited in mem[0] ]\n", octW(w));
-
-  printf("read back mem[0]=%s\n", octW(doReadMemory(0)));
+  printf("[start instruction %s deposited in mem[0]]\n", octW(w));
   return w;
 }
 

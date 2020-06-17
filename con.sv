@@ -188,9 +188,6 @@ module con(iAPR APR,
   assign CON.IO_LEGAL = IR.IO_LEGAL | KERNEL_MODE | KERNEL_CYCLE |
                         SCD.USER & SCD.USER_IOT;
 
-  always @(posedge DIAG_CONTINUE) $display($time, " [DIAG CONTINUE]");
-  always @(posedge INSTR_GO) $display($time, " [INSTR_GO]");
-
   bit start0, start1, start2;
   assign start0 = DIAG_CONTINUE |
                   start0 & ~CON.START & ~CON.RESET;
@@ -201,8 +198,6 @@ module con(iAPR APR,
     CON.START <= start2;
   end
 
-  always @(posedge CON.START) $display($time, " [KL START]");
-
   bit run0, run1, run2;
   assign run0 = DIAG_SET_RUN |
                 run0 & ~DIAG_CLR_RUN & ~CON.RESET;
@@ -211,9 +206,6 @@ module con(iAPR APR,
     run2 <= run1;
     CON.RUN <= run2;
   end
-
-  always @(posedge CON.RUN) $display($time, " [KL RUN]");
-  always @(negedge CON.RUN) $display($time, " [RUN flip-flop deassert]");
 
 /*
   bit runStateNC1, runStateNC2, runStateNC3;
