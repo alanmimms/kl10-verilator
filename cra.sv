@@ -130,9 +130,24 @@ module cra(iAPR APR,
                                           {10'b0, CON.COND_ADR_10};
   
 
-  assign {CRA.AREAD[1:4], CRA.AREAD[7:10]} = IR.DRAM_A != 3'b111 ?
-                                             {IR.DRAM_J[1:4], IR.DRAM_J[7:10]} :
-                                             {5'b0, IR.DRAM_A};
+/*
+   1 0 2    a b a|b   A
+ ------------------------
+   0 0 0    1 1  1    0
+   0 0 1    1 0  1    1
+   1 0 0    0 1  1    2
+   1 0 1    0 0  0    3
+   0 1 0    0 0  0    4
+   0 1 1    0 0  0    5
+   1 1 0    0 0  0    6
+   1 1 1    0 0  0    7
+
+  Therefore signal indicates A < 3
+ */
+
+  assign {CRA.AREAD[1:4], CRA.AREAD[7:10]} = IR.DRAM_A < 3'b011 ?
+                                             {5'b0, IR.DRAM_A} :
+                                             {IR.DRAM_J[1:4], IR.DRAM_J[7:10]};
 
   bit RET_AND_not1777, CALL_RESET, CALL_RESET_1777;
   assign RET_AND_not1777 = CTL.DISP_RETURN & ~CLK.FORCE_1777;
