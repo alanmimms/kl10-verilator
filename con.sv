@@ -290,9 +290,6 @@ module con(iAPR APR,
   always_ff @(posedge clk) CON.EBUS_GRANT <= PIC.EBUS_CP_GRANT;
   always_ff @(posedge clk) PI_XFER <= PIC.EXT_TRAN_REC;
 
-  // XXX This is a guess
-  assign CON.NICOND[10] = CON.NICOND_TRAP_EN;
-
   bit e34q1, e34q13;
   always_ff @(posedge clk) e34q1 <= NICOND;
   always_ff @(posedge clk) e34q13 <= CON.COND_LOAD_IR;
