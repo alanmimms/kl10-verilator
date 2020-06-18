@@ -115,7 +115,7 @@ module vma(iAPR APR,
   bit [12:17] VMA_IN;
   bit CRY_16, CRY_20, CRY_24, CRY_28, CRY_32;
   bit [18:35] vmaMux;
-  assign vmaMux = MCL.VMA_AD ? EDP.AD[18:35] : VMA_AD[18:35];
+  assign vmaMux = MCL.VMA_AD ? EDP.ADxyzzy[18:35] : VMA_AD[18:35];
 
   UCR4 e11(.D(VMA_IN[12:15]),
            .CIN(CRY_16),
@@ -168,7 +168,7 @@ module vma(iAPR APR,
 
     for (k = 12; k < 36; k += 6) begin: adrBrkR
       USR4 r(.S0(1'b0),
-             .D(k == 12 ? {1'b0, EDP.AD[k+1:k+3]} : {EDP.AD[k:k+3]}),
+             .D(k == 12 ? {1'b0, EDP.ADxyzzy[k+1:k+3]} : {EDP.ADxyzzy[k:k+3]}),
              .S3(1'b0),
              .Q(VMA.ADR_BRK[k:k+3]),
              .SEL({2{~CON.DATAO_APR}}),
@@ -243,14 +243,14 @@ module vma(iAPR APR,
                                2'b00: VMA_IN[k] = VMA.VMA[k];
                                2'b01: VMA_IN[k] = VMA.PC[k];
                                2'b10: VMA_IN[k] = VMA.PREV_SEC[k];
-                               2'b11: VMA_IN[k] = EDP.AD[k];
+                               2'b11: VMA_IN[k] = EDP.ADxyzzy[k];
                                endcase
     end
   endgenerate
 
   bit ignored5;
   USR4 e32(.S0(1'b0),
-           .D({1'b0, EDP.AD[13:15]}),
+           .D({1'b0, EDP.ADxyzzy[13:15]}),
            .S3(1'b0),
            .SEL({2{~CON.LOAD_PREV_CONTEXT}}),
            .CLK(clk),
@@ -259,7 +259,7 @@ module vma(iAPR APR,
   bit [16:17] ps;
   
   USR4 e24(.S0(1'b0),
-           .D({EDP.AD[16:17], EDP.AD[17], EDP.AD[16]}),
+           .D({EDP.ADxyzzy[16:17], EDP.ADxyzzy[17], EDP.ADxyzzy[16]}),
            .S3(1'b0),
            .SEL({2{~CON.LOAD_PREV_CONTEXT}}),
            .CLK(clk),

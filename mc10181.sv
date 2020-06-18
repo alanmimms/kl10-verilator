@@ -29,25 +29,34 @@ module mc10181(input bit [0:3] S,
                output bit CP,
                output bit COUT);
 
-  bit [3:0] G, P;
+  bit [0:3] G, P, Ale, Ble, Sle, Fle;
   bit notGG;
 
-  assign G = ~(~({4{S[3]}} | B | A) | ~({4{S[2]}} | A  | ~B));
-  assign P = ~(~({4{S[1]}} | ~B   ) | ~({4{S[0]}} | B) | ~A);
-  assign F = ~(G ^ P ^
-               {~(M | G[2]) |
-                ~(M | P[2] | G[1]) |
-                ~(M | P[2] | P[1] | G[0]) |
-                ~(M | P[2] | P[1] | P[0] | CIN),
+  // In the ECL datasheet, the e S3..S0 and A, B, and F fields are in
+  // little-endian bit order. But of course PDP10 uses the
+  // never-to-be-sufficently-damned big-endian bit ordering. We have to
+  // swap this here.
+  assign Sle = {S[3], S[2], S[1], S[0]};
+  assign Ale = {A[3], A[2], A[1], A[0]};
+  assign Ble = {B[3], B[2], B[1], B[0]};
+  assign F = {Fle[3], Fle[2], Fle[1], Fle[0]};
 
-                ~(M | G[1]) |
-                ~(M | P[1] | G[0]) |
-                ~(M | P[1] | P[0] | CIN),
+  assign G = ~(~({4{Sle[3]}} | Ble | Ale) | ~({4{Sle[2]}} | Ale  | ~Ble));
+  assign P = ~(~({4{Sle[1]}} | ~Ble   ) | ~({4{Sle[0]}} | Ble) | ~Ale);
+  assign Fle = ~(G ^ P ^
+                 {~(M | G[2]) |
+                  ~(M | P[2] | G[1]) |
+                  ~(M | P[2] | P[1] | G[0]) |
+                  ~(M | P[2] | P[1] | P[0] | CIN),
 
-                ~(M | G[0]) |
-                ~(M | P[0] | CIN),
+                  ~(M | G[1]) |
+                  ~(M | P[1] | G[0]) |
+                  ~(M | P[1] | P[0] | CIN),
 
-                ~(M | CIN)});
+                  ~(M | G[0]) |
+                  ~(M | P[0] | CIN),
+
+                  ~(M | CIN)});
   assign notGG = ~G[3] |
                  ~(P[3] | G[2]) |
                  ~(P[3] | P[2] | G[1]) |
@@ -59,48 +68,26 @@ endmodule // mc10181
 
 
 `ifdef TESTBENCH
-module mc10181_tb;
-
-  bit clk;
-  bit [3:0] S, A, B;
-  bit [3:0] F;
+module mc10181_tb(input bit clk);
+  bit [0:3] S, A, B;
+  bit [0:3] F;
   bit M, CIN;
   bit CG, CP, COUT;
-  bit [31:0] s, a, b;
-  bit [31:0] m, cin;
 
-  mc10181 mc10181(.S(S), .M(M), .A(A), .B(B), .CIN(CIN), .F(F), .CG(CG), .CP(CP), .COUT(COUT));
+  bit [7:0] tickCount;
 
-  always #1 clk = ~clk;
+  mc10181 mc10181(.*);
 
-  initial begin
-    clk = 0;
-    cin = 0;
+  /* verilator lint_off BLKSEQ */
+  always @(posedge clk) begin
+    ++tickCount;
+    A = 0;
+    B = 0;
+    {M, S} = 5'o23;
+    CIN = 0;
 
-    for (m = 0; m < 2; m = m + 1) begin
-      M = m;
-
-      for (s = 0; s < 16; s = s + 1) begin
-        S = s;
-
-        for (b = 0; b < 16; b = b + 1) begin
-          B = b;
-
-          for (a = 0; a < 16; a = a + 1) begin
-            #1 A = a;
-            cin = ~cin;
-            CIN = cin;
-          end
-        end
-      end
-    end
-  end
-
-  initial begin
-    $monitor("T=%-6D M=%b S=%4b A=%4b B=%4b CIN=%b F=%4b CG=%b CP=%b COUT=%b",
-             $time, M, S, A, B, CIN, F, CG, CP, COUT);
-    $dumpfile("mc10181_tb.vcd");
-    $dumpvars(0, mc10181_tb);
+    $display($time, "M=%b S=%4b A=%4b B=%4b CIN=%b F=%4b CG=%b CP=%b COUT=%b",
+             M, S, A, B, CIN, F, CG, CP, COUT);
   end
 endmodule // mc10181_tb
 `endif //  `ifdef TESTBENCH

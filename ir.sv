@@ -97,7 +97,7 @@ module ir(iIR IR,
   assign IR.ACeq0 = IR.IR[9:12] == 4'b0;
 
   // The actual IR register is built out of 10173 latch-muxes.
-  always_latch if (HOLD_IR) IR.IR[0:12] <= CLK.MB_XFER ? MBOX.CACHE_DATA[0:12] : EDP.AD[0:12];
+  always_latch if (HOLD_IR) IR.IR[0:12] <= CLK.MB_XFER ? MBOX.CACHE_DATA[0:12] : EDP.ADxyzzy[0:12];
 
 
   // IR2 p.129
@@ -131,12 +131,12 @@ module ir(iIR IR,
 
   // IR3 p.130
   assign magic7eq8 = CRAM.MAGIC[7] ^ CRAM.MAGIC[8];
-  assign AgtB = EDP.AD[0] ^ EDP.AD_CRY[-2];
-  assign IR.ADeq0 = EDP.AD == '0;
+  assign AgtB = EDP.ADxyzzy[0] ^ EDP.AD_CRYxyzzy[-2];
+  assign IR.ADeq0 = EDP.ADxyzzy == '0;
   assign IR.TEST_SATISFIED = (~IR.DRAM_B[1] & IR.ADeq0 & magic7eq8 |       // EQ
                               ~IR.DRAM_B[2] & AgtB & ~CRAM.MAGIC[7] |      // GT
-                              ~IR.DRAM_B[2] & EDP.AD[0] & ~CRAM.MAGIC[8] | // LT
-                              ~magic7eq8 & ~EDP.AD_CRY[-2]) ^              // X
+                              ~IR.DRAM_B[2] & EDP.ADxyzzy[0] & ~CRAM.MAGIC[8] | // LT
+                              ~magic7eq8 & ~EDP.AD_CRYxyzzy[-2]) ^         // X
                              IR.DRAM_B[0];
 
   // This is modeled as one-hot active high unlike the MC10161 which
@@ -166,10 +166,10 @@ module ir(iIR IR,
 `endif
 
   priority_encoder8 e67(.d({1'b0,
-                            EDP.AD[0],
-                            EDP.AD[6] | (EDP.AD[0:5] != '0),
-                            EDP.AD[7:10],
-                            EDP.AD[6:35] != '0}),
+                            EDP.ADxyzzy[0],
+                            EDP.ADxyzzy[6] | (EDP.ADxyzzy[0:5] != '0),
+                            EDP.ADxyzzy[7:10],
+                            EDP.ADxyzzy[6:35] != '0}),
                         .any(),
                         .q(IR.NORM));
 
@@ -192,9 +192,9 @@ module ir(iIR IR,
     3'b101: IR.EBUSdriver.data[0:5] = {DRAM_PAR, IR.DRAM_ODD_PARITY, IR.DRAM_J[7:10]};
     3'b110: IR.EBUSdriver.data[0:5] = {IR.ADeq0, IR.IO_LEGAL,
                                        CTL.INH_CRY_18, CTL.SPEC_GEN_CRY_18,
-                                       CTL.SPEC_GEN_CRY_18, EDP.AD_CRY[-2]};
-    3'b111: IR.EBUSdriver.data[0:5] = {EDP.AD_CRY[12], EDP.AD_CRY[18],
-                                       EDP.AD_CRY[24], EDP.AD_CRY[36],
+                                       CTL.SPEC_GEN_CRY_18, EDP.AD_CRYxyzzy[-2]};
+    3'b111: IR.EBUSdriver.data[0:5] = {EDP.AD_CRYxyzzy[12], EDP.AD_CRYxyzzy[18],
+                                       EDP.AD_CRYxyzzy[24], EDP.AD_CRYxyzzy[36],
                                        EDP.ADX_CRY[12], EDP.ADX_CRY[24]};
     endcase
               else IR.EBUSdriver.data = '0;

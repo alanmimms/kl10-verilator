@@ -250,13 +250,13 @@ module scd(iAPR APR,
   
   mux e17(.en(SCD.EBUSdriver.driving),
           .sel(DIAG),
-          .d({TRAP_REQ_1, ~EDP.AD_CRY[1], ~EDP.AD_OVERFLOW[0], CON.CLR_PRIVATE_INSTR,
+          .d({TRAP_REQ_1, ~EDP.AD_CRYxyzzy[1], ~EDP.AD_OVERFLOW[0], CON.CLR_PRIVATE_INSTR,
               ~USER_EN, ~SCD.PRIVATE_INSTR, SCD.USER_IOT, SCD.ADR_BRK_CYC}),
           .q(SCD.EBUSdriver.data[5]));
   
   mux e12(.en(SCD.EBUSdriver.driving),
           .sel(DIAG),
-          .d({SCD.FPD, SCD.DIV_CHK, ~EDP.AD_CRY[-2], NICOND_10,
+          .d({SCD.FPD, SCD.DIV_CHK, ~EDP.AD_CRYxyzzy[-2], NICOND_10,
               PUBLIC_PAGE, ~PRIVATE_INSTR_EN, ~USER_IOT_EN, SCD.ADR_BRK_PREVENT}),
           .q(SCD.EBUSdriver.data[6]));
 
@@ -370,8 +370,8 @@ module scd(iAPR APR,
                (SCD.OV | SCAD[1] & EXP_TEST | CRAM.MAGIC[0] & PCF_MAGIC) :
                 EDP.AR[0]);
 
-    SCD.CRY0 <= EDP.AD_CRY[-2] & SET_AD_FLAGS | (LOAD_FLAGS ? SCD.CRY0 : EDP.AR[1]);
-    SCD.CRY1 <= EDP.AD_CRY[1] & SET_AD_FLAGS | (LOAD_FLAGS ? SCD.CRY1 : EDP.AR[2]);
+    SCD.CRY0 <= EDP.AD_CRYxyzzy[-2] & SET_AD_FLAGS | (LOAD_FLAGS ? SCD.CRY0 : EDP.AR[1]);
+    SCD.CRY1 <= EDP.AD_CRYxyzzy[1] & SET_AD_FLAGS | (LOAD_FLAGS ? SCD.CRY1 : EDP.AR[2]);
 
     SCD.FOV <= (LOAD_FLAGS | SCD.FOV | (SCAD[1] & EXP_TEST | CRAM.MAGIC[0] & PCF_MAGIC)) &
                (~LOAD_FLAGS | EDP.AR[3]);

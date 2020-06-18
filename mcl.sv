@@ -117,7 +117,7 @@ module mcl(iAPR APR,
   bit [1:4] gatedAD;
 
   assign gatedMagic = {4{MEM_EA_CALC}} & CRAM.MAGIC[0:3];
-  assign gatedAD = {4{MEM_AD_FUNC}} & EDP.AD[1:4];
+  assign gatedAD = {4{MEM_AD_FUNC}} & EDP.ADxyzzy[1:4];
   assign MCL.VMA_READ = |e13SR[0:1];
   assign MCL.VMA_READ_OR_WRITE = e13SR[0] | e13SR[1] | e13SR[3];
   assign MCL.LOAD_AR = e13SR[0];
@@ -137,11 +137,11 @@ module mcl(iAPR APR,
   assign USER_EN = MCL.VMA_PREV_EN & USER_IOT |
                    USER & (KERNEL_CYCLE | FETCH_EN) & ~SPEC_EXEC |
                    SPEC_SP_MEM_CYCLE & CRAM.MAGIC[1] & ~SPEC_EXEC |
-                   LOAD_AD_FUNC & EDP.AD[5];
+                   LOAD_AD_FUNC & EDP.ADxyzzy[5];
   assign PUBLIC_EN = ~MCL.VMA_PREV_EN & (KERNEL_CYCLE | FETCH_EN) & PUBLIC |
                      SCD.PCP & ~USER & MCL.VMA_PREV_EN |
                      USER & PUBLIC & MCL.VMA_PREV_EN |
-                     LOAD_AD_FUNC & EDP.AD[6];
+                     LOAD_AD_FUNC & EDP.ADxyzzy[6];
 
   bit [0:3] e14SR;
   always_ff @(posedge clk) if (MCL.LOAD_VMA_CONTEXT)
@@ -247,7 +247,7 @@ module mcl(iAPR APR,
                         (CRAM.VMA[0] | CRAM.VMA[1] | RESET);
   assign MCL.VMA_PREV_EN = e48B0 & VMAslashAD |
                            AREAD_EA & PXCT_B10 |
-                           EDP.AD[7] & LOAD_AD_FUNC |
+                           EDP.ADxyzzy[7] & LOAD_AD_FUNC |
                            MEM_EA_CALC &
                            (e48B1 & CRAM.MAGIC[5] |
                             MCL.XR_PREVIOUS & CRAM.MAGIC[5] |
@@ -274,7 +274,7 @@ module mcl(iAPR APR,
   assign adrErr = ~LOAD_AD_FUNC &
                   ~MEM_REG_FUNC &
                   VMA_LONG_EN &
-                  ((EDP.AD[6:11] !== '0) | ~EDP.AD[12]);
+                  ((EDP.ADxyzzy[6:11] !== '0) | ~EDP.ADxyzzy[12]);
 
   always_ff @(posedge clk) if (MCL.LOAD_VMA) begin
     ADR_ERR <= adrErr;
@@ -322,8 +322,8 @@ module mcl(iAPR APR,
 
   // MCL6 p.376
   bit [0:3] e33SR;
-  assign AD_FUNC_08 = EDP.AD[8] & LOAD_AD_FUNC;
-  assign AD_FUNC_09 = EDP.AD[9] & LOAD_AD_FUNC;
+  assign AD_FUNC_08 = EDP.ADxyzzy[8] & LOAD_AD_FUNC;
+  assign AD_FUNC_09 = EDP.ADxyzzy[9] & LOAD_AD_FUNC;
   assign VMA_SECTION_0 = ~CTL.DIAG_FORCE_EXTEND & VMA.VMA_SECTION_0;
   assign PC_SECTION_0 = ~CTL.DIAG_FORCE_EXTEND & VMA.PC_SECTION_0;
   assign PCS_SECTION_0 = ~CTL.DIAG_FORCE_EXTEND & VMA.PCS_SECTION_0;
@@ -345,17 +345,17 @@ module mcl(iAPR APR,
   always_ff @(posedge clk) if (MCL.LOAD_VMA_CONTEXT) begin
     e33SR[0] = ~CON.CACHE_LOAD_EN |
                SPEC_SP_MEM_CYCLE & CRAM.MAGIC[7] |
-               LOAD_AD_FUNC & EDP.AD[11];
+               LOAD_AD_FUNC & EDP.ADxyzzy[11];
     e33SR[1] = CON.TRAP_EN |
                SPEC_SP_MEM_CYCLE & CRAM.MAGIC[08] |
-               LOAD_AD_FUNC & EDP.AD[12];
+               LOAD_AD_FUNC & EDP.ADxyzzy[12];
     e33SR[2] = EPT_EN;
     e33SR[3] = UPT_EN;
     MCL.PAGE_UEBR_REF_A <= PHYS_REF | EPT_EN | UPT_EN; // XXX find wrong references
   end
 
   always_ff @(posedge clk) if (MCL.REQ_EN) begin
-    MAP_FUNC <= MEM_REG_FUNC & CRAM.MAGIC[3] | LOAD_AD_FUNC & EDP.AD[12];
+    MAP_FUNC <= MEM_REG_FUNC & CRAM.MAGIC[3] | LOAD_AD_FUNC & EDP.ADxyzzy[12];
     REG_FUNC <= MEM_REG_FUNC & CRAM.MAGIC[0];
     MCL.VMA_FETCH <= FETCH_EN;
   end

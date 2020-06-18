@@ -89,8 +89,8 @@ module cra(iAPR APR,
                      endcase
     else if (dispEn30_37) unique case (CRAM.DISP[2:4])
                           3'b000: dispMux[7:10] = {1'b0, SCD.FE_SIGN, EDP.MQ[34:35]};
-                          3'b001: dispMux[7:10] = {1'b0, SCD.FE_SIGN, EDP.BR[0], EDP.AD_CRY[-2]};
-                          3'b010: dispMux[7:10] = {EDP.ARX[0], EDP.AR[0], EDP.BR[0], EDP.AD[0]};
+                          3'b001: dispMux[7:10] = {1'b0, SCD.FE_SIGN, EDP.BR[0], EDP.AD_CRYxyzzy[-2]};
+                          3'b010: dispMux[7:10] = {EDP.ARX[0], EDP.AR[0], EDP.BR[0], EDP.ADxyzzy[0]};
                           3'b011: dispMux[7:10] = {1'b0, IR.DRAM_B[0:2]};
                           3'b100: dispMux[7:10] = {1'b0, SCD.FPD, EDP.AR[12], SCD.SCAD_SIGN};
                           3'b101: dispMux[7:10] = {1'b0, IR.NORM[8:10]};
@@ -115,8 +115,8 @@ module cra(iAPR APR,
                                   3'b001: dispMux[10] = SCD.SCAD_SIGN;
                                   3'b010: dispMux[10] = ~SCD.SCADeq0;
                                   3'b011: dispMux[10] = EDP.ADX[0];
-                                  3'b100: dispMux[10] = EDP.AD_CRY[-2];
-                                  3'b101: dispMux[10] = ~EDP.AD[0];
+                                  3'b100: dispMux[10] = EDP.AD_CRYxyzzy[-2];
+                                  3'b101: dispMux[10] = ~EDP.ADxyzzy[0];
                                   3'b110: dispMux[10] = ~IR.ADeq0;
                                   3'b111: dispMux[10] = ~VMA.LOCAL_AC_ADDRESS;
                                   endcase

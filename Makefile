@@ -19,11 +19,13 @@ HFILES =
 TBOBJS = $(foreach F,$(CFILES:.c=.o) $(CXXFILES:.cc=.o),$(VOBJDIR)/$F)
 
 EXE = kl10pvtb
+MC10181_EXE = mc10181tb
 
 DTE_INTF = dte.h dte.svh
 
 KILL_WARNINGS = -Wno-LITENDIAN \
 		-Wno-UNOPTFLAT \
+		-Wno-DECLFILENAME \
 		-Wno-CLKDATA
 
 INCDIR = $(VERILATOR_ROOT)/include
@@ -43,13 +45,25 @@ VFLAGS = \
 	--cc --build --exe -j 4
 
 .PHONY:	all
-all:	$(EXE)
+all:	$(EXE) $(MC10181_EXE)
 
 $(EXE):	$(SVFILES) $(SVHFILES) $(CXXFILES) $(CFILES) $(HFILES) $(DTE_INTF)
 	$(VERILATOR) $(VFLAGS) $(filter-out %.h, $^) -o $(EXE)
 
 $(DTE_INTF): dte-interface.js
 	node dte-interface.js -- $(DTE_INTF)
+
+$(MC10181_EXE): mc10181.sv tb/mc10181-main.cc
+	$(VERILATOR) -Wall $(KILL_WARNINGS) \
+		--default-language 1800-2017 +1800-2017ext+sv \
+		-DTESTBENCH \
+		$(foreach F, $(CFLAGS), -CFLAGS $F) \
+		$(foreach F, $(DEBUG), -LDFLAGS $F) \
+		--trace --trace-structs \
+		--timescale-override 1ns/1ps \
+		--cc mc10181.sv --exe --build \
+		tb/mc10181-main.cc \
+		-o $@
 
 .PHONY:	clean
 clean:

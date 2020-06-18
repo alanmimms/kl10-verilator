@@ -452,7 +452,7 @@ static void startKL(W36 bootAddr) {
   if (!nStepsToRUN) printf("WARNING: KL didn't exit HALT loop after 1000 clocks\n");
 
   // Start the KL clock running.
-  FELOG("[init time time=%lld, start KL clock]\n", nextReqTicks);
+  FELOG("[start KL clock t=%lld]\n", nextReqTicks);
   doDiagFunc(diagfSTART_CLOCK);                   // START THE CLOCK
 }
 

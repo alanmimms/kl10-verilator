@@ -1,77 +1,38 @@
 [*]
 [*] GTKWave Analyzer v3.3.101 (w)1999-2019 BSI
-[*] Wed Jun 17 19:01:53 2020
+[*] Thu Jun 18 22:13:34 2020
 [*]
 [dumpfile] "/home/alan/kl10-verilator/kl10pv-trace.vcd"
-[dumpfile_mtime] "Wed Jun 17 18:57:41 2020"
-[dumpfile_size] 48374299
+[dumpfile_mtime] "Thu Jun 18 22:10:44 2020"
+[dumpfile_size] 34856518
 [savefile] "/home/alan/kl10-verilator/clk-debug.gtkw"
-[timestart] 683285
+[timestart] 33166
 [size] 1920 1051
 [pos] -1 -1
-*-7.686000 684052 8708 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-6.799893 33506 8708 1274366 33657 33506 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [ruler] 8708 175
 [treeopen] TOP.
 [treeopen] TOP.top.
-[treeopen] TOP.top.CLK.
 [treeopen] TOP.top.ebox0.
-[treeopen] TOP.top.ebox0.CLK.
 [treeopen] TOP.top.ebox0.CRAM.
-[treeopen] TOP.top.ebox0.crm0.
-[treeopen] TOP.top.ebox0.MTR.
-[treeopen] TOP.top.EDP.
-[treeopen] TOP.top.mbox0.
+[treeopen] TOP.top.ebox0.edp0.ADaluE1E2(18).
+[treeopen] TOP.top.ebox0.edp0.ADaluE1E2(24).
+[treeopen] TOP.top.ebox0.edp0.ADaluE1E2(30).
 [treeopen] TOP.top.mbox0.mbx0.
-[treeopen] TOP.top.memory0.
 [treeopen] TOP.top.memory0.aPhase.
 [treeopen] TOP.top.memory0.bPhase.
 [sst_width] 211
-[signals_width] 233
+[signals_width] 299
 [sst_expanded] 1
-[sst_vpaned_height] 410
+[sst_vpaned_height] 532
 @30
 TOP.top.CLK.MR_RESET
 [color] 2
 +{TOP.top.CLK.CRA} TOP.top.CLK.CRA
 +{CRADR} TOP.top.CRA.CRADR[0:10]
-TOP.top.ebox0.scd0.NICOND_10
-TOP.top.ebox0.con0.NICOND
-TOP.top.ebox0.CRA.AREAD[1:10]
-@c00210
--CON-nicond
-@30
-TOP.top.ebox0.CON.PI_CYCLE
-TOP.top.ebox0.CON.RUN
-TOP.top.ebox0.con0.MTR_INT_REQ
-TOP.top.ebox0.con0.INT_REQ
-TOP.top.ebox0.con0.CON.UCODE_STATE5
-@70
-[color] 1
-TOP.top.VMA.AC_REF
-@210
--
-@70
-[color] 1
-TOP.top.ebox0.CON.PI_CYCLE
-@30
-TOP.top.ebox0.CON.NICOND_TRAP_EN
-TOP.top.ebox0.CON.NICOND[7:10]
-@1401210
--CON-nicond
-@c00211
--EDPstate
-@30
-[color] 7
-TOP.top.EDP.AR[0:35]
-[color] 7
-TOP.top.EDP.ARX[0:35]
-[color] 7
-TOP.top.EDP.BR[0:35]
-[color] 7
-TOP.top.EDP.BRX[0:35]
-@1401211
--EDPstate
-@c00210
+@28
+TOP.top.ebox0.DTE.resetCRA
+@c00200
 -CRAM
 @28
 [color] 7
@@ -126,8 +87,77 @@ TOP.top.ebox0.CRAM.SPEC[0:4]
 TOP.top.ebox0.CRAM.TIME[0:1]
 [color] 7
 TOP.top.ebox0.CRAM.VMA[0:1]
-@1401210
+@1401200
 -CRAM
+@30
+TOP.top.ebox0.VMA.VMA[12:35]
+@800200
+-EDPstate
+@28
+TOP.top.ebox0.DTE.overrideAR
+@30
+TOP.top.ebox0.DTE.ARvalue[0:35]
+TOP.top.ebox0.CTL.AR00to08_LOAD
+TOP.top.ebox0.CTL.AR09to17_LOAD
+TOP.top.ebox0.CTL.ARR_LOAD
+TOP.top.ebox0.CTL.AR00to11_CLR
+TOP.top.ebox0.CTL.AR12to17_CLR
+TOP.top.ebox0.CTL.ARR_CLR
+TOP.top.ebox0.edp0.ARM[0:35]
+[color] 7
+TOP.top.EDP.AR[0:35]
+[color] 7
+TOP.top.EDP.ARX[0:35]
+[color] 7
+TOP.top.EDP.BR[0:35]
+[color] 7
+TOP.top.EDP.BRX[0:35]
+TOP.top.ebox0.EDP.FM[0:35]
+TOP.top.ebox0.edp0.ADA_EN
+TOP.top.ebox0.edp0.ADA[0:35]
+TOP.top.ebox0.edp0.ADBxyzz[-2:35]
+TOP.top.ebox0.EDP.ADxyzz[-2:35]
+@31
+TOP.top.ebox0.CRAM.AD[0:5]
+@30
+TOP.top.ebox0.edp0.AD_BOOL
+TOP.top.ebox0.EDP.ADX[0:35]
+TOP.top.ebox0.APR.FM_BLOCK[0:2]
+TOP.top.ebox0.APR.FM_ADR[0:3]
+@28
+TOP.top.ebox0.CON.FM_WRITE00_17
+TOP.top.ebox0.CON.FM_WRITE18_35
+TOP.top.ebox0.edp0.FM_WRITE
+@1000200
+-EDPstate
+@30
+TOP.top.ebox0.con0.NICOND
+TOP.top.ebox0.scd0.NICOND_10
+TOP.top.ebox0.IR.DRAM_A[0:2]
+TOP.top.ebox0.IR.DRAM_B[0:2]
+TOP.top.ebox0.IR.DRAM_J[0:10]
+TOP.top.ebox0.CRA.AREAD[1:10]
+@c00200
+-CON-nicond
+@30
+TOP.top.ebox0.CON.PI_CYCLE
+TOP.top.ebox0.CON.RUN
+TOP.top.ebox0.con0.MTR_INT_REQ
+TOP.top.ebox0.con0.INT_REQ
+TOP.top.ebox0.con0.CON.UCODE_STATE5
+@70
+[color] 1
+TOP.top.VMA.AC_REF
+@200
+-
+@70
+[color] 1
+TOP.top.ebox0.CON.PI_CYCLE
+@30
+TOP.top.ebox0.CON.NICOND_TRAP_EN
+TOP.top.ebox0.CON.NICOND[7:10]
+@1401200
+-CON-nicond
 @c00200
 -all-clocks
 @28
