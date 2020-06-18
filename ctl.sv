@@ -141,11 +141,11 @@ module ctl(iAPR APR,
   bit resetOrREG_CTLorMQ_CLR;
   bit mathOrREG_CTLorMQ_CLR;
 
-  assign CTL.ARR_LOAD = ~(CTL.REG_CTL[2] | |{CRAM.AR[2],
-                                             CTL.ARR_SEL[1],
-                                             CTL.ARR_SEL[0],
-                                             CTL.ARR_CLR,
-                                             CTL.COND_ARR_LOAD});
+  assign CTL.ARR_LOAD = CTL.REG_CTL[2] | |{CRAM.AR[2],
+                                           CTL.ARR_SEL[1],
+                                           CTL.ARR_SEL[0],
+                                           CTL.ARR_CLR,
+                                           CTL.COND_ARR_LOAD};
   assign load1 = |{CTL.AR00to11_CLR, CTL.ARL_SEL};
   assign CTL.AR09to17_LOAD = CTL.COND_ARLR_LOAD | CTL.REG_CTL[1] | load1;
   assign CTL.AR00to08_LOAD = CTL.COND_ARLL_LOAD | CTL.REG_CTL[0] | load1 |
