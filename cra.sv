@@ -18,6 +18,7 @@ module cra(iAPR APR,
            iCRM CRM,
            iCSH CSH,
            iCTL CTL,
+           iDTE DTE,
            iEDP EDP,
            iIR IR,
            iMCL MCL,
@@ -123,7 +124,7 @@ module cra(iAPR APR,
   end
 
   // CRA.CRADR
-  always @(posedge clk) if (RESET) CRA.CRADR <= '0;
+  always @(posedge clk) if (RESET | DTE.resetCRA) CRA.CRADR <= '0;
                         else CRA.CRADR <= CRAM.J |
                                           {1'b0, {9{CLK.FORCE_1777}}, 1'b0} |
                                           dispMux |
