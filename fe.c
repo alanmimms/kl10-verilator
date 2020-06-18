@@ -231,9 +231,9 @@ static void doWrite(int func, W36 value) {
 
 
 //   Do a miscellaneous control function in DTE and return (option) result.
-static W36 doMiscFunc(int func) {
+static W36 doMiscFunc(int func, W36 data1 = 0, W36 data2 = 0) {
   REGLOG("F misc func %s\n", miscFuncNames[func]);
-  return sendAndGetResult(nextReqTicks, 1, dteMisc, func);
+  return sendAndGetResult(nextReqTicks, 1, dteMisc, func, data1, data2);
 }
 
 
@@ -402,29 +402,6 @@ static W36 loadBootstrap() {
 }
 
 
-/*
-// Based on KLINIT.T20 $LDAR routine. PUT THE MICROCODE INTO THE HALT
-// LOOP, STOP IT, PHASE THE CLOCKS, AND LOAD THE AR REGISTER WITH AN
-// INSTRUCTION OR STARTING ADDRESS.
-//
-// We can actually assume we are already in the HALT loop and stopped.
-// So we don't bother with the clock phasing shit. We just stop the KL
-// clock, load AR with our starting PC, and reset the CRADR to zero
-// (the START entry point) and go. This differs from DTE20 FE but its
-// end effect is the same.
-static void loadARandResetCRADR(W36 newAR) {
-  FELOG("[stop clocks]\n");
-  doDiagFunc(diagfSTOP_CLOCK);
-
-  FELOG("[load AR with %s]\n", octW(newAR));
-  doMiscFunc(loadAR, LH(newAR), RH(newAR));
-
-  FELOG("[zero CRADR]\n");
-  doMiscFunc(loadAR, loadCRADR, 0ull);
-}
-*/
-
-
 // Derived from KLINIT.T20 $TENST and $STRKL functions. XXX for now,
 // use all zero (which is already loaded to AC0 by clearing all ACs)
 // for .KLIWD to indicate we want dialog with KL boot process.
@@ -436,9 +413,22 @@ static void loadARandResetCRADR(W36 newAR) {
 static void startKL(W36 bootAddr) {
   bootAddr &= (1ul << 23) - 1ul; /* Mask to just 22 bits of start address */
 
-  // Load bootAddr into AR and reset CRAM address to 0 (START).
-  //  loadARandResetCRADR(bootAddr);
-  // XXX for now we depend on mem[0] containing our start instruction.
+  // Load bootAddr into AR. Based on KLINIT.T20 $LDAR routine. PUT THE
+  // MICROCODE INTO THE HALT LOOP, STOP IT, PHASE THE CLOCKS, AND LOAD
+  // THE AR REGISTER WITH AN INSTRUCTION OR STARTING ADDRESS.
+  //
+  // We can actually assume we are already in the HALT loop and stopped.
+  // So we don't bother with the clock phasing shit. We just stop the KL
+  // clock, load AR with our starting PC, and let the HALT loop exit
+  // process reset the CRADR to zero (the START entry point).
+  // This differs from DTE20 FE but its end effect is the same.
+  FELOG("[load AR with %s and reset CRADR]\n", octW(bootAddr));
+  doMiscFunc(loadAR, LH(bootAddr), RH(bootAddr));
+  waitFor(10);
+  doMiscFunc(resetCRA);
+  waitFor(10);
+  doMiscFunc(clrCROBAR);        /* Release AR override and resetCRA */
+  waitFor(10);
 
   // Set the RUN flop.
   FELOG("[set RUN flop]\n");
@@ -462,7 +452,7 @@ static void startKL(W36 bootAddr) {
   if (!nStepsToRUN) printf("WARNING: KL didn't exit HALT loop after 1000 clocks\n");
 
   // Start the KL clock running.
-  FELOG("[start clock]\n");
+  FELOG("[init time time=%lld, start KL clock]\n", nextReqTicks);
   doDiagFunc(diagfSTART_CLOCK);                   // START THE CLOCK
 }
 

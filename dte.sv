@@ -27,8 +27,18 @@ module dte(iCLK CLK,
 
   initial CROBAR = 1;
 
+  bit clkIn = CLK.MBC;          // This is ungated equivalent to EBOX clock
+  bit clkDiv1, clkDiv2;
+
+  initial clkDiv1 = 0;
+  initial clkDiv2 = 0;
+
+  // Divide it by four
+  always @(posedge clkIn) clkDiv1 <= ~clkDiv1;
+  always @(posedge clkDiv1) clkDiv2 <= ~clkDiv2;
+
   bit clk /*notverilator notclocker*/;
-  assign clk = CLK.MHZ16_FREE;
+  assign clk = clkDiv2;
 
   var tReqType reqType;
   var tDiagFunction diagReq;
@@ -61,7 +71,11 @@ module dte(iCLK CLK,
     if (reqType == dteMisc) begin
 
       case (int'(diagReq))
-      clrCROBAR: CROBAR = 0;
+      clrCROBAR: begin
+        CROBAR = 0;
+        DTE.overrideAR = 0;
+        DTE.resetCRA = 0;
+      end
 
       getAPRID: begin
         lh = 32'({ucodeMajor, ucodeMinor, ucodeEdit});
@@ -81,10 +95,12 @@ module dte(iCLK CLK,
         rh = {30'b0, CON.RUN, CON.EBOX_HALTED};
       end
 
-/*
-      loadAR: EDP.AR = {reqData1[18:35], reqData2[18:35]};
-      loadCRADR: CRA.CRADR = reqData1[25:35];
-*/
+      loadAR: begin
+        DTE.overrideAR = 1;
+        DTE.ARvalue = {18'(reqData1), 18'(reqData2)};
+      end
+
+      resetCRA: DTE.resetCRA = 1;
 
       default: ;
       endcase

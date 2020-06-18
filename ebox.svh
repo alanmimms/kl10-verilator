@@ -2,6 +2,9 @@
 `ifndef _EBOX_SVH_
  `define _EBOX_SVH_ 1
 
+
+`include "dte.svh"
+
 // Universal shift register function selector values
 typedef enum bit [0:1] {usrLOAD, usrSHL, usrSHR, usrHOLD} tUSRfunc;
 
@@ -29,8 +32,7 @@ typedef enum bit [0:2] {
                 ebusfPIaddrIn = 3'b101
                 } tEBUSfunction;
 
- `include "dte.svh"
-
+////////////////////////////////////////////////////////////////
 // Each driver of EBUS gets its own instance of this. These are all
 // muxed onto the iEBUS.data member based on the one-hot
 // tEBUSdriver.driving indicator.
@@ -1081,8 +1083,10 @@ interface iCTL;
   tEBUSdriver EBUSdriver;
 endinterface
 
-
 interface iDTE;
+  bit overrideAR;
+  bit [0:35] ARvalue;
+  bit resetCRA;
   tEBUSdriver EBUSdriver;
 endinterface
 

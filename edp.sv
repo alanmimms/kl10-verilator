@@ -7,6 +7,7 @@ module edp(iAPR APR,
            iCON CON,
            iCRAM.mod CRAM,
            iCTL CTL,
+           iDTE DTE,
            iEDP EDP,
            iIR IR,
            iPI PIC,
@@ -49,24 +50,25 @@ module edp(iAPR APR,
   always_comb begin
     ARM = '0;
 
-    unique case (CTL.ARL_SEL)
-    // These hwOptions bits are wirewrapped
-    // onto the backplane for each machine's
-    // serial number and hardware options.
-    // This is listed in schematics as ARMM
-    // but ARMM is only [0:8] and [13:17]
-    // (driven by SCD and VMA, respectively).
-    // The low half comes from this
-    // wirewrapped strapping.
-    3'b000: ARM = {EDP.ARMM_SCD, 4'b0, EDP.ARMM_VMA, hwOptions};
-    3'b001: ARM = MBOX.CACHE_DATA[0:35];
-    3'b010: ARM = EDP.AD[0:35];
-    3'b011: ARM = EBUS.data[0:35];
-    3'b100: ARM = SHM.SH[0:35];
-    3'b101: ARM = {EDP.AD[1:35], EDP.ADX[0]};
-    3'b110: ARM = EDP.ADX[0:35];
-    3'b111: ARM = {AD_EX[-2:-1], EDP.AD[0:33]};
-    endcase
+    if (DTE.overrideAR) ARM = DTE.ARvalue;
+    else unique case (CTL.ARL_SEL)
+         // These hwOptions bits are wirewrapped
+         // onto the backplane for each machine's
+         // serial number and hardware options.
+         // This is listed in schematics as ARMM
+         // but ARMM is only [0:8] and [13:17]
+         // (driven by SCD and VMA, respectively).
+         // The low half comes from this
+         // wirewrapped strapping.
+         3'b000: ARM = {EDP.ARMM_SCD, 4'b0, EDP.ARMM_VMA, hwOptions};
+         3'b001: ARM = MBOX.CACHE_DATA[0:35];
+         3'b010: ARM = EDP.AD[0:35];
+         3'b011: ARM = EBUS.data[0:35];
+         3'b100: ARM = SHM.SH[0:35];
+         3'b101: ARM = {EDP.AD[1:35], EDP.ADX[0]};
+         3'b110: ARM = EDP.ADX[0:35];
+         3'b111: ARM = {AD_EX[-2:-1], EDP.AD[0:33]};
+         endcase
 
     if (CTL.AR00to11_CLR) ARM[0:11] = '0;
     if (CTL.AR12to17_CLR) ARM[12:17] = '0;
@@ -74,9 +76,9 @@ module edp(iAPR APR,
   end
   
   // EDP.AR
-  always_ff @(posedge clk) if (CTL.AR00to08_LOAD) EDP.AR[0:8] <= ARM[0:8];
-  always_ff @(posedge clk) if (CTL.AR09to17_LOAD) EDP.AR[9:17] <= ARM[9:17];
-  always_ff @(posedge clk) if (CTL.ARR_LOAD)      EDP.AR[18:35] <= ARM[18:35];
+  always_ff @(posedge clk) if (DTE.overrideAR | CTL.AR00to08_LOAD) EDP.AR[0:8] <= ARM[0:8];
+  always_ff @(posedge clk) if (DTE.overrideAR | CTL.AR09to17_LOAD) EDP.AR[9:17] <= ARM[9:17];
+  always_ff @(posedge clk) if (DTE.overrideAR | CTL.ARR_LOAD)      EDP.AR[18:35] <= ARM[18:35];
 
   // ARX muxes DP02 p16.
   bit [0:35] ARXM;
@@ -357,7 +359,7 @@ module edp(iAPR APR,
   // If either CTL_adToEBUS_{L,R} is lit we force AD as the source XXX
   // this is wrong. But it might be right enough. And I don't want to
   // go change every EBUSdriver.driving into LH and RH separately.
-  // Because that would be arsing tedious as fuck.
+  // Because that would be arsing tedious AF.
   bit [0:35] ebusR;
   assign EDP.EBUSdriver.driving = CTL.DIAG_READ_FUNC_12x | CTL.AD_TO_EBUS_L | CTL.AD_TO_EBUS_R;
   assign EDP.EBUSdriver.data[ 0:17] = (CTL.DIAG_READ_FUNC_12x || CTL.AD_TO_EBUS_L) ? ebusR[0:17] : '0;
