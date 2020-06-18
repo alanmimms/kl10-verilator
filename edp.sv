@@ -78,7 +78,11 @@ module edp(iAPR APR,
   // EDP.AR
   always_ff @(posedge clk) if (DTE.overrideAR | CTL.AR00to08_LOAD) EDP.AR[0:8] <= ARM[0:8];
   always_ff @(posedge clk) if (DTE.overrideAR | CTL.AR09to17_LOAD) EDP.AR[9:17] <= ARM[9:17];
-  always_ff @(posedge clk) if (DTE.overrideAR | CTL.ARR_LOAD)      EDP.AR[18:35] <= ARM[18:35];
+
+  always_ff @(posedge clk) if (DTE.overrideAR | CTL.ARR_LOAD) begin
+    EDP.AR[18:35] <= ARM[18:35];
+    DTE.overrideAR = 0;
+  end
 
   // ARX muxes DP02 p16.
   bit [0:35] ARXM;

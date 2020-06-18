@@ -124,11 +124,13 @@ module cra(iAPR APR,
   end
 
   // CRA.CRADR
-  always @(posedge clk) if (RESET | DTE.resetCRA) CRA.CRADR <= '0;
-                        else CRA.CRADR <= CRAM.J |
-                                          {1'b0, {9{CLK.FORCE_1777}}, 1'b0} |
-                                          dispMux |
-                                          {10'b0, CON.COND_ADR_10};
+  always @(posedge clk) if (RESET | DTE.resetCRA) begin
+    CRA.CRADR <= '0;
+    DTE.resetCRA = 0;
+  end else CRA.CRADR <= CRAM.J |
+                        {1'b0, {9{CLK.FORCE_1777}}, 1'b0} |
+                        dispMux |
+                        {10'b0, CON.COND_ADR_10};
   
 
 /*
