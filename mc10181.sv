@@ -81,13 +81,29 @@ module mc10181_tb(input bit clk);
   /* verilator lint_off BLKSEQ */
   always @(posedge clk) begin
     ++tickCount;
-    A = 0;
-    B = 0;
-    {M, S} = 5'o23;
-    CIN = 0;
 
-    $display($time, "M=%b S=%4b A=%4b B=%4b CIN=%b F=%4b CG=%b CP=%b COUT=%b",
-             M, S, A, B, CIN, F, CG, CP, COUT);
+    unique case (tickCount)
+    2: begin
+      A = 0;
+      B = 0;
+      {M, S} = 5'o23;
+      CIN = 0;
+    end
+    
+    3: begin
+      A = 4'd7;
+      B = 4'd3;
+      {M, S} = 5'b01001;
+      CIN = 1;
+    end
+
+    9: $finish;
+
+    default: ;
+    endcase
+
+    $display("%0d: M=%b S=%4b A=%4b B=%4b CIN=%b F=%4b CG=%b CP=%b COUT=%b",
+             tickCount, M, S, A, B, CIN, F, CG, CP, COUT);
   end
 endmodule // mc10181_tb
 `endif //  `ifdef TESTBENCH
