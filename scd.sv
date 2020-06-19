@@ -41,20 +41,24 @@ module scd(iAPR APR,
   bit TRAP_CYC_1_OR_2;
   bit [0:9] SCAD;
   assign SCAD_S1 =     ~CRAM.SCAD[0] &  CRAM.SCAD[1] &  CRAM.SCAD[2];
-  assign SCAD_S0 =     ~CRAM.SCAD[0] & ~CRAM.SCAD[1] &  CRAM.SCAD[2];
+  // Pretty sure -SCD1 SCAD 4 H is wrong here (someone "fixed" it on print?)
+  assign SCAD_S0 =      CRAM.SCAD[0] & ~CRAM.SCAD[1] &  CRAM.SCAD[2];
   assign SCAD_CRY_IN =  CRAM.SCAD[0] & ~CRAM.SCAD[1] &  CRAM.SCAD[2];
   assign SCD.SCADeq0 = SCAD == '0;  // E54, E37
 
-  bit ignoredE82;
-  mc10181 e82(.S({CRAM.SCAD[2], CRAM.SCAD[1], SCAD_S1, SCAD_S0}),
+  bit [0:3] aluF;
+  assign aluF = {CRAM.SCAD[2], CRAM.SCAD[1], SCAD_S1, SCAD_S0};
+
+  bit e82Ignored;
+  mc10181 e82(.S(aluF),
               .M(1'b0),
-              .A({1'b0, SCD.SCADA[0], SCD.SCADA[0], SCD.SCADA[1]}),
-              .B({1'b0, SCD.SCADB[0], SCD.SCADB[0], SCD.SCADB[1]}),
+              .A({1'b0, SCD.SCADA[0], SCD.SCADA[0:1]}),
+              .B({1'b0, SCD.SCADB[0], SCD.SCADB[0:1]}),
               .CIN(SCAD_CRY_02_OUT),
               .CG(), .CP(), .COUT(),
-              .F({ignoredE82, SCD.SCAD_SIGN, SCAD[0], SCAD[1]}));
+              .F({e82Ignored, SCD.SCAD_SIGN, SCAD[0], SCAD[1]}));
 
-  mc10181 e84(.S({CRAM.SCAD[2], CRAM.SCAD[1], SCAD_S1, SCAD_S0}),
+  mc10181 e84(.S(aluF),
               .M(1'b0),
               .A(SCD.SCADA[2:5]),
               .B(SCD.SCADB[2:5]),
@@ -63,7 +67,7 @@ module scd(iAPR APR,
               .COUT(SCAD_CRY_02_OUT),
               .F(SCAD[2:5]));
 
-  mc10181 e66(.S({CRAM.SCAD[2], CRAM.SCAD[1], SCAD_S1, SCAD_S0}),
+  mc10181 e66(.S(aluF),
               .M(1'b0),
               .A(SCD.SCADA[6:9]),
               .B(SCD.SCADB[6:9]),
