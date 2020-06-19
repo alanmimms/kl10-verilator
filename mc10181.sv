@@ -78,6 +78,38 @@ module mc10181_tb(input bit clk);
 
   mc10181 mc10181(.*);
 
+  bit [0:3] scadALU;
+  bit [0:9] scadA, scadB, scadF;
+  bit CRY_02_OUT, CRY_06_OUT, CRY_IN, sign;
+
+  bit e82Ignored, ign82a, ign82b, ign82c, ign84a, ign84b, ign66a, ign66b;
+  mc10181 e82(.S(scadALU),
+              .M(1'b0),
+              .A({1'b0, scadA[0], scadA[0:1]}),
+              .B({1'b0, scadB[0], scadB[0:1]}),
+              .CIN(CRY_02_OUT),
+              .CG(ign82a), .CP(ign82b), .COUT(ign82c),
+              .F({e82Ignored, sign, scadF[0], scadF[1]}));
+
+  mc10181 e84(.S(scadALU),
+              .M(1'b0),
+              .A(scadA[2:5]),
+              .B(scadB[2:5]),
+              .CIN(CRY_06_OUT),
+              .CG(ign84a), .CP(ign84b),
+              .COUT(CRY_02_OUT),
+              .F(scadF[2:5]));
+
+  mc10181 e66(.S(scadALU),
+              .M(1'b0),
+              .A(scadA[6:9]),
+              .B(scadB[6:9]),
+              .CIN(CRY_IN),
+              .CG(ign66a), .CP(ign66b),
+              .COUT(CRY_06_OUT),
+              .F(scadF[6:9]));
+
+
   /* verilator lint_off BLKSEQ */
   always @(posedge clk) begin
     ++tickCount;
@@ -90,20 +122,33 @@ module mc10181_tb(input bit clk);
       CIN = 0;
     end
     
-    3: begin
+    3: $display("%0d: M=%b S=%4b A=%4b B=%4b CIN=%b F=%4b CG=%b CP=%b COUT=%b",
+                tickCount, M, S, A, B, CIN, F, CG, CP, COUT);
+
+    4: begin
       A = 4'd7;
       B = 4'd3;
       {M, S} = 5'b01001;
       CIN = 1;
     end
 
-    9: $finish;
+    5: $display("%0d: M=%b S=%4b A=%4b B=%4b CIN=%b F=%4b CG=%b CP=%b COUT=%b",
+                tickCount, M, S, A, B, CIN, F, CG, CP, COUT);
+
+    10: begin
+      scadA = 10'd36;
+      scadB = 10'd23;
+      scadALU = 4'b1001;
+      CRY_IN = 1;
+    end
+
+    11: $display("%0d: scadA=%b=%0d scadB=%b=%0d CIN=%b scadF=%b=%0d sign=%b",
+                 tickCount, scadA, scadA, scadB, scadB, CRY_IN, scadF, scadF, sign);
+
+    15: $finish;
 
     default: ;
     endcase
-
-    $display("%0d: M=%b S=%4b A=%4b B=%4b CIN=%b F=%4b CG=%b CP=%b COUT=%b",
-             tickCount, M, S, A, B, CIN, F, CG, CP, COUT);
   end
 endmodule // mc10181_tb
 `endif //  `ifdef TESTBENCH

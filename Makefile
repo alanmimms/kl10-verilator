@@ -54,7 +54,7 @@ $(DTE_INTF): dte-interface.js
 	node dte-interface.js -- $(DTE_INTF)
 
 $(MC10181_EXE): mc10181.sv tb/mc10181-main.cc
-	$(VERILATOR) -Wall $(KILL_WARNINGS) \
+	$(VERILATOR) $(KILL_WARNINGS) \
 		--default-language 1800-2017 +1800-2017ext+sv \
 		-DTESTBENCH \
 		$(foreach F, $(CFLAGS), -CFLAGS $F) \
