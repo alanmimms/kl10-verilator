@@ -22,8 +22,8 @@ module sim_mem
   genvar byteN;
   generate
 
-//    for (byteN = 0; byteN < NBYTES; ++byteN)
-//      always_ff @(posedge clk) if (wea[byteN]) mem[addr][byteN] <= lanes[byteN];
+    for (byteN = 0; byteN < NBYTES; ++byteN)
+      always_ff @(posedge clk) if (wea[byteN]) mem[addr][byteN] <= lanes[byteN];
 
   endgenerate
 
