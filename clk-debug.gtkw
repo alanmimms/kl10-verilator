@@ -1,10 +1,10 @@
 [*]
 [*] GTKWave Analyzer v3.3.101 (w)1999-2019 BSI
-[*] Fri Jun 19 01:46:15 2020
+[*] Sat Jun 20 01:31:15 2020
 [*]
 [dumpfile] "/home/alan/kl10-verilator/kl10pv-trace.vcd"
-[dumpfile_mtime] "Fri Jun 19 01:41:47 2020"
-[dumpfile_size] 33822266
+[dumpfile_mtime] "Sat Jun 20 01:29:30 2020"
+[dumpfile_size] 35100738
 [savefile] "/home/alan/kl10-verilator/clk-debug.gtkw"
 [timestart] 33329
 [size] 1920 1051
@@ -133,7 +133,7 @@ TOP.top.ebox0.EDP.ADX[0:35]
 TOP.top.SCD.SC[0:9]
 @30
 TOP.top.SHM.XR[0:3]
-@29
+@28
 TOP.top.ebox0.SCD.SCAD_SIGN
 @24
 TOP.top.ebox0.scd0.SCAD[0:9]
@@ -146,6 +146,10 @@ TOP.top.ebox0.scd0.aluF[0:3]
 TOP.top.SHM.SH[0:35]
 @24
 TOP.top.ebox0.shm0.sc[0:5]
+@28
+TOP.top.ebox0.shm0.SHIFT_36
+@29
+TOP.top.ebox0.shm0.SHIFT_50
 @28
 TOP.top.ebox0.shm0.SHIFT_INH
 @30
