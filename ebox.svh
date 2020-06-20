@@ -413,8 +413,8 @@ typedef enum bit [0:4] {
                         specLOAD_PC = 5'b01_101,
                         specXCRY_AR0 = 5'b01_110,
                         specGEN_CRY18 = 5'b01_111,
-
                         specSTACK_UPDATE = 5'b10_000,
+                        specSUBR_CALL = 5'b10_001,
                         specARL_IND = 5'b10_010,
                         specMTR_CTL = 5'b10_011,
                         specFLAG_CTL = 5'b10_100,
@@ -989,20 +989,12 @@ interface iCTL;
   bit AR00to11_CLR;
   bit AR09to17_LOAD;
   bit AR12to17_CLR;
-  bit ARL_IND;
   bit ARR_CLR;
   bit ARR_LOAD;
   bit ARX_CLR;
   bit ARX_LOAD;
   bit AR_CLR;
-  bit COND_ARLL_LOAD;
-  bit COND_ARLR_LOAD;
-  bit COND_ARL_IND;
-  bit COND_ARR_LOAD;
-  bit COND_ARX_CLR;
-  bit COND_AR_CLR;
   bit COND_AR_EXP;
-  bit COND_REG_CTL;
   bit CONSOLE_CONTROL;
   bit DIAG_AR_LOAD;
   bit DIAG_CHANNEL_CLK_STOP;
@@ -1031,13 +1023,7 @@ interface iCTL;
   bit DIAG_READ_FUNC_17x;
   bit DIAG_STROBE;
   bit DIAG_SYNC_FUNC_075;
-  bit DISP_AREAD;
-  bit DISP_EA_MOD;
-  bit DISP_DIV;
-  bit DISP_MUL;
-  bit DISP_NORM;
   bit DISP_NICOND;
-  bit DISP_RET;
   bit DISP_RETURN;
   bit [0:6] DS;
   bit EBUS_E_TO_T_EN;
@@ -1048,36 +1034,27 @@ interface iCTL;
   bit INH_CRY_18;
   bit LOAD_PC;
   bit MQM_EN;
-  bit MQ_CLR;
   bit PI_CYCLE_SAVE_FLAGS;
   bit READ_STROBE;
-  bit SPEC_ADX_CRY_36;
   bit SPEC_AD_LONG;
-  bit SPEC_ARL_IND;
   bit SPEC_CALL;
   bit SPEC_CLR_FPD;
   bit SPEC_FLAG_CTL;
   bit SPEC_GEN_CRY_18;
-  bit SPEC_INH_CRY_18;
-  bit SPEC_LOAD_PC;
-  bit SPEC_MQ_SHIFT;
   bit SPEC_MTR_CTL;
   bit SPEC_SAVE_FLAGS;
   bit SPEC_SBR_CALL;
   bit SPEC_SCM_ALT;
   bit SPEC_SP_MEM_CYCLE;
-  bit SPEC_STACK_UPDATE;
-  bit SPEC_XCRY_AR0;
   bit [0:1] ARL_IND_SEL;
   bit [0:1] DISP_EN;
   bit [0:1] MQM_SEL;
   bit [0:1] MQ_SEL;
   bit [0:2] ARL_SEL;
-  bit [0:2] ARR_SEL;
-  bit [0:2] ARXL_SEL;
-  bit [0:2] ARXR_SEL;
+  bit [0:1] ARR_SEL;
+  bit [0:1] ARXL_SEL;
+  bit [0:1] ARXR_SEL;
   bit [0:6] DIAG;
-  bit [0:8] REG_CTL;
   bit adToEBUS_L;
   bit adToEBUS_R;
   tEBUSdriver EBUSdriver;

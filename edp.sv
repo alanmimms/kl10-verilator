@@ -89,7 +89,7 @@ module edp(iAPR APR,
   always_comb begin
     ARXM[0:17] = '0;
 
-    unique case (CTL.ARXL_SEL)
+    unique case ({CRAM.ARX[0], CTL.ARXL_SEL})
               3'b000: ARXM[0:17] = '0;
               3'b001: ARXM[0:17] = MBOX.CACHE_DATA[0:17];
               3'b010: ARXM[0:17] = EDP.ADxyzzy[0:17];
@@ -104,7 +104,7 @@ module edp(iAPR APR,
   always_comb begin
     ARXM[18:35] = '0;
 
-    unique case (CTL.ARXR_SEL)
+    unique case ({CRAM.ARX[0], CTL.ARXR_SEL})
               3'b000: ARXM[18:35] = '0;
               3'b001: ARXM[18:35] = MBOX.CACHE_DATA[18:35];
               3'b010: ARXM[18:35] = EDP.ADxyzzy[18:35];
