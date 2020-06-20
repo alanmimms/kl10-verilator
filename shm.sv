@@ -15,7 +15,7 @@ module shm(iCRAM CRAM,
   //   10     ARX      SHIFT_INH,SHIFT_36
   //   11   AR SWAP    SHIFT_INH,SHIFT_50
 
-  bit INSTR_FORMAT, SHIFT_INH, SHIFT_36, SHIFT_50;
+  bit INSTR_FORMAT, notSHIFT_INH, SHIFT_36, SHIFT_50;
 
   // XXX temporary
   initial begin
@@ -31,19 +31,19 @@ module shm(iCRAM CRAM,
   assign SHM.XR = INSTR_FORMAT ? EDP.ARX[14:17] : EDP.ARX[2:5];
   assign SHM.INDEXED = |SHM.XR;
 
-  assign SHIFT_INH = |CRAM.SH | SCD.SC_GE_36 | SCD.SC_36_TO_63;
+  assign notSHIFT_INH = ~((CRAM.SH != '0) | SCD.SC_GE_36 | SCD.SC_36_TO_63);
   assign SHIFT_50 = &CRAM.SH;
-  assign SHIFT_36 = ~CRAM.SH[1] & SHIFT_INH;
+  assign SHIFT_36 = ~CRAM.SH[1] & ~notSHIFT_INH;
 
   bit [0:5] sc;
-  assign sc = SCD.SC[4:9] & {6{SHIFT_INH}} |
+  assign sc = SCD.SC[4:9] & {6{notSHIFT_INH}} |
               {SHIFT_36 | SHIFT_50, SHIFT_50, 1'b0, SHIFT_36, SHIFT_50, 1'b0};
   
   // SHM2 p.335
   bit [0:71] ar_arx;
   assign ar_arx = {EDP.AR, EDP.ARX} << sc;
   always_comb case (CRAM.SH)
-              2'b00: SHM.SH = ar_arx[36:71];
+              2'b00: SHM.SH = ar_arx[0:35];
               2'b01: SHM.SH = EDP.AR;
               2'b10: SHM.SH = EDP.ARX;
               2'b11: SHM.SH = {EDP.AR[18:35], EDP.AR[0:17]};
