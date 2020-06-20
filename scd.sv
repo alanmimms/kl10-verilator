@@ -56,7 +56,7 @@ module scd(iAPR APR,
               .B({1'b0, SCD.SCADB[0], SCD.SCADB[0:1]}),
               .CIN(SCAD_CRY_02_OUT),
               .CG(), .CP(), .COUT(),
-              .F({e82Ignored, SCD.SCAD_SIGN, SCAD[0], SCAD[1]}));
+              .F({e82Ignored, SCD.SCAD_SIGN, SCAD[0:1]}));
 
   mc10181 e84(.S(aluF),
               .M(1'b0),
