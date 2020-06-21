@@ -42,6 +42,7 @@
 #include <string.h>
 #include <signal.h>
 #include <svdpi.h>
+#include <math.h>
 
 static const int feVerbose = 1;  /* Show FE progress */
 static const int regVerbose = 0; /* Show register operations */
@@ -135,23 +136,31 @@ static LL nextReqTicks = 0;            /* Ticks count to do next request */
 
 static double nsPerClock;       /* Nanoseconds in each of our ticks */
 
-
-#define RLOG(...) do {                          \
-if (pipeVerbose) printf(__VA_ARGS__);           \
-} while (0)                                     \
+static W36 bootAddr;
 
 
-#define WLOG(...) do {                          \
-if (pipeVerbose) printf(__VA_ARGS__);           \
-} while (0)                                     \
 
-#define FELOG(FMT, ...) do {                                    \
-  if (feVerbose) printf("  " FMT __VA_OPT__(,) __VA_ARGS__);  \
+#define TLOG(FMT, ...) do {                                      \
+  printf("%6lld: " FMT, nextReqTicks __VA_OPT__(,) __VA_ARGS__); \
 } while (0)
 
-#define REGLOG(...) do {                        \
-if (regVerbose) printf(__VA_ARGS__);            \
-} while (0)                                     \
+
+#define RLOG(...) do {                \
+if (pipeVerbose) printf(__VA_ARGS__); \
+} while (0)
+
+
+#define WLOG(...) do {                \
+if (pipeVerbose) printf(__VA_ARGS__); \
+} while (0)
+
+#define FELOG(FMT, ...) do {                                 \
+    if (feVerbose) printf("%6lld:   " FMT, nextReqTicks __VA_OPT__(,) __VA_ARGS__);   \
+} while (0)
+
+#define REGLOG(...) do {             \
+if (regVerbose) printf(__VA_ARGS__); \
+} while (0)
 
 
 static void fatalError(const char *msgP) {
@@ -263,7 +272,7 @@ static W36 doRead(int func) {
   //  REGLOG("F diag func %s\n", diagFuncNames[func]);
 
   /* Send function and delay 1us until EBUS.data is stable */
-  sendAndGetResult(nextReqTicks, (LL) (1000.0 / nsPerClock), dteDiagFunc, func);
+  sendAndGetResult(nextReqTicks, (LL) ceil(1000.0 / nsPerClock), dteDiagFunc, func);
 
   REGLOG("F diag %s read\n", diagFuncNames[func]);
   W36 result = sendAndGetResult(nextReqTicks, DIAG_DURATION, dteRead);
@@ -279,19 +288,75 @@ static void waitFor(LL ticks) {
 }
 
 
-static void klMasterReset() {
-  printf("[KL master reset]\n");
+static W36 fileWordToWord(unsigned char fw[]) {
+  return
+    ((W36) fw[0] << 28) |
+    ((W36) fw[1] << 20) |
+    ((W36) fw[2] << 12) |
+    ((W36) fw[3] <<  4) |
+    ((W36) fw[4] >> 4);
+}
+
+
+// Load the BOOT.EXE into memory and return the boot address.
+static W36 loadBootstrap() {
+  LL startTicks = nextReqTicks;
+  printf("\n");
+  TLOG("[Loading BOOT.EXE]\n");
+
+  FILE *f = fopen("./images/boot/boot.exe", "rb");
+  if (!f) fatalError("opening images/boot/boot.exe");
+  W36 minAddr = (1ull << 36) - 1;
+  W36 maxAddr = 0;
+  W36 w;
+
+  for (;;) {
+    unsigned char fw[5];
+    size_t len = fread(&fw, 1, sizeof(fw), f);
+    if (len < sizeof(fw)) fatalError("reading images/boot/boot.exe");
+    w = fileWordToWord(fw);
+    unsigned nww = LH(w);
+    unsigned addr = RH(w);
+    if (nww < B18) break;
+
+    int nWords = B17 - nww;     /* Negate RH */
+
+    for (int wn = nWords; wn; --wn) {
+      len = fread(fw, 1, sizeof(fw), f);
+      if (len < sizeof(fw)) fatalError("reading images/boot/boot.exe");
+      w = fileWordToWord(fw);
+      if (addr < minAddr) minAddr = addr;
+      if (addr > maxAddr) maxAddr = addr;
+      doWriteMemory(addr, w);
+      ++addr;
+    }
+  }
+
+  TLOG("[loaded in %lld ticks]\n", nextReqTicks - startTicks);
+  printf("          [boot image minAddr: %6llo]\n", minAddr);
+  printf("          [boot image maxAddr: %6llo]\n", maxAddr);
+
+  doWriteMemory(0ull, w);
+  TLOG("[start instruction %s deposited in mem[0]]\n", octW(w));
+  return w;
+}
+
+
+static void klReset() {
+  TLOG("[KL reset]\n");
 
   // $DFXC(.CLRUN=010)    ; Clear run
   FELOG("[clear RUN flop]\n");
   doDiagFunc(diagfCLR_RUN);
+
+  bootAddr = loadBootstrap();
 
   // This is the first phase of DMRMRT table operations.
   FELOG("[clear clock source rate]\n");
   doWrite(diagfCLR_CLK_SRC_RATE, 0);
   FELOG("[stop clocks]\n");
   doDiagFunc(diagfSTOP_CLOCK);
-  FELOG("[set master reset]\n");
+  FELOG("[set reset]\n");
   doDiagFunc(diagfSET_RESET);
   FELOG("[reset parity registers]\n");
   doWrite(diagfRESET_PAR_REGS, 0);
@@ -334,72 +399,19 @@ static void klMasterReset() {
     doDiagFunc(diagfSTEP_CLOCK);
   }
 
-  if (!mboxInitSuccess) printf("[WARNING: MBOX initializatin (A CHANGE COMING L) failed]\n");
+  if (!mboxInitSuccess) TLOG("[WARNING: MBOX initialization (A CHANGE COMING L) failed]\n");
   
   // Phase 2 from DMRMRT table operations.
   FELOG("[conditional single step]\n");
   doDiagFunc(diagfCOND_STEP);             // CONDITIONAL SINGLE STEP
-  FELOG("[clear master reset]\n");
+  FELOG("[clear reset]\n");
   doDiagFunc(diagfCLR_RESET);             // CLEAR RESET
   FELOG("[enable KL instruction decode and ACs]\n");
   doWrite(diagfENABLE_KL, 0);             // ENABLE KL STL DECODING OF CODES & AC'S
   FELOG("[reset MBOX]\n");
   doWrite(diagfEBUS_LOAD, 0);             // SET KL10 MEM RESET FLOP
   doWrite(diagfWRITE_MBOX, 0120);         // WRITE M-BOX
-  printf("[KL master reset complete t=%lld]\n\n", nextReqTicks);
-}
-
-
-static W36 fileWordToWord(unsigned char fw[]) {
-  return
-    ((W36) fw[0] << 28) |
-    ((W36) fw[1] << 20) |
-    ((W36) fw[2] << 12) |
-    ((W36) fw[3] <<  4) |
-    ((W36) fw[4] >> 4);
-}
-
-
-// Load the BOOT.EXE into memory and return the boot address.
-static W36 loadBootstrap() {
-  LL startTicks = nextReqTicks;
-  printf("\n[Loading BOOT.EXE]\n");
-
-  FILE *f = fopen("./images/boot/boot.exe", "rb");
-  if (!f) fatalError("opening images/boot/boot.exe");
-  W36 minAddr = (1ull << 36) - 1;
-  W36 maxAddr = 0;
-  W36 w;
-
-  for (;;) {
-    unsigned char fw[5];
-    size_t len = fread(&fw, 1, sizeof(fw), f);
-    if (len < sizeof(fw)) fatalError("reading images/boot/boot.exe");
-    w = fileWordToWord(fw);
-    unsigned nww = LH(w);
-    unsigned addr = RH(w);
-    if (nww < B18) break;
-
-    int nWords = B17 - nww;     /* Negate RH */
-
-    for (int wn = nWords; wn; --wn) {
-      len = fread(fw, 1, sizeof(fw), f);
-      if (len < sizeof(fw)) fatalError("reading images/boot/boot.exe");
-      w = fileWordToWord(fw);
-      if (addr < minAddr) minAddr = addr;
-      if (addr > maxAddr) maxAddr = addr;
-      doWriteMemory(addr, w);
-      ++addr;
-    }
-  }
-
-  printf("[loaded in %lld ticks]\n", nextReqTicks - startTicks);
-  printf("[boot image minAddr: %6llo]\n", minAddr);
-  printf("[boot image maxAddr: %6llo]\n", maxAddr);
-
-  doWriteMemory(0ull, w);
-  printf("[start instruction %s deposited in mem[0]]\n", octW(w));
-  return w;
+  TLOG("[KL reset complete t=%lld]\n\n", nextReqTicks);
 }
 
 
@@ -423,10 +435,10 @@ static void startKL(W36 bootAddr) {
   // clock, load AR with our starting PC, and let the HALT loop exit
   // process reset the CRADR to zero (the START entry point).
   // This differs from DTE20 FE but its end effect is the same.
-  printf("[load AR with %s and reset CRADR]\n", octW(bootAddr));
+  TLOG("[load AR with %s and reset CRADR]\n", octW(bootAddr));
   doMiscFunc(loadAR, LH(bootAddr), RH(bootAddr));
-  doMiscFunc(resetCRA);
-  waitFor(500);
+  //  doMiscFunc(resetCRA);
+  waitFor(50);
 
   // Set the RUN flop.
   FELOG("[set RUN flop]\n");
@@ -447,7 +459,7 @@ static void startKL(W36 bootAddr) {
     if ((diag1 & 1) == 0) break;       /* HALT flag is clear */
   }
 
-  if (!nStepsToRUN) printf("WARNING: KL didn't exit HALT loop after 1000 clocks\n");
+  if (!nStepsToRUN) TLOG("WARNING: KL didn't exit HALT loop after 1000 clocks\n");
 
   // Start the KL clock running.
   FELOG("[start KL clock t=%lld]\n", nextReqTicks);
@@ -476,7 +488,6 @@ static void klBoot(void) {
   printf("\nKLISIM -- MICROCODE VERSION %0o.%0o(%0o) LOADED\n\n",
          ucodeMajor, ucodeMinor, ucodeEdit);
 
-  W36 bootAddr = loadBootstrap();
   startKL(bootAddr);
 }
 
@@ -500,7 +511,7 @@ static void runFE(void) {
   waitFor(13);
   doMiscFunc(clrCROBAR);
 
-  klMasterReset();
+  klReset();
   klBoot();
   for (;;) waitFor(99999999LL);
 }
