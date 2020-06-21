@@ -230,7 +230,7 @@ static void doWrite(int func, W36 value) {
 }
 
 
-//   Do a miscellaneous control function in DTE and return (option) result.
+//   Do a miscellaneous control function in DTE and return (optional) result.
 static W36 doMiscFunc(int func, W36 data1 = 0, W36 data2 = 0) {
   REGLOG("F misc func %s\n", miscFuncNames[func]);
   return sendAndGetResult(nextReqTicks, 1, dteMisc, func, data1, data2);
@@ -263,7 +263,7 @@ static W36 doRead(int func) {
   //  REGLOG("F diag func %s\n", diagFuncNames[func]);
 
   /* Send function and delay 1us until EBUS.data is stable */
-  sendAndGetResult(nextReqTicks, (LL) (1000 / nsPerClock), dteDiagFunc, func);
+  sendAndGetResult(nextReqTicks, (LL) (1000.0 / nsPerClock), dteDiagFunc, func);
 
   REGLOG("F diag %s read\n", diagFuncNames[func]);
   W36 result = sendAndGetResult(nextReqTicks, DIAG_DURATION, dteRead);
@@ -362,6 +362,7 @@ static W36 fileWordToWord(unsigned char fw[]) {
 
 // Load the BOOT.EXE into memory and return the boot address.
 static W36 loadBootstrap() {
+  LL startTicks = nextReqTicks;
   printf("\n[Loading BOOT.EXE]\n");
 
   FILE *f = fopen("./images/boot/boot.exe", "rb");
@@ -392,7 +393,7 @@ static W36 loadBootstrap() {
     }
   }
 
-  printf("[loaded]\n");
+  printf("[loaded in %lld ticks]\n", nextReqTicks - startTicks);
   printf("[boot image minAddr: %6llo]\n", minAddr);
   printf("[boot image maxAddr: %6llo]\n", maxAddr);
 
@@ -422,19 +423,16 @@ static void startKL(W36 bootAddr) {
   // clock, load AR with our starting PC, and let the HALT loop exit
   // process reset the CRADR to zero (the START entry point).
   // This differs from DTE20 FE but its end effect is the same.
-  FELOG("[load AR with %s and reset CRADR]\n", octW(bootAddr));
+  printf("[load AR with %s and reset CRADR]\n", octW(bootAddr));
   doMiscFunc(loadAR, LH(bootAddr), RH(bootAddr));
-  waitFor(10);
   doMiscFunc(resetCRA);
-  waitFor(10);
-  doMiscFunc(clrCROBAR);        /* Release AR override and resetCRA */
-  waitFor(10);
+  waitFor(500);
 
   // Set the RUN flop.
   FELOG("[set RUN flop]\n");
   doDiagFunc(diagfSET_RUN);
 
-  // Set the CONTINUE button.
+  // Push the CONTINUE button.
   FELOG("[set CONTINUE]\n");
   doDiagFunc(diagfCONTINUE);
 

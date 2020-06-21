@@ -88,7 +88,7 @@ void DTEfinal(LL ns) {
 }
 
 
-static const double endTime = 1.5 * 1000 * 1000; // 1.5 ms
+static const double endTime = 3.0 * 1000 * 1000; // 1.5 ms
 
 
 int main(int argc, char **argv) {

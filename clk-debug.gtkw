@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.101 (w)1999-2019 BSI
-[*] Sat Jun 20 20:27:53 2020
+[*] Sun Jun 21 04:08:11 2020
 [*]
 [dumpfile] "/home/alan/kl10-verilator/kl10pv-trace.vcd"
-[dumpfile_mtime] "Sat Jun 20 20:25:42 2020"
-[dumpfile_size] 33036299
+[dumpfile_mtime] "Sun Jun 21 03:57:35 2020"
+[dumpfile_size] 50191756
 [savefile] "/home/alan/kl10-verilator/clk-debug.gtkw"
-[timestart] 33329
+[timestart] 1274692
 [size] 1920 1051
 [pos] -1 -1
-*-6.799957 33513 8708 1274366 33657 33506 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-7.799957 1275691 1274386 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [ruler] 8708 175
 [treeopen] TOP.
 [treeopen] TOP.top.
@@ -18,7 +18,6 @@
 [treeopen] TOP.top.ebox0.edp0.ADaluE1E2(18).
 [treeopen] TOP.top.ebox0.edp0.ADaluE1E2(24).
 [treeopen] TOP.top.ebox0.edp0.ADaluE1E2(30).
-[treeopen] TOP.top.ebox0.SCD.
 [treeopen] TOP.top.mbox0.mbx0.
 [treeopen] TOP.top.memory0.aPhase.
 [treeopen] TOP.top.memory0.bPhase.
@@ -27,13 +26,17 @@
 [sst_expanded] 1
 [sst_vpaned_height] 532
 @30
-TOP.top.CLK.MR_RESET
 [color] 2
 +{TOP.top.CLK.CRA} TOP.top.CLK.CRA
-+{CRADR} TOP.top.CRA.CRADR[0:10]
 @28
 TOP.top.ebox0.DTE.resetCRA
-@c00201
+TOP.top.ebox0.DTE.overrideAR
+TOP.top.ebox0.CON.RUN
+@29
+TOP.top.ebox0.CON.START
+@30
++{CRADR} TOP.top.CRA.CRADR[0:10]
+@c00200
 -CRAM
 @28
 [color] 7
@@ -88,7 +91,7 @@ TOP.top.ebox0.CRAM.SPEC[0:4]
 TOP.top.ebox0.CRAM.TIME[0:1]
 [color] 7
 TOP.top.ebox0.CRAM.VMA[0:1]
-@1401201
+@1401200
 -CRAM
 @30
 TOP.top.ebox0.VMA.VMA[12:35]
@@ -117,6 +120,10 @@ TOP.top.ebox0.edp0.ADA[0:35]
 TOP.top.ebox0.edp0.ADA_EN
 [color] 3
 TOP.top.ebox0.edp0.ADBxyzz[-2:35]
+@28
+[color] 7
+TOP.top.ebox0.CRAM.AR[0:2]
+@30
 [color] 3
 TOP.top.ebox0.edp0.ARM[0:35]
 @28
@@ -125,9 +132,8 @@ TOP.top.ebox0.CTL.ARR_SEL[0:1]
 TOP.top.ebox0.CRAM.ARX[0:2]
 TOP.top.ebox0.CTL.ARXL_SEL[0:1]
 TOP.top.ebox0.CTL.ARXR_SEL[0:1]
-@22
-TOP.top.ebox0.edp0.ARXM[0:35]
 @30
+TOP.top.ebox0.edp0.ARXM[0:35]
 [color] 3
 TOP.top.EDP.AR[0:35]
 [color] 3
@@ -166,18 +172,18 @@ TOP.top.ebox0.shm0.SHIFT_50
 TOP.top.ebox0.shm0.ar_arx[0:71]
 @1000200
 -SH/SCD
-@c00200
+@800200
 -FM
 @30
 TOP.top.ebox0.APR.FM_BLOCK[0:2]
 TOP.top.ebox0.APR.FM_ADR[0:3]
+TOP.top.ebox0.EDP.FM[0:35]
 @28
 TOP.top.ebox0.CON.FM_WRITE00_17
 TOP.top.ebox0.CON.FM_WRITE18_35
 TOP.top.ebox0.edp0.FM_WRITE
-@1401200
--FM
 @1000200
+-FM
 -EDPstate
 @30
 TOP.top.ebox0.con0.NICOND
