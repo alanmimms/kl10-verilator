@@ -435,9 +435,8 @@ static void startKL(W36 bootAddr) {
   // clock, load AR with our starting PC, and let the HALT loop exit
   // process reset the CRADR to zero (the START entry point).
   // This differs from DTE20 FE but its end effect is the same.
-  TLOG("[load AR with %s and reset CRADR]\n", octW(bootAddr));
+  TLOG("[load AR with %s]\n", octW(bootAddr));
   doMiscFunc(loadAR, LH(bootAddr), RH(bootAddr));
-  //  doMiscFunc(resetCRA);
   waitFor(50);
 
   // Set the RUN flop.
