@@ -22,7 +22,7 @@ module edp(iAPR APR,
   bit [0:17] ARXL, ARXR;
   
   bit [0:35] ADA;
-  bit [-2:35] ADBxyzzy;
+  bit [-2:35] ADB;
   bit [0:35] ADXA, ADXB;
 
   bit [0:35] AD_CG, AD_CP;
@@ -40,7 +40,7 @@ module edp(iAPR APR,
   bit clk /*noverilator clocker*/;
   assign clk = CLK.EDP;         // Saves typing
 
-  assign EDP.AD_CRYxyzzy[36] = CTL.AD_CRY_36;
+  assign EDP.AD_CRY[36] = CRAM.AD[0]; // CTL.AD_CRY_36; (XXX I think this is backplane wire)
   assign EDP.ADX_CRY[36] = CTL.ADX_CRY_36;
 
   // AR including ARL, ARR, and ARM p15.
@@ -62,12 +62,12 @@ module edp(iAPR APR,
          // wirewrapped strapping.
          3'b000: ARM = {EDP.ARMM_SCD, 4'b0, EDP.ARMM_VMA, hwOptions};
          3'b001: ARM = MBOX.CACHE_DATA[0:35];
-         3'b010: ARM = EDP.ADxyzzy[0:35];
+         3'b010: ARM = EDP.AD[0:35];
          3'b011: ARM = EBUS.data[0:35];
          3'b100: ARM = SHM.SH[0:35];
-         3'b101: ARM = {EDP.ADxyzzy[1:35], EDP.ADX[0]};
+         3'b101: ARM = {EDP.AD[1:35], EDP.ADX[0]};
          3'b110: ARM = EDP.ADX[0:35];
-         3'b111: ARM = {AD_EX[-2:-1], EDP.ADxyzzy[0:33]};
+         3'b111: ARM = {AD_EX[-2:-1], EDP.AD[0:33]};
          endcase
 
     if (CTL.AR00to11_CLR) ARM[0:11] = '0;
@@ -92,12 +92,12 @@ module edp(iAPR APR,
     unique case ({CRAM.ARX[0], CTL.ARXL_SEL})
               3'b000: ARXM[0:17] = '0;
               3'b001: ARXM[0:17] = MBOX.CACHE_DATA[0:17];
-              3'b010: ARXM[0:17] = EDP.ADxyzzy[0:17];
+              3'b010: ARXM[0:17] = EDP.AD[0:17];
               3'b011: ARXM[0:17] = EDP.MQ[0:17];
               3'b100: ARXM[0:17] = SHM.SH[0:17];
               3'b101: ARXM[0:17] = EDP.ADX[1:18];
               3'b110: ARXM[0:17] = EDP.ADX[0:17];
-              3'b111: ARXM[0:17] = {EDP.ADxyzzy[34:35], EDP.ADX[0:15]};
+              3'b111: ARXM[0:17] = {EDP.AD[34:35], EDP.ADX[0:15]};
               endcase
   end
 
@@ -107,7 +107,7 @@ module edp(iAPR APR,
     unique case ({CRAM.ARX[0], CTL.ARXR_SEL})
               3'b000: ARXM[18:35] = '0;
               3'b001: ARXM[18:35] = MBOX.CACHE_DATA[18:35];
-              3'b010: ARXM[18:35] = EDP.ADxyzzy[18:35];
+              3'b010: ARXM[18:35] = EDP.AD[18:35];
               3'b011: ARXM[18:35] = EDP.MQ[18:35];
               3'b100: ARXM[18:35] = SHM.SH[18:35];
               3'b101: ARXM[18:35] = {EDP.ADX[19:35], EDP.MQ[0]};
@@ -128,7 +128,7 @@ module edp(iAPR APR,
     if (CTL.MQM_EN) unique case (CTL.MQM_SEL)
                               2'b00: MQM = {EDP.ADX[34:35], EDP.MQ[0:33]};
                               2'b01: MQM = SHM.SH[0:35];
-                              2'b10: MQM = EDP.ADxyzzy[0:35];
+                              2'b10: MQM = EDP.AD[0:35];
                               2'b11: MQM = '1;
                               endcase
   end
@@ -164,7 +164,7 @@ module edp(iAPR APR,
   assign ADA_EN = ~CRAM.ADA[0];
   assign AD_BOOL = CRAM.AD[1];
 
-  assign EDP.AD_CRYxyzzy[-1:35] = AD_CRY[-1:35];
+  assign EDP.AD_CRY[-1:35] = AD_CRY[-1:35];
 
   // AD
   generate
@@ -172,29 +172,27 @@ module edp(iAPR APR,
       bit e33q10;
 
       // Misc carry logic, top p.17
-      assign e33q10 = EDP.ADxyzzy[n+0] ^ AD_EX[n-1];
-      assign EDP.AD_CRYxyzzy[n+1] = AD_CRY[n-2] ^ e33q10;
+      assign e33q10 = EDP.AD[n+0] ^ AD_EX[n-1];
+      assign EDP.AD_CRY[n+1] = AD_CRY[n-2] ^ e33q10;
       assign EDP.AD_OVERFLOW[n] = (AD_EX[n-2] ^ AD_EX[n-1]) | e33q10;
 
       mc10181 e1(.M(AD_BOOL),
-//                 .S(CRAM.AD[2:5]),
                  .S(CRAM.AD[2:5]),
                  .A({{3{ADA[n+0]}}, ADA[n+1]}),
-                 .B(ADBxyzzy[n-2:n+1]),
+                 .B(ADB[n-2:n+1]),
                  .CIN(AD_CRY[n+2]),
                  // Note EDP.AD_EX is a dumping ground when n>0
-                 .F({AD_EX[n-2:n-1], EDP.ADxyzzy[n:n+1]}),
+                 .F({AD_EX[n-2:n-1], EDP.AD[n:n+1]}),
                  .CG(AD_CG[n]),
                  .CP(AD_CP[n]),
                  .COUT(AD_CRY[n-2]));
 
       mc10181 e2(.M(AD_BOOL),
-//                 .S(CRAM.AD[2:5]),
                  .S(CRAM.AD[2:5]),
                  .A(ADA[n+2:n+5]),
-                 .B(ADBxyzzy[n+2:n+5]),
+                 .B(ADB[n+2:n+5]),
                  .CIN(AD_CRY[n+6]), // Assigned AD_CRY_36 to AD_CRY[36] so this works
-                 .F(EDP.ADxyzzy[n+2:n+5]),
+                 .F(EDP.AD[n+2:n+5]),
                  .CG(AD_CG[n+2]),
                  .CP(AD_CP[n+2]),
                  .COUT(AD_CRY[n+2]));
@@ -234,8 +232,8 @@ module edp(iAPR APR,
               .CIN(AD_CRY[36]),
               .GG(),
               .PG(),
-              .C8OUT(EDP.AD_CRYxyzzy[-2]),
-              .C2OUT(EDP.AD_CRYxyzzy[6]));
+              .C8OUT(EDP.AD_CRY[-2]),
+              .C2OUT(EDP.AD_CRY[6]));
 
   mc10179 e7(.G({AD_CG[6], AD_CG[6], AD_CG[8], AD_CG[8]}),
              .P({AD_CP[6],     1'b0,     1'b0, AD_CP[8]}),
@@ -250,8 +248,8 @@ module edp(iAPR APR,
              .CIN(AD_CRY[36]),
              .GG(AD_CG12_35),
              .PG(AD_CP12_35),
-             .C8OUT(EDP.AD_CRYxyzzy[12]),
-             .C2OUT(EDP.AD_CRYxyzzy[18]));
+             .C8OUT(EDP.AD_CRY[12]),
+             .C2OUT(EDP.AD_CRY[18]));
 
   mc10179 e6(.G({~CTL.INH_CRY_18,     ~CTL.INH_CRY_18, AD_CG[18], AD_CG[20]}),
              .P({CTL.SPEC_GEN_CRY_18, 1'b0,            AD_CP[18], AD_CP[20]}),
@@ -266,8 +264,8 @@ module edp(iAPR APR,
              .CIN(AD_CRY[36]),
              .GG(AD_CG24_35),
              .PG(AD_CP24_35),
-             .C8OUT(EDP.AD_CRYxyzzy[24]),
-             .C2OUT(EDP.AD_CRYxyzzy[30]));
+             .C8OUT(EDP.AD_CRY[24]),
+             .C2OUT(EDP.AD_CRY[30]));
 
   // ADX carry look ahead
   // Moved here from IR4
@@ -279,7 +277,7 @@ module edp(iAPR APR,
               .CIN(CTL.ADX_CRY_36),
               .GG(),
               .PG(),
-              .C8OUT(EDP.AD_CRYxyzzy[36]),
+              .C8OUT(EDP.AD_CRY[36]),
               .C2OUT());
 
   mc10179 e21(.G({ADX_CG[0], ADX_CG[3], ADX_CG[6], ADX_CG[9]}),
@@ -307,16 +305,16 @@ module edp(iAPR APR,
               .C2OUT(EDP.ADX_CRY[30]));
 
   // DP03 p.17
-  // ADBxyzzy mux
+  // ADB mux
   // This was way more complex in the schematics, but it boils down to this.
   always_comb begin
-    ADBxyzzy = '0;
+    ADB = '0;
 
     unique case(CRAM.ADB)
-    2'b00: ADBxyzzy[-2:35] = {{2{EDP.FM[0]}}, EDP.FM[0:35]};
-    2'b01: ADBxyzzy[-2:35] = {{2{EDP.BR[0]}}, EDP.BR[1:35], EDP.BRX[0]};
-    2'b10: ADBxyzzy[-2:35] = {{2{EDP.BR[0]}}, EDP.BR[0:35]};
-    2'b11: ADBxyzzy[-2:35] = {{2{EDP.AR[2]}}, EDP.AR[2:35], EDP.ARX[0:1]};
+    2'b00: ADB[-2:35] = {{2{EDP.FM[0]}}, EDP.FM[0:35]};
+    2'b01: ADB[-2:35] = {{2{EDP.BR[0]}}, EDP.BR[1:35], EDP.BRX[0]};
+    2'b10: ADB[-2:35] = {{2{EDP.BR[0]}}, EDP.BR[0:35]};
+    2'b11: ADB[-2:35] = {{2{EDP.AR[2]}}, EDP.AR[2:35], EDP.ARX[0:1]};
     endcase
   end
   
@@ -379,7 +377,7 @@ module edp(iAPR APR,
     3'b100: ebusR = EDP.BRX;
     3'b101: ebusR = EDP.ARX;
     3'b110: ebusR = EDP.ADX[0:35];
-    3'b111: ebusR = EDP.ADxyzzy[0:35];
+    3'b111: ebusR = EDP.AD[0:35];
     endcase
 
   // FM. No static at all!

@@ -14,4 +14,5 @@ module mux2x4
                       2'b10: {B0, B1} = {D0[2], D1[2]};
                       2'b11: {B0, B1} = {D0[3], D1[3]};
                       endcase
+              else {B0, B1} = '0;
 endmodule

@@ -1071,8 +1071,8 @@ endinterface
 interface iEDP;
   bit DIAG_READ_FUNC_10x;
   bit FM_PARITY;
-  bit [-2:35] ADxyzzy;
-  bit [-2:36] AD_CRYxyzzy;
+  bit [-2:35] AD;
+  bit [-2:36] AD_CRY;
   bit [0:35] ADX;
   bit [0:35] AD_OVERFLOW;
   bit [0:35] AR;

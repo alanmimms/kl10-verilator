@@ -118,13 +118,11 @@ module ctl(iAPR APR,
   // Miscellaneous control signals CTL1
   assign CTL.PI_CYCLE_SAVE_FLAGS = CON.PCplus1_INH & CTL.SPEC_SAVE_FLAGS;
 
-  // This is "CRAM.AD & adCARRY" term is actually shown on CTL1
+  // This is `CRAM.AD[0]` term is actually shown on CTL1
   // E8 pins 5 and 7 as CRAM AD CRY. I'm just guessing this is
   // what they mean since I don't have backplane wiring.
-  bit cram_ad_cry;
-  assign cram_ad_cry = (CRAM.AD & `adCARRY) !== 0;
   assign CTL.ADX_CRY_36 = ~CTL.PI_CYCLE_SAVE_FLAGS &
-                          cram_ad_cry ^ (EDP.AR[0] & SPEC_XCRY_AR0);
+                          CRAM.AD[0] ^ (EDP.AR[0] & SPEC_XCRY_AR0);
 
   assign REG_CTL[0:2]    = CRAM.MAGIC[0:2] & {3{COND_REG_CTL}};
   assign CTL.COND_AR_EXP = CRAM.MAGIC[5]   & COND_REG_CTL;
@@ -139,7 +137,7 @@ module ctl(iAPR APR,
                           (CTL.SPEC_GEN_CRY_18 | MCL.SHORT_STACK);
 
   assign CTL.INH_CRY_18 = (SPEC_INH_CRY_18 | CTL.SPEC_SAVE_FLAGS | SPEC_STACK_UPDATE) &
-                          (SPEC_INH_CRY_18 | CTL.SPEC_SAVE_FLAGS | ~cram_ad_cry) &
+                          (SPEC_INH_CRY_18 | CTL.SPEC_SAVE_FLAGS | ~CRAM.AD[0]) &
                           (SPEC_INH_CRY_18 | CTL.SPEC_SAVE_FLAGS | MCL.SHORT_STACK);
 
   assign CTL.DISP_EN = CRAM.DISP[0:1];
