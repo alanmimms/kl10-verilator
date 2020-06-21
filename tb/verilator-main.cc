@@ -27,7 +27,7 @@ public: double nsPerClock;
     tickcount = 0ll;
     trace = (TRACECLASS *) 0;
     done = false;
-    nsPerClock = 1.0e9/60.0e6; // 60MHz clock
+    nsPerClock = 1.0e9/100.0e6; // 100MHz clock (simplifies mental math)
   }
 
   virtual ~TESTBENCH(void) {
