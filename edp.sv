@@ -40,8 +40,6 @@ module edp(iAPR APR,
   bit clk /*noverilator clocker*/;
   assign clk = CLK.EDP;         // Saves typing
 
-  assign EDP.AD_CRY[36] = CRAM.AD[0]; // CTL.AD_CRY_36; (XXX I think this is backplane wire)
-  assign EDP.ADX_CRY[36] = CTL.ADX_CRY_36;
 
   // AR including ARL, ARR, and ARM p15.
   bit [0:35] ARM;
@@ -164,7 +162,12 @@ module edp(iAPR APR,
   assign ADA_EN = ~CRAM.ADA[0];
   assign AD_BOOL = CRAM.AD[1];
 
+  // Was CTL.AD_CRY_36 XXX I think this is backplane wire Note this is
+  // the REVERSE of the flow for th rest of the bits which are
+  // generated in AD_CRY and then assigned to EDP.AD_CRY.
+  assign AD_CRY[36] = CRAM.AD[0] | EDP.AD_CRY[36];
   assign EDP.AD_CRY[-1:35] = AD_CRY[-1:35];
+  assign EDP.ADX_CRY[36] = CTL.ADX_CRY_36;
 
   // AD
   generate
