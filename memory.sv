@@ -15,7 +15,7 @@
 module memory(input bit CROBAR,
               iSBUS.memory SBUS);
 
-`ifdef KL10PV_TB
+`ifdef TB
   bit [0:35] mem[`MEMSIZE];
 
   bit aClk, bClk;
@@ -55,6 +55,7 @@ module memory(input bit CROBAR,
 endmodule
 
 
+`timescale 1ns/1ps
 // This is one phase of the MB20 core memory. For now, we implement
 // only read cycles and only non-interleaved organization.
 //

@@ -15,7 +15,7 @@ module crm(iCLK CLK,
 
   bit [0:83] CRAMdata;
 
-`ifdef KL10PV_TB
+`ifdef TB
   sim_mem
     #(.SIZE(2048), .WIDTH(84), .NBYTES(1))
   cram

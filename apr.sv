@@ -126,7 +126,7 @@ module apr(iAPR APR,
 
   bit fm36XORin;
 
-`ifdef KL10PV_TB
+`ifdef TB
   sim_mem
     #(.SIZE(128), .WIDTH(2), .NBYTES(1))
   fm

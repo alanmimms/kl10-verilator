@@ -101,7 +101,7 @@ module ir(iIR IR,
 
 
   // IR2 p.129
-`ifdef KL10PV_TB
+`ifdef TB
   sim_mem
     #(.SIZE(DRAM_SIZE), .WIDTH(DRAM_WIDTH), .NBYTES(1))
   dram

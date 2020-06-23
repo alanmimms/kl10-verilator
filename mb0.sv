@@ -108,7 +108,7 @@ module mb0(iCCL CCL,
 
   // e69, e59, e49, e44, e64, e54,
   // e39, e35, e25, e15, e30, e20
-`ifdef KL10PV_TB
+`ifdef TB
   sim_mem
     #(.SIZE(128), .WIDTH(36), .NBYTES(1))
   chBuf

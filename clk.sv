@@ -59,7 +59,7 @@ module clk(input bit CROBAR,
   bit BURST_CNTeq0;
   bit SYNC /*noverilator clocker*/;
 
-`ifndef KL10PV_TB
+`ifndef TB
   ebox_clocks ebox_clocks0(.clk_in1(clk));
 `endif
 
@@ -109,7 +109,7 @@ module clk(input bit CROBAR,
   bit e56q2;
   always_ff @(posedge MAIN_SOURCE) e56q2 <= GATED_EN;
 
-`ifdef KL10PV_TB
+`ifdef TB
   assign delaysLocked = 1;
   
   /*

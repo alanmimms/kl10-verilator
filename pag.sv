@@ -35,7 +35,7 @@ module pag(iAPR APR,
   bit ptDirWEA;
   assign ptDirWEA = CSH.MBOX_PT_DIR_WR | CLK.PT_DIR_WR;
 
-`ifdef KL10PV_TB
+`ifdef TB
   sim_mem
     #(.SIZE(256), .WIDTH(36), .NBYTES(2))
   pt
