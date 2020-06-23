@@ -1,5 +1,5 @@
-// 2020-05-23 Schematic review: DP01, DP02, IR4, DP03, DP04
 `timescale 1ns/1ps
+// 2020-05-23 Schematic review: DP01, DP02, IR4, DP03, DP04
 `include "ebox.svh"
 
 module edp(iAPR APR,
