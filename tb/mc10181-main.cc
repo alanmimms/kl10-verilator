@@ -1,4 +1,4 @@
-#include "Vmc10181.h"
+#include "Vmc10181tb.h"
 #include "verilated.h"
 #define TRACECLASS      VerilatedVcdC
 #include <verilated_vcd_c.h>
@@ -14,7 +14,7 @@ double sc_time_stamp () {       // Called by $time in Verilog
 
 int main(int argc, char** argv, char** env) {
   Verilated::commandArgs(argc, argv);
-  Vmc10181* top = new Vmc10181;
+  Vmc10181tb* top = new Vmc10181tb;
 
   Verilated::traceEverOn(true);
   TRACECLASS *trace = new TRACECLASS;
