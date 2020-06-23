@@ -5,66 +5,65 @@ SVFILES = apr.sv ccl.sv ccw.sv cha.sv chc.sv chd.sv chx.sv clk.sv	\
 	mux2x4.sv mux4x2.sv mux.sv pag.sv pi.sv pma.sv pri8.sv scd.sv	\
 	shm.sv top.sv ucr4.sv usr4.sv vma.sv tb/sim-mem.sv
 
-VERILATOR_ROOT = /usr/local/share/verilator
+VERILATORROOT = /usr/local/share/verilator
 VOBJDIR = ./obj_dir
 
 DEBUG = -g
 #OPTIMIZE = "-O3 --x-assign fast --x-initial fast"
 #OPTIMIZE = -CFLAGS -O3 -O3
 OPTIMIZE =
-SVHFILES = ebox.svh
+DTEINTF = dte.h dte.svh
+SVHFILES = ebox.svh $(DTEINTF)
 CXXFILES = tb/verilator-main.cc
 CFILES = fe.c
 HFILES =
 TBOBJS = $(foreach F,$(CFILES:.c=.o) $(CXXFILES:.cc=.o),$(VOBJDIR)/$F)
 
+EXEs = $(EXE) $(MC10181EXE) $(EDPEXE)
 EXE = kl10pvtb
-MC10181_EXE = mc10181tb
+MC10181EXE = mc10181tb
+EDPEXE = edptb
 
-DTE_INTF = dte.h dte.svh
+KILLWARNINGS = \
+	-Wno-LITENDIAN \
+	-Wno-UNOPTFLAT \
+	-Wno-DECLFILENAME \
+	-Wno-CLKDATA \
+	-Wno-TIMESCALEMOD
 
-KILL_WARNINGS = -Wno-LITENDIAN \
-		-Wno-UNOPTFLAT \
-		-Wno-DECLFILENAME \
-		-Wno-CLKDATA
-
-INCDIR = $(VERILATOR_ROOT)/include
+INCDIR = $(VERILATORROOT)/include
 CFLAGS += -I$(VOBJDIR) -I$(INCDIR) -I$(INCDIR)/vltstd -std=gnu++14 $(DEBUG)
 CXXFLAGS += -I$(VOBJDIR) -I$(INCDIR) -I$(INCDIR)/vltstd $(DEBUG)
 
 VERILATOR ?= verilator
 VFLAGS = \
-	$(KILL_WARNINGS) \
+	$(KILLWARNINGS) \
 	--default-language 1800-2017 +1800-2017ext+sv \
-	-DTB -DKL10PV_TB \
+	-DTB -DKL10PV_TB -DTESTBENCH \
 	--MMD \
 	$(foreach F, $(CFLAGS), -CFLAGS $F) \
 	$(foreach F, $(DEBUG), -LDFLAGS $F) \
 	--trace --trace-structs \
-	--timescale-override 1ns/1ps --top-module top --x-initial 0 \
+	--timescale 1ns/1ps --timescale-override 1ns/1ps \
+	--x-initial 0 \
 	--cc --build --exe -j 4
 
 .PHONY:	all
-all:	$(EXE) $(MC10181_EXE)
+all:	$(EXE) $(MC10181EXE) $(EDPEXE)
 
-$(EXE):	$(SVFILES) $(SVHFILES) $(CXXFILES) $(CFILES) $(HFILES) $(DTE_INTF)
-	$(VERILATOR) $(VFLAGS) $(filter-out %.h, $^) -o $(EXE)
+$(EXE):	$(SVFILES) $(CXXFILES) $(CFILES) $(HFILES) $(SVHFILES)
+	$(VERILATOR) $(VFLAGS) $(filter-out %.h, $^) --top-module top -o $@
 
-$(DTE_INTF): dte-interface.js
-	node dte-interface.js -- $(DTE_INTF)
+$(DTEINTF): dte-interface.js
+	node dte-interface.js -- $(DTEINTF)
 
-$(MC10181_EXE): mc10181.sv tb/mc10181-main.cc
-	$(VERILATOR) $(KILL_WARNINGS) \
-		--default-language 1800-2017 +1800-2017ext+sv \
-		-DTESTBENCH \
-		$(foreach F, $(CFLAGS), -CFLAGS $F) \
-		$(foreach F, $(DEBUG), -LDFLAGS $F) \
-		--trace --trace-structs \
-		--timescale-override 1ns/1ps \
-		--cc mc10181.sv --exe --build \
-		tb/mc10181-main.cc \
-		-o $@
+$(MC10181EXE): mc10181.sv tb/mc10181tb.sv tb/mc10181-main.cc $(SVHFILES)
+	$(VERILATOR) $(VFLAGS) $(filter-out %.h, $^) --top-module mc10181tb -o $@
+
+$(EDPEXE): edp.sv tb/edptb.sv tb/edp-main.cc tb/sim-mem.sv usr4.sv $(SVHFILES)
+	$(VERILATOR) $(VFLAGS) $(filter-out %.h, $^) --top-module edptb -o $@
 
 .PHONY:	clean
 clean:
-	rm -rf $(VOBJDIR) $(DTE_INTF)
+	rm -rf $(VOBJDIR) $(DTEINTF) $(foreach F,$(EXE),tb/$(EXE))
+
