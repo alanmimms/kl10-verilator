@@ -1,7 +1,8 @@
-`default_nettype	none
 `ifndef _EBOX_SVH_
  `define _EBOX_SVH_ 1
 
+`timescale 1ns/1ps
+`default_nettype	none
 
 `include "dte.svh"
 

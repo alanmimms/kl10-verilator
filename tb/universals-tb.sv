@@ -1,4 +1,4 @@
-`timescale 1ns/1ns
+`timescale 1ns/1ps
 
 module universal_tb();
   bit cin, cout, clk, s0, s3;

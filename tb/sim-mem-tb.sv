@@ -1,4 +1,4 @@
-`timescale 1ns/1ns
+`timescale 1ns/1ps
 module sim_mem_tb;
   localparam SIZE3=100, WIDTH3=36, NBYTES3=3;
   localparam ADDR_WIDTH3 = $clog2(SIZE3-1);
