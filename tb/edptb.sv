@@ -236,7 +236,7 @@ module edptb(input clk);
       CRAM.BRX <= brxRECIRC;
     end
     
-    6'o61: $display($time, " result: AD/ORCB+1, ADA/AR, ADB/BR AD=h%09x SB=h%09X", EDP.AD[-2:35], sb);
+    6'o61: $display($time, " result: AD/Ax2, ADA/AR, ADB/BR AD=h%09x SB=h%09X", EDP.AD[-2:35], sb);
 
     6'o77: $finish;
     default: ;
