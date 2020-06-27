@@ -280,7 +280,7 @@ module edp(iAPR APR,
               .CIN(CTL.ADX_CRY_36),
               .GG(),
               .PG(),
-              .C8OUT(EDP.AD_CRY[36]),
+              .C8OUT(AD_CRY[36]),
               .C2OUT());
 
   mc10179 e21(.G({ADX_CG[0], ADX_CG[3], ADX_CG[6], ADX_CG[9]}),
@@ -367,8 +367,10 @@ module edp(iAPR APR,
   // Because that would be arsing tedious AF.
   bit [0:35] ebusR;
   assign EDP.EBUSdriver.driving = CTL.DIAG_READ_FUNC_12x | CTL.AD_TO_EBUS_L | CTL.AD_TO_EBUS_R;
-  assign EDP.EBUSdriver.data[ 0:17] = (CTL.DIAG_READ_FUNC_12x || CTL.AD_TO_EBUS_L) ? ebusR[0:17] : '0;
-  assign EDP.EBUSdriver.data[18:35] = (CTL.DIAG_READ_FUNC_12x || CTL.AD_TO_EBUS_R) ? ebusR[18:35] : '0;
+  assign EDP.EBUSdriver.data[ 0:17] = (CTL.DIAG_READ_FUNC_12x || CTL.AD_TO_EBUS_L) ?
+                                      ebusR[0:17] : '0;
+  assign EDP.EBUSdriver.data[18:35] = (CTL.DIAG_READ_FUNC_12x || CTL.AD_TO_EBUS_R) ?
+                                      ebusR[18:35] : '0;
 
   always_comb if (EDP.EBUSdriver.driving)
     unique case ((CTL.AD_TO_EBUS_L | CTL.AD_TO_EBUS_R) ? 3'b111 : CTL.DIAG[4:6])

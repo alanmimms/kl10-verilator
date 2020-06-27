@@ -1,61 +1,242 @@
 [*]
 [*] GTKWave Analyzer v3.3.105 (w)1999-2020 BSI
-[*] Tue Jun 23 18:52:43 2020
+[*] Fri Jun 26 20:34:45 2020
 [*]
 [dumpfile] "/home/alan/kl10-verilator/edptb.vcd"
-[dumpfile_mtime] "Tue Jun 23 18:52:31 2020"
-[dumpfile_size] 86094
+[dumpfile_mtime] "Fri Jun 26 18:40:46 2020"
+[dumpfile_size] 92884
 [savefile] "/home/alan/kl10-verilator/edptb-debug.gtkw"
-[timestart] 182
+[timestart] 302
 [size] 1920 1051
-[pos] -1 -1
-*-5.619497 335 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] -917 -452
+*-5.619497 576 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] TOP.
 [treeopen] TOP.edptb.
-[treeopen] TOP.edptb.edp0.ADaluE1E2(30).
+[treeopen] TOP.edptb.CLK.
+[treeopen] TOP.edptb.edp0.
+[treeopen] TOP.edptb.edp0.ADaluE1E2(24).
 [sst_width] 211
-[signals_width] 158
+[signals_width] 254
 [sst_expanded] 1
-[sst_vpaned_height] 299
+[sst_vpaned_height] 554
+@28
+[color] 2
+TOP.edptb.edp0.clk
+@30
+[color] 2
+TOP.edptb.state[8:0]
+@28
+TOP.edptb.edp0.ADA_EN
+@22
+TOP.edptb.edp0.ADA[0:35]
+TOP.edptb.edp0.ADB[-2:35]
+[color] 3
+TOP.edptb.EDP.AD[-2:35]
+@c00023
+[color] 3
+TOP.edptb.EDP.AD_CRY[-2:36]
+@28
+[color] 3
+(0)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(1)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(2)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(3)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(4)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(5)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(6)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(7)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(8)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(9)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(10)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(11)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(12)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(13)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(14)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(15)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(16)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(17)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(18)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(19)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(20)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(21)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(22)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(23)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(24)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(25)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(26)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(27)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(28)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(29)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(30)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(31)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(32)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(33)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(34)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(35)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(36)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(37)TOP.edptb.EDP.AD_CRY[-2:36]
+[color] 3
+(38)TOP.edptb.EDP.AD_CRY[-2:36]
+@1401201
+-group_end
+@c00022
+[color] 7
+TOP.edptb.edp0.AD_CRY[-2:36]
 @28
 [color] 7
-TOP.edptb.clk
-@30
+(0)TOP.edptb.edp0.AD_CRY[-2:36]
 [color] 7
-TOP.edptb.state[5:0]
-@22
-TOP.edptb.MBOX.CACHE_DATA[0:35]
-@100000028
-[color] 2
-TOP.edptb.CRAM.AR[0:2]
-@22
-TOP.edptb.EDP.AR[0:35]
-[color] 2
-TOP.edptb.CRAM.BR
-TOP.edptb.EDP.BR[0:35]
-@100000028
-[color] 2
-TOP.edptb.CRAM.AD[0:5]
-[color] 2
-TOP.edptb.CRAM.ADA[0:2]
-[color] 2
-TOP.edptb.CRAM.ADB[0:1]
-@22
-TOP.edptb.EDP.AD[-2:35]
-TOP.edptb.edp0.ARM[0:35]
-@23
+(1)TOP.edptb.edp0.AD_CRY[-2:36]
 [color] 7
-TOP.edptb.sb[0:35]
-@c00200
--ALU-LSBs
-@22
-TOP.edptb.edp0.ADaluE1E2(30).e2.S[0:3]
-TOP.edptb.edp0.ADaluE1E2(30).e2.CIN
-TOP.edptb.edp0.ADaluE1E2(30).e2.A[0:3]
-TOP.edptb.edp0.ADaluE1E2(30).e2.B[0:3]
-TOP.edptb.edp0.ADaluE1E2(30).e2.F[0:3]
-TOP.edptb.edp0.ADaluE1E2(30).e2.COUT
+(2)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(3)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(4)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(5)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(6)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(7)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(8)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(9)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(10)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(11)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(12)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(13)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(14)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(15)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(16)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(17)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(18)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(19)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(20)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(21)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(22)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(23)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(24)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(25)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(26)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(27)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(28)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(29)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(30)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(31)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(32)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(33)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(34)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(35)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(36)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(37)TOP.edptb.edp0.AD_CRY[-2:36]
+[color] 7
+(38)TOP.edptb.edp0.AD_CRY[-2:36]
 @1401200
--ALU-LSBs
+-group_end
+@22
+TOP.edptb.edp0.ARL[0:17]
+TOP.edptb.edp0.ARM[0:35]
+TOP.edptb.EDP.AR[0:35]
+TOP.edptb.EDP.BR[0:35]
+TOP.edptb.sb[0:35]
+@800200
+-e1-30
+@28
+TOP.edptb.edp0.ADaluE1E2(30).e1.M
+@22
+TOP.edptb.edp0.ADaluE1E2(30).e1.S[0:3]
+TOP.edptb.edp0.ADaluE1E2(30).e1.A[0:3]
+TOP.edptb.edp0.ADaluE1E2(30).e1.B[0:3]
+@28
+TOP.edptb.edp0.ADaluE1E2(30).e1.CIN
+@22
+TOP.edptb.edp0.ADaluE1E2(30).e1.F[0:3]
+@28
+TOP.edptb.edp0.ADaluE1E2(30).e1.COUT
+@1000200
+-e1-30
+@800200
+-e2-24
+@28
+TOP.edptb.edp0.ADaluE1E2(24).e2.M
+@22
+TOP.edptb.edp0.ADaluE1E2(24).e2.S[0:3]
+@28
+TOP.edptb.edp0.ADaluE1E2(24).e2.CIN
+@22
+TOP.edptb.edp0.ADaluE1E2(24).e2.A[0:3]
+TOP.edptb.edp0.ADaluE1E2(24).e2.B[0:3]
+TOP.edptb.edp0.ADaluE1E2(24).e2.F[0:3]
+@28
+TOP.edptb.edp0.ADaluE1E2(24).e2.COUT
+@1000200
+-e2-24
 [pattern_trace] 1
 [pattern_trace] 0
