@@ -228,17 +228,17 @@ module edp(iAPR APR,
     end
   endgenerate
 
-  // AD carry look ahead
-  // Moved here from IR4
-  mc10179 e11(.G({AD_CG[0], AD_CG[2], AD_CG06_11, AD_CG12_35}),
+  // AD carry look ahead moved here from IR4. I renamed the En numbers
+  // to be cn to avoid conflicts with EDP schematic En numbering.
+  mc10179 c11(.G({AD_CG[0], AD_CG[2], AD_CG06_11, AD_CG12_35}),
               .P({AD_CP[0], AD_CP[2], AD_CP06_11, AD_CP12_35}),
               .CIN(AD_CRY[36]),
               .GG(),
               .PG(),
-              .C8OUT(EDP.AD_CRY[-2]),
-              .C2OUT(EDP.AD_CRY[6]));
+              .C8OUT(AD_CRY[-2]),
+              .C2OUT(AD_CRY[6]));
 
-  mc10179 e7(.G({AD_CG[6], AD_CG[6], AD_CG[8], AD_CG[8]}),
+  mc10179 c7(.G({AD_CG[6], AD_CG[6], AD_CG[8], AD_CG[8]}),
              .P({AD_CP[6],     1'b0,     1'b0, AD_CP[8]}),
              .CIN(1'b0),
              .GG(AD_CG06_11),
@@ -246,15 +246,15 @@ module edp(iAPR APR,
              .C8OUT(),
              .C2OUT());
 
-  mc10179 e2(.G({AD_CG[12], AD_CG[14], AD_CG18_23, AD_CG24_35}),
+  mc10179 c2(.G({AD_CG[12], AD_CG[14], AD_CG18_23, AD_CG24_35}),
              .P({AD_CP[12], AD_CP[14], AD_CP18_23, AD_CP24_35}),
              .CIN(AD_CRY[36]),
              .GG(AD_CG12_35),
              .PG(AD_CP12_35),
-             .C8OUT(EDP.AD_CRY[12]),
-             .C2OUT(EDP.AD_CRY[18]));
+             .C8OUT(AD_CRY[12]),
+             .C2OUT(AD_CRY[18]));
 
-  mc10179 e6(.G({~CTL.INH_CRY_18,     ~CTL.INH_CRY_18, AD_CG[18], AD_CG[20]}),
+  mc10179 c6(.G({~CTL.INH_CRY_18,     ~CTL.INH_CRY_18, AD_CG[18], AD_CG[20]}),
              .P({CTL.SPEC_GEN_CRY_18, 1'b0,            AD_CP[18], AD_CP[20]}),
              .CIN(1'b0),
              .GG(AD_CG18_23),
@@ -262,20 +262,20 @@ module edp(iAPR APR,
              .C8OUT(),
              .C2OUT());
 
-  mc10179 e1(.G({AD_CG[24], AD_CG[26], AD_CG[30], AD_CG[32]}),
+  mc10179 c1(.G({AD_CG[24], AD_CG[26], AD_CG[30], AD_CG[32]}),
              .P({AD_CP[24], AD_CP[26], AD_CP[30], AD_CP[32]}),
              .CIN(AD_CRY[36]),
              .GG(AD_CG24_35),
              .PG(AD_CP24_35),
-             .C8OUT(EDP.AD_CRY[24]),
-             .C2OUT(EDP.AD_CRY[30]));
+             .C8OUT(AD_CRY[24]),
+             .C2OUT(AD_CRY[30]));
 
   // ADX carry look ahead
   // Moved here from IR4
   bit GEN_CRY_36, PROP_CRY_36;
   assign GEN_CRY_36 = CTL.ADX_CRY_36 | CTL.SPEC_AD_LONG;
   assign PROP_CRY_36 = ~CTL.AD_LONG;
-  mc10179 e22(.G({ GEN_CRY_36, ADX_CG00_11, ADX_CG12_23, ADX_CG24_35}),
+  mc10179 c22(.G({ GEN_CRY_36, ADX_CG00_11, ADX_CG12_23, ADX_CG24_35}),
               .P({PROP_CRY_36, ADX_CP00_11, ADX_CP12_23, ADX_CP24_35}),
               .CIN(CTL.ADX_CRY_36),
               .GG(),
@@ -283,7 +283,7 @@ module edp(iAPR APR,
               .C8OUT(AD_CRY[36]),
               .C2OUT());
 
-  mc10179 e21(.G({ADX_CG[0], ADX_CG[3], ADX_CG[6], ADX_CG[9]}),
+  mc10179 c21(.G({ADX_CG[0], ADX_CG[3], ADX_CG[6], ADX_CG[9]}),
               .P({ADX_CP[0], ADX_CP[3], ADX_CP[6], ADX_CP[9]}),
               .CIN(ADX_CRY[12]),
               .GG(ADX_CG00_11),
@@ -291,21 +291,21 @@ module edp(iAPR APR,
               .C8OUT(),
               .C2OUT(ADX_CRY[6]));
 
-  mc10179 e26(.G({ADX_CG[12], ADX_CG[15], ADX_CG[18], ADX_CG[21]}),
+  mc10179 c26(.G({ADX_CG[12], ADX_CG[15], ADX_CG[18], ADX_CG[21]}),
               .P({ADX_CP[12], ADX_CP[15], ADX_CP[18], ADX_CP[21]}),
               .CIN(ADX_CRY[24]),
               .GG(),
               .PG(),
-              .C8OUT(EDP.ADX_CRY[12]),
-              .C2OUT(EDP.ADX_CRY[18]));
+              .C8OUT(ADX_CRY[12]),
+              .C2OUT(ADX_CRY[18]));
 
-  mc10179 e16(.G({ADX_CG[24], ADX_CG[27], ADX_CG[30], ADX_CG[33]}),
+  mc10179 c16(.G({ADX_CG[24], ADX_CG[27], ADX_CG[30], ADX_CG[33]}),
               .P({ADX_CP[24], ADX_CP[27], ADX_CP[30], ADX_CP[33]}),
               .CIN(CTL.ADX_CRY_36),
               .GG(ADX_CG24_35),
               .PG(ADX_CP24_35),
-              .C8OUT(EDP.ADX_CRY[24]),
-              .C2OUT(EDP.ADX_CRY[30]));
+              .C8OUT(ADX_CRY[24]),
+              .C2OUT(ADX_CRY[30]));
 
   // DP03 p.17
   // ADB mux
