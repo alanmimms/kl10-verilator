@@ -19,10 +19,10 @@ CFILES = fe.c
 HFILES =
 TBOBJS = $(foreach F,$(CFILES:.c=.o) $(CXXFILES:.cc=.o),$(VOBJDIR)/$F)
 
+EXE = $(VOBJDIR)/kl10pvtb
+MC10181EXE = $(VOBJDIR)/mc10181tb
+EDPEXE = $(VOBJDIR)/edptb
 EXEs = $(EXE) $(MC10181EXE) $(EDPEXE)
-EXE = kl10pvtb
-MC10181EXE = mc10181tb
-EDPEXE = edptb
 
 KILLWARNINGS = \
 	-Wno-LITENDIAN \
@@ -48,22 +48,32 @@ VFLAGS = \
 	--x-initial 0 \
 	--cc --build --exe -j 4
 
+all:	$(EXEs)
 .PHONY:	all
-all:	$(EXE) $(MC10181EXE) $(EDPEXE)
+.PHONY: default
+
+### Default rules...
+# Include list of all generated classes
+include $(VOBJDIR)/Vedptb_classes.mk
+include $(VOBJDIR)/Vtop_classes.mk
+include $(VOBJDIR)/Vmc10181tb_classes.mk
+include $(VOBJDIR)/*.d
+
+# Include global rules
+include $(VERILATORROOT)/include/verilated.mk
 
 $(EXE):	$(SVFILES) $(CXXFILES) $(CFILES) $(HFILES) $(SVHFILES)
-	$(VERILATOR) $(VFLAGS) $(filter-out %.h, $^) --top-module top -o $@
+	$(VERILATOR) $(VFLAGS) $(filter-out %.h, $^) --top-module top -o $(@F)
 
 $(DTEINTF): dte-interface.js
 	node dte-interface.js -- $(DTEINTF)
 
 $(MC10181EXE): mc10181.sv tb/mc10181tb.sv tb/mc10181-main.cc $(SVHFILES)
-	$(VERILATOR) $(VFLAGS) $(filter-out %.h, $^) --top-module mc10181tb -o $@
+	$(VERILATOR) $(VFLAGS) $(filter-out %.h, $^) --top-module mc10181tb -o $(@F)
 
-$(EDPEXE): edp.sv tb/edptb.sv tb/edp-main.cc tb/sim-mem.sv usr4.sv $(SVHFILES)
-	$(VERILATOR) $(VFLAGS) $(filter-out %.h, $^) --top-module edptb -o $@
+$(EDPEXE): edp.sv tb/edptb.sv tb/edp-main.cc tb/sim-mem.sv usr4.sv mc10181.sv mc10179.sv $(SVHFILES)
+	$(VERILATOR) $(VFLAGS) $(filter-out %.h, $^) --top-module edptb -o $(@F)
 
 .PHONY:	clean
 clean:
 	rm -rf $(VOBJDIR) $(DTEINTF) $(foreach F,$(EXE),tb/$(EXE))
-
