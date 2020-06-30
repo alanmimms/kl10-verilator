@@ -254,8 +254,8 @@ module edp(iAPR APR,
              .C8OUT(AD_CRY[12]),
              .C2OUT(AD_CRY[18]));
 
-  mc10179 c6(.G({~CTL.INH_CRY_18,     ~CTL.INH_CRY_18, AD_CG[18], AD_CG[20]}),
-             .P({CTL.SPEC_GEN_CRY_18, 1'b0,            AD_CP[18], AD_CP[20]}),
+  mc10179 c6(.G({    ~CTL.INH_CRY_18, ~CTL.INH_CRY_18, AD_CG[18], AD_CG[20]}),
+             .P({CTL.SPEC_GEN_CRY_18,            1'b0, AD_CP[18], AD_CP[20]}),
              .CIN(1'b0),
              .GG(AD_CG18_23),
              .PG(AD_CP18_23),
