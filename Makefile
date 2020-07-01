@@ -54,10 +54,10 @@ all:	$(EXEs)
 
 ### Default rules...
 # Include list of all generated classes
-include $(VOBJDIR)/Vedptb_classes.mk
-include $(VOBJDIR)/Vtop_classes.mk
-include $(VOBJDIR)/Vmc10181tb_classes.mk
-include $(VOBJDIR)/*.d
+-include $(VOBJDIR)/Vedptb_classes.mk
+-include $(VOBJDIR)/Vtop_classes.mk
+-include $(VOBJDIR)/Vmc10181tb_classes.mk
+-include $(VOBJDIR)/*.d
 
 # Include global rules
 include $(VERILATORROOT)/include/verilated.mk
