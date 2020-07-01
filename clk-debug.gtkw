@@ -1,21 +1,20 @@
 [*]
 [*] GTKWave Analyzer v3.3.105 (w)1999-2020 BSI
-[*] Mon Jun 22 03:28:37 2020
+[*] Wed Jul  1 01:54:23 2020
 [*]
 [dumpfile] "/home/alan/kl10-verilator/kl10pv-trace.vcd"
-[dumpfile_mtime] "Mon Jun 22 03:27:34 2020"
-[dumpfile_size] 78608070
+[dumpfile_mtime] "Tue Jun 30 22:59:28 2020"
+[dumpfile_size] 76493764
 [savefile] "/home/alan/kl10-verilator/clk-debug.gtkw"
-[timestart] 749721
+[timestart] 747854
 [size] 1920 1051
-[pos] -1 -1
-*-5.800453 749872 748330 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] 3 -452
+*-7.800191 748464 748330 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [ruler] 8708 175
 [treeopen] TOP.
 [treeopen] TOP.top.
 [treeopen] TOP.top.ebox0.
 [treeopen] TOP.top.ebox0.CRAM.
-[treeopen] TOP.top.ebox0.edp0.
 [treeopen] TOP.top.ebox0.edp0.ADaluE1E2(18).
 [treeopen] TOP.top.ebox0.edp0.ADaluE1E2(24).
 [treeopen] TOP.top.ebox0.edp0.ADaluE1E2(30).
@@ -99,6 +98,10 @@ TOP.top.ebox0.CRAM.VMA[0:1]
 -CRAM
 @30
 TOP.top.ebox0.VMA.VMA[12:35]
+@22
+TOP.top.ebox0.vma0.VMA_AD[18:35]
+TOP.top.ebox0.vma0.VMA_IN[12:17]
+TOP.top.ebox0.vma0.vmaMux[18:35]
 @800200
 -EDPstate
 -EDPregs
@@ -117,7 +120,6 @@ TOP.top.ebox0.CTL.ARX_LOAD
 TOP.top.ebox0.CRAM.AD[0:5]
 [color] 7
 TOP.top.ebox0.edp0.AD_BOOL
-@31
 TOP.top.ebox0.EDP.AD[-2:35]
 @800030
 TOP.top.ebox0.EDP.AD_CRY[-2:36]
@@ -160,10 +162,16 @@ TOP.top.ebox0.EDP.FM[0:35]
 TOP.top.ebox0.EDP.ADX[0:35]
 @1000200
 -EDPregs
-@c00200
--SH/SCD
 @30
++{CRADR} TOP.top.CRA.CRADR[0:10]
+@800200
+-SH/SCD
+@29
+[color] 2
+TOP.top.ebox0.CLK.SCD
+@24
 TOP.top.SCD.SC[0:9]
+@30
 TOP.top.SHM.XR[0:3]
 TOP.top.SCD.FE[0:9]
 @28
@@ -175,11 +183,13 @@ TOP.top.ebox0.SCD.SCADB[0:9]
 TOP.top.ebox0.scd0.SCAD_CRY_IN
 TOP.top.ebox0.scd0.aluF[0:3]
 TOP.top.SHM.SH[0:35]
+@24
 TOP.top.ebox0.shm0.sc[0:5]
+@30
 TOP.top.ebox0.shm0.SHIFT_36
 TOP.top.ebox0.shm0.SHIFT_50
 TOP.top.ebox0.shm0.ar_arx[0:71]
-@1401200
+@1000200
 -SH/SCD
 @800200
 -FM

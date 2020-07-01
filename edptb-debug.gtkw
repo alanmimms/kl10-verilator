@@ -1,12 +1,12 @@
 [*]
 [*] GTKWave Analyzer v3.3.105 (w)1999-2020 BSI
-[*] Tue Jun 30 00:50:12 2020
+[*] Tue Jun 30 22:59:34 2020
 [*]
 [dumpfile] "/home/alan/kl10-verilator/edptb.vcd"
-[dumpfile_mtime] "Mon Jun 29 19:28:04 2020"
-[dumpfile_size] 92821
+[dumpfile_mtime] "Tue Jun 30 22:58:38 2020"
+[dumpfile_size] 189910
 [savefile] "/home/alan/kl10-verilator/edptb-debug.gtkw"
-[timestart] 367
+[timestart] 451
 [size] 1920 1051
 [pos] -1 -1
 *-4.619497 494 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
@@ -22,10 +22,6 @@
 @28
 [color] 2
 TOP.edptb.edp0.clk
-@30
-[color] 2
-TOP.edptb.state[8:0]
-@28
 [color] 7
 TOP.edptb.edp0.ADA_EN
 @22
@@ -124,9 +120,88 @@ TOP.edptb.edp0.CRAM.AR[0:2]
 @22
 TOP.edptb.EDP.AR[0:35]
 TOP.edptb.EDP.BR[0:35]
-@23
+@c00023
 [color] 3
 TOP.edptb.EDP.AD[-2:35]
+@29
+[color] 3
+(0)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(1)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(2)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(3)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(4)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(5)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(6)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(7)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(8)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(9)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(10)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(11)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(12)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(13)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(14)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(15)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(16)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(17)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(18)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(19)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(20)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(21)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(22)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(23)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(24)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(25)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(26)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(27)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(28)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(29)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(30)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(31)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(32)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(33)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(34)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(35)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(36)TOP.edptb.EDP.AD[-2:35]
+[color] 3
+(37)TOP.edptb.EDP.AD[-2:35]
+@1401201
+-group_end
 @22
 TOP.edptb.sb[0:35]
 @c00200
