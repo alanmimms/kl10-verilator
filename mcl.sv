@@ -29,7 +29,7 @@ module mcl(iAPR APR,
   bit LOAD_AD_FUNC, LOAD_VMA_HELD;
   bit AREAD_EA, RW_OR_RPW_CYCLE, MEM_COND_JUMP;
   bit USER_EN, PUBLIC_EN, VMA_EXT_EN;
-  bit VMA_AD, VMAslashAD, AD_FUNC_08, AD_FUNC_09;
+  bit VMAslashAD, AD_FUNC_08, AD_FUNC_09;
   bit AREAD_3_6_7, AREAD_001, AREAD_x11, Aeq0x0, Aeq001, AREAD_1xx;
   bit EA_PREVIOUS, EA_EXTENDED, FETCH_EN, FETCH_EN_IN;
   bit USER, USER_IOT, PUBLIC, KERNEL_CYCLE;
@@ -214,13 +214,13 @@ module mcl(iAPR APR,
                    EA_EXTENDED & CRAM.MAGIC[7] & MEM_EA_CALC |
                    ~MCL.SHORT_STACK & CRAM.MAGIC[8] & MEM_EA_CALC |
                    AD_LONG_EN & AREAD_EN;
-  assign VMA_EXT_EN = VMA_AD & ~SR[0] |
+  assign VMA_EXT_EN = VMAslashAD & ~SR[0] |
                       AD_FUNC_08 |
                       e46pin3;
   assign VMA_LONG_EN = e46pin3 |
                        MEM_REG_FUNC |
                        LOAD_AD_FUNC |
-                       VMA_AD |
+                       VMAslashAD |
                        MEM_EA_CALC & CRAM.MAGIC[5];
   assign MCL.VMAX_SEL[0] = MCL.VMA_PREV_EN & ~VMA_PREVIOUS |
                            CRAM.SH[0] & ~MCL.LOAD_VMA |
@@ -239,8 +239,8 @@ module mcl(iAPR APR,
                            PC_SECTION_0 & ~PXCT_B12 |
                            PXCT_B12 & PCS_SECTION_0 |
                            ~APR.FM_EXTENDED;
-  assign VMA_AD = MEM_EA_CALC | LOAD_AD_FUNC | VMA_AD | RESET | AREAD_EA;
-  assign VMAslashAD = &CRAM.VMA;     // XXX find all earlier refs to VMA_AD and fixup
+  assign MCL.VMA_AD = MEM_EA_CALC | LOAD_AD_FUNC | VMAslashAD | RESET | AREAD_EA;
+  assign VMAslashAD = &CRAM.VMA;
   assign MCL.VMA_INC = MCL.SKIP_SATISFIED & ~CON.PI_CYCLE;
   assign MCL.LOAD_VMA_CONTEXT = SPEC_SP_MEM_CYCLE | MCL.LOAD_VMA;
   assign MCL.LOAD_VMA = (~MEM_COND_JUMP | ~IR.TEST_SATISFIED) &
