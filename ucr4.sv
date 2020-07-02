@@ -17,7 +17,7 @@ module UCR4(input bit [0:3] D,
 
   always_comb unique case (SEL)
               2'b00: COUT = 1;            // LOAD
-              2'b01: COUT = Q == '0;      // DEC
+              2'b01: COUT = Q == 4'b0000; // DEC
               2'b10: COUT = Q == 4'b1111; // INC
               2'b11: COUT = 0;            // HOLD
               endcase
