@@ -1,0 +1,24 @@
+# Microcode notes
+
+## Microcode in start sequence shown as typically executed
+
+```
+U 0000, 1072 START:     SET FLAGS_AR,J/SETPC		;LOAD FLAGS, USE REST AS ADDR
+U 1072, 0217 SETPC:     VMA_AR AND ADMSK,FETCH,J/NOP
+U 0217, 0133 NOP:       SR_0        				;Must be near CAIx instructions
+U 0133, 0140 FINI:      NXT INSTR           		;Load IR and PC, test PI cycle, RUN, PI READY, TRAPS
+                     	CLR AR,ARX_1S,SC_#,#/23.,   ;HERE IF RUN FLOP OFF
+U 0142, 0044			  CALL,J/ROTS          		;BUILD ADDR MASK
+U 0044, 0003 ROTS:      AR_SHIFT,ARX_SHIFT,SC_#-SC,#/36.,RETURN3
+U 0143, 0030            FM[ADMSK]_AR,AR_AR*2,J/EXMSK ;[230] AR HAS 77,,777776
+U 0030, 0041 EXMSK:     AR_AR+1                     ;[230] GIVES 77,,777777
+U 0041, 0620            FM[EXPMSK]_AR,J/CHALT       ;[230] MASK FOR FORTRAN EXT EXP
+             CHALT:     AR_0S,CLR SC,CLR FE,SET HALTED,	;KERNEL OR CONSOLE HALT
+U 0620, 0554			  VMA/PC,PC_VMA             ; IF JRST 4, COPY EA TO PC
+             HALT1:     SKP -START,TIME/3T,         ;CHECK FOR CONTINUE BUTTON
+U 0554, 0654			  FE_AR0-8,ARX_AR,J/HALT2   ;PICK UP OPCODE IN CASE XCT
+U 0555, 0144            TAKE INTRPT                 ;HERE IF EXAMINE/DEPOSIT UP
+U 0654, 0326 HALT2:     GEN FE-1,BYTE DISP,CONTINUE,J/UNHALT	;INSTR FROM SWITCHES?
+U 0655, 0554            SKP INTRPT,TIME/2T,J/HALT1  ;Still halted
+U 0327, 0000            SKP AR EQ,J/START           ;NOT AN INSTR.  START, OR CONT?
+```
