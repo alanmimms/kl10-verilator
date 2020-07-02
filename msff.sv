@@ -7,6 +7,6 @@ module msff(input bit clk,
             output bit q);
 
   bit master;
-  always @(negedge clk) master <= d;
+  always_comb if (~clk) master = d;
   always @(posedge clk) q <= master;
 endmodule
