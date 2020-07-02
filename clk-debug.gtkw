@@ -1,20 +1,19 @@
 [*]
 [*] GTKWave Analyzer v3.3.105 (w)1999-2020 BSI
-[*] Thu Jul  2 01:44:56 2020
+[*] Thu Jul  2 22:03:38 2020
 [*]
 [dumpfile] "/home/alan/kl10-verilator/kl10pv-trace.vcd"
 [dumpfile_mtime] "Thu Jul  2 01:44:38 2020"
 [dumpfile_size] 30477747
 [savefile] "/home/alan/kl10-verilator/clk-debug.gtkw"
-[timestart] 747917
+[timestart] 747142
 [size] 1920 1051
 [pos] -1 -1
-*-6.800191 748121 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-7.800191 747875 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [ruler] 8708 175
 [treeopen] TOP.
 [treeopen] TOP.top.
 [treeopen] TOP.top.ebox0.
-[treeopen] TOP.top.ebox0.CLK.
 [treeopen] TOP.top.ebox0.CRAM.
 [treeopen] TOP.top.ebox0.edp0.ADaluE1E2(18).
 [treeopen] TOP.top.ebox0.edp0.ADaluE1E2(24).
@@ -27,9 +26,8 @@
 [signals_width] 337
 [sst_expanded] 1
 [sst_vpaned_height] 532
-@30
-[color] 2
-+{TOP.top.CLK.CRA} TOP.top.CLK.CRA
+@800200
+-start
 @28
 TOP.top.ebox0.cra0.CON.SKIP_EN_40_47
 TOP.top.ebox0.cra0.CON.SKIP_EN_50_57
@@ -39,7 +37,68 @@ TOP.top.ebox0.DTE.resetCRA
 TOP.top.ebox0.DTE.overrideAR
 TOP.top.ebox0.CON.RUN
 TOP.top.ebox0.CON.START
+@1000200
+-start
+@c00200
+-all-clocks
+@28
+[color] 2
+TOP.top.clk60
+@800028
+[color] 2
+TOP.top.ebox0.clk0.ring60[3:0]
+@28
+[color] 2
+(0)TOP.top.ebox0.clk0.ring60[3:0]
+[color] 2
+(1)TOP.top.ebox0.clk0.ring60[3:0]
+[color] 2
+(2)TOP.top.ebox0.clk0.ring60[3:0]
+[color] 2
+(3)TOP.top.ebox0.clk0.ring60[3:0]
+@1001200
+-group_end
+@28
+[color] 2
+TOP.top.clk30
+[color] 2
+TOP.top.ebox0.clk0.MAIN_SOURCE
+[color] 2
+TOP.top.ebox0.clk0.ODD
+[color] 2
+TOP.top.ebox0.clk0.MBOX
+[color] 2
+TOP.top.ebox0.clk0.GATED
+[color] 2
+TOP.top.ebox0.clk0.CLK_OUT
+[color] 2
+TOP.top.ebox0.clk0.CLK_ON
+[color] 2
+TOP.top.ebox0.clk0.MBOX_CLK
+[color] 2
+TOP.top.ebox0.clk0.SOURCE_DELAYED
+TOP.top.ebox0.clk0.EBOX_SOURCE
+TOP.top.ebox0.CLK.EBOX_SYNC
+TOP.top.ebox0.clk0.EBOX_SRC_EN
+[color] 2
+TOP.top.ebox0.clk0.CLK_DELAYED
+[color] 2
+TOP.top.ebox0.clk0.EBUS_CLK_SOURCE
+[color] 2
+TOP.top.ebox0.CLK.EBUS_CLK
+[color] 2
+TOP.top.mbox0.CLK.SBUS_CLK
+[color] 2
+TOP.top.CLK.MBZ
+[color] 2
+TOP.top.CLK.MCL
+[color] 2
+TOP.top.ebox0.CLK.EDP
+@1401200
+-all-clocks
 @30
+[color] 2
++{TOP.top.CLK.CRA} TOP.top.CLK.CRA
 +{CRADR} TOP.top.CRA.CRADR[0:10]
 @c00200
 -CRAM
@@ -98,15 +157,17 @@ TOP.top.ebox0.CRAM.TIME[0:1]
 TOP.top.ebox0.CRAM.VMA[0:1]
 @1401200
 -CRAM
+@800200
+-VMA
 @30
 TOP.top.ebox0.VMA.VMA[12:35]
-@22
 TOP.top.ebox0.vma0.VMA_AD[18:35]
 TOP.top.ebox0.vma0.VMA_IN[12:17]
 TOP.top.ebox0.vma0.vmaMux[18:35]
-@800200
--EDPstate
+@1000200
+-VMA
 @c00200
+-EDPstate
 -EDPregs
 @30
 TOP.top.ebox0.CTL.AR00to08_LOAD
@@ -167,7 +228,7 @@ TOP.top.ebox0.EDP.ADX[0:35]
 -EDPregs
 @30
 +{CRADR} TOP.top.CRA.CRADR[0:10]
-@800200
+@c00200
 -SH/SCD
 @28
 [color] 7
@@ -178,7 +239,6 @@ TOP.top.ebox0.CRAM.SCAD[0:2]
 TOP.top.ebox0.CRAM.SCADA[0:2]
 [color] 7
 TOP.top.ebox0.CRAM.SCADB[0:1]
-@29
 [color] 2
 TOP.top.ebox0.CLK.SCD
 @24
@@ -201,7 +261,7 @@ TOP.top.ebox0.shm0.sc[0:5]
 TOP.top.ebox0.shm0.SHIFT_36
 TOP.top.ebox0.shm0.SHIFT_50
 TOP.top.ebox0.shm0.ar_arx[0:71]
-@1000200
+@1401200
 -SH/SCD
 @c00200
 -FM
@@ -215,7 +275,6 @@ TOP.top.ebox0.CON.FM_WRITE18_35
 TOP.top.ebox0.edp0.FM_WRITE
 @1401200
 -FM
-@1000200
 -EDPstate
 @c00200
 -CON-nicond
@@ -248,80 +307,34 @@ TOP.top.ebox0.CON.NICOND_TRAP_EN
 TOP.top.ebox0.CON.NICOND[7:10]
 @1401200
 -CON-nicond
-@c00200
--all-clocks
-@28
-[color] 2
-TOP.top.clk60
-@800028
-[color] 2
-TOP.top.ebox0.clk0.ring60[3:0]
-@28
-[color] 2
-(0)TOP.top.ebox0.clk0.ring60[3:0]
-[color] 2
-(1)TOP.top.ebox0.clk0.ring60[3:0]
-[color] 2
-(2)TOP.top.ebox0.clk0.ring60[3:0]
-[color] 2
-(3)TOP.top.ebox0.clk0.ring60[3:0]
-@1001200
--group_end
-@28
-[color] 2
-TOP.top.clk30
-[color] 2
-TOP.top.ebox0.clk0.MAIN_SOURCE
-[color] 2
-TOP.top.ebox0.clk0.ODD
-[color] 2
-TOP.top.ebox0.clk0.MBOX
-[color] 2
-TOP.top.ebox0.clk0.GATED
-[color] 2
-TOP.top.ebox0.clk0.CLK_OUT
-[color] 2
-TOP.top.ebox0.clk0.CLK_ON
-[color] 2
-TOP.top.ebox0.clk0.MBOX_CLK
-[color] 2
-TOP.top.ebox0.clk0.SOURCE_DELAYED
-TOP.top.ebox0.clk0.EBOX_SOURCE
-TOP.top.ebox0.CLK.EBOX_SYNC
-TOP.top.ebox0.clk0.EBOX_SRC_EN
-[color] 2
-TOP.top.ebox0.clk0.CLK_DELAYED
-[color] 2
-TOP.top.ebox0.clk0.EBUS_CLK_SOURCE
-[color] 2
-TOP.top.ebox0.CLK.EBUS_CLK
-[color] 2
-TOP.top.mbox0.CLK.SBUS_CLK
-[color] 2
-TOP.top.CLK.MBZ
-[color] 2
-TOP.top.CLK.MCL
-[color] 2
-TOP.top.ebox0.CLK.EDP
-@1401200
--all-clocks
 @800200
 -MBOX
 @28
 TOP.top.ebox0.CSH.MBOX_RESP_IN
 TOP.top.ebox0.clk0.CLK.RESP_MBOX
+TOP.top.ebox0.CON.FM_XFER
+TOP.top.ebox0.CLK.MB_XFER
+TOP.top.ebox0.MCL.MBOX_CYC_REQ
+@29
+TOP.top.ebox0.con0.clk
+@28
+TOP.top.ebox0.con0.e57q13
+TOP.top.ebox0.con0.e57q14
+TOP.top.ebox0.con0.MEM_CYCLE
 TOP.top.ebox0.clk0.CON.MBOX_WAIT
-[color] 2
-TOP.top.mbox0.SBUS.CLK_INT
 @30
 [color] 3
 TOP.top.mbox0.PMA.PA[14:35]
+@28
+[color] 2
+TOP.top.mbox0.SBUS.CLK_INT
+@30
 +{SBUS_D} TOP.top.memory0.SBUS.D[0:35]
 [color] 3
 +{SBUS_ADR} TOP.top.memory0.SBUS.ADR[14:35]
 @28
 +{SBUS_RQ} TOP.top.memory0.SBUS.RQ[0:3]
-@c00200
+@800200
 -memA
 @28
 TOP.top.memory0.aPhase.START
@@ -330,9 +343,9 @@ TOP.top.memory0.aPhase.ACKN
 TOP.top.memory0.aPhase.VALID
 @30
 TOP.top.memory0.aPhase.D[0:35]
-@1401200
+@1000200
 -memA
-@c00200
+@800200
 -memB
 @28
 TOP.top.memory0.bPhase.START
@@ -341,9 +354,8 @@ TOP.top.memory0.bPhase.ACKN
 TOP.top.memory0.bPhase.VALID
 @30
 TOP.top.memory0.bPhase.D[0:35]
-@1401200
--memB
 @1000200
+-memB
 -MBOX
 @c00200
 -ERRs
