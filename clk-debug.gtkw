@@ -1,19 +1,20 @@
 [*]
 [*] GTKWave Analyzer v3.3.105 (w)1999-2020 BSI
-[*] Wed Jul  1 01:54:23 2020
+[*] Thu Jul  2 01:44:56 2020
 [*]
 [dumpfile] "/home/alan/kl10-verilator/kl10pv-trace.vcd"
-[dumpfile_mtime] "Tue Jun 30 22:59:28 2020"
-[dumpfile_size] 76493764
+[dumpfile_mtime] "Thu Jul  2 01:44:38 2020"
+[dumpfile_size] 30477747
 [savefile] "/home/alan/kl10-verilator/clk-debug.gtkw"
-[timestart] 747854
+[timestart] 747917
 [size] 1920 1051
-[pos] 3 -452
-*-7.800191 748464 748330 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] -1 -1
+*-6.800191 748121 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [ruler] 8708 175
 [treeopen] TOP.
 [treeopen] TOP.top.
 [treeopen] TOP.top.ebox0.
+[treeopen] TOP.top.ebox0.CLK.
 [treeopen] TOP.top.ebox0.CRAM.
 [treeopen] TOP.top.ebox0.edp0.ADaluE1E2(18).
 [treeopen] TOP.top.ebox0.edp0.ADaluE1E2(24).
@@ -21,6 +22,7 @@
 [treeopen] TOP.top.mbox0.mbx0.
 [treeopen] TOP.top.memory0.aPhase.
 [treeopen] TOP.top.memory0.bPhase.
+[treeopen] TOP.top.SCD.
 [sst_width] 211
 [signals_width] 337
 [sst_expanded] 1
@@ -104,6 +106,7 @@ TOP.top.ebox0.vma0.VMA_IN[12:17]
 TOP.top.ebox0.vma0.vmaMux[18:35]
 @800200
 -EDPstate
+@c00200
 -EDPregs
 @30
 TOP.top.ebox0.CTL.AR00to08_LOAD
@@ -160,26 +163,35 @@ TOP.top.EDP.BRX[0:35]
 TOP.top.ebox0.EDP.FM[0:35]
 [color] 3
 TOP.top.ebox0.EDP.ADX[0:35]
-@1000200
+@1401200
 -EDPregs
 @30
 +{CRADR} TOP.top.CRA.CRADR[0:10]
 @800200
 -SH/SCD
+@28
+[color] 7
+TOP.top.ebox0.CRAM.SC
+[color] 7
+TOP.top.ebox0.CRAM.SCAD[0:2]
+[color] 7
+TOP.top.ebox0.CRAM.SCADA[0:2]
+[color] 7
+TOP.top.ebox0.CRAM.SCADB[0:1]
 @29
 [color] 2
 TOP.top.ebox0.CLK.SCD
 @24
 TOP.top.SCD.SC[0:9]
-@30
 TOP.top.SHM.XR[0:3]
 TOP.top.SCD.FE[0:9]
 @28
 TOP.top.ebox0.SCD.SCAD_SIGN
-@30
+@24
 TOP.top.ebox0.scd0.SCAD[0:9]
 TOP.top.ebox0.SCD.SCADA[0:9]
 TOP.top.ebox0.SCD.SCADB[0:9]
+@30
 TOP.top.ebox0.scd0.SCAD_CRY_IN
 TOP.top.ebox0.scd0.aluF[0:3]
 TOP.top.SHM.SH[0:35]
@@ -191,7 +203,7 @@ TOP.top.ebox0.shm0.SHIFT_50
 TOP.top.ebox0.shm0.ar_arx[0:71]
 @1000200
 -SH/SCD
-@800200
+@c00200
 -FM
 @30
 TOP.top.ebox0.APR.FM_BLOCK[0:2]
@@ -201,8 +213,9 @@ TOP.top.ebox0.EDP.FM[0:35]
 TOP.top.ebox0.CON.FM_WRITE00_17
 TOP.top.ebox0.CON.FM_WRITE18_35
 TOP.top.ebox0.edp0.FM_WRITE
-@1000200
+@1401200
 -FM
+@1000200
 -EDPstate
 @c00200
 -CON-nicond
