@@ -161,8 +161,10 @@ module cra(iAPR APR,
   `ifdef THIS_IS_BAROQUE_AND_BROKE
 
   tCRADR LOC;
-  // E67, E72, E76 combined
-  always_ff @(posedge clk) LOC <= CRA.CRADR;
+  bit xE65;
+  msff6 e65ff(.*, .d({1'b0, CRA.CRADR[0:4]}), .q({xE65, LOC[0:4]}));
+  msff6 e60ff(.*, .d(CRA.CRADR[5:10]), .q(LOC[5:10]));
+
 
   ////////////////////////////////////////////////////////////////
   // The opaque, baroque, tedious, and painful call/return stack implementation
@@ -261,8 +263,9 @@ module cra(iAPR APR,
   // Diagnostics stuff
   assign CRA.DISP_PARITY = ^{CRAM.CALL, CRAM.DISP};
 
-  always_comb if (CRA.DIA_FUNC_051) diagAdr[5:10] = EBUS.data[0:5];
-              else if (CRA.DIA_FUNC_052) diagAdr[0:4] = EBUS.data[1:5];
+  bit ignoredE45;
+  msff6 e45(.clk(CRA.DIA_FUNC_052), .d({1'b0, EBUS.data[1:5]}), .q({ignoredE45, diagAdr[0:4]}));
+  msff6 e37(.clk(CRA.DIA_FUNC_051), .d(EBUS.data[0:5]), .q(diagAdr[5:10]));
 
   decoder e1(.en(CTL.DIAG_LOAD_FUNC_05x),
              .sel(CTL.DIAG[4:6]),

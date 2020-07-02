@@ -160,8 +160,17 @@ module scd(iAPR APR,
   assign clk = CLK.SCD;
 
   bit [0:9] SCM;
-  always_ff @(posedge clk) SCD.SC_SIGN <= SCM[0];
-  always_ff @(posedge clk) SCD.SC <= SCM;
+  bit [0:9] scMaster;
+
+
+  // 10176 is MS FF which means data it latched on negedge then
+  // presented on posedge.
+  always_ff @(negedge clk) scMaster <= SCM;
+
+  always_ff @(posedge clk) begin
+    SCD.SC_SIGN <= scMaster[0];
+    SCD.SC <= scMaster;
+  end
 
   // FE shift register
   bit RESET, ignoreE68;

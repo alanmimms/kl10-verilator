@@ -270,7 +270,7 @@ module clk(input bit CROBAR,
 
   // CLK2 p.169
   bit [0:3] e64SR;
-  bit [0:3] e60FF;
+  bit [0:3] e60Q;
   assign CLK.MHZ16_FREE = e64SR[3];
 
   USR4 e64(.S0(1'b0),
@@ -281,13 +281,15 @@ module clk(input bit CROBAR,
            .Q(e64SR));
 
   // XXX slashed wire
-  assign CLK.FUNC_GATE = ~|e60FF[0:2];
-  assign CLK.TENELEVEN_CLK = e60FF[3];
-  always_ff @(posedge MAIN_SOURCE) begin
-    // XXX slashed wire moves us from active-low to acitve-high
-    // discipline.
-    e60FF <= {~e64SR[0], e64SR[1:3]};
-  end
+  assign CLK.FUNC_GATE = ~|e60Q[0:2];
+  assign CLK.TENELEVEN_CLK = e60Q[3];
+
+  // XXX slashed wire moves us from active-low to acitve-high
+  // discipline.
+  msff e60q2ff(.clk(MAIN_SOURCE), .d(~e64SR[0]), .q(e60Q[0]));
+  msff e60q3ff(.clk(MAIN_SOURCE), .d(e64SR[1]), .q(e60Q[1]));
+  msff e60q4ff(.clk(MAIN_SOURCE), .d(e64SR[2]), .q(e60Q[2]));
+  msff e60q13ff(.clk(MAIN_SOURCE), .d(e64SR[3]), .q(e60Q[3]));
 
   bit e66SRFF;
   always_ff @(negedge CLK.FUNC_SET_RESET,
@@ -405,10 +407,10 @@ module clk(input bit CROBAR,
                      .q(e50out));
 
   // CLK3 p.170
-  bit [0:5] e58FF;
+  bit [0:5] e58Q;
   bit e58Ignored;
   assign {CLK.DRAM_PAR_ERR, CLK.CRAM_PAR_ERR, CLK.FM_PAR_ERR,
-          e58Ignored, CLK.FS_ERROR, EBOX_CLK_ERROR} = e58FF;
+          e58Ignored, CLK.FS_ERROR, EBOX_CLK_ERROR} = e58Q;
 
   bit e45FF4, e45FF13, e45FF14;
   assign CLK.ERROR_HOLD_A = ~IR.DRAM_ODD_PARITY & ~CON.LOAD_DRAM & DRAM_PAR_CHECK;
@@ -418,17 +420,16 @@ module clk(input bit CROBAR,
   assign CLK.ERROR = e45FF4 | e45FF13;
   assign CLK.FS_ERROR = ~e45FF14;
 
-  always_ff @(posedge ODD)
-    e58FF <= {CLK.ERROR_HOLD_A,
-              ~CRM.PAR_16 & CRAM_PAR_CHECK,
-              ~APR.FM_ODD_PARITY & FM_PAR_CHECK,
-              EBOX_SRC_EN,
-              ~CLK.ERROR_HOLD_B,
-              CLK.ERROR_HOLD_A};
+  msff e58q2ff(.clk(ODD), .d(CLK.ERROR_HOLD_A), .q(e58Q[0]));
+  msff e58q3ff(.clk(ODD), .d(~CRM.PAR_16 & CRAM_PAR_CHECK), .q(e58Q[1]));
+  msff e58q4ff(.clk(ODD), .d(~APR.FM_ODD_PARITY & FM_PAR_CHECK), .q(e58Q[2]));
+  msff e58q13ff(.clk(ODD), .d(EBOX_SRC_EN), .q(e58Q[3]));
+  msff e58q14ff(.clk(ODD), .d(~CLK.ERROR_HOLD_B), .q(e58Q[4]));
+  msff e58q15ff(.clk(ODD), .d(CLK.ERROR_HOLD_A), .q(e58Q[5]));
 
-  always_ff @(posedge ODD) e45FF4 <= CLK.ERROR_HOLD_B;
-  always_ff @(posedge ODD) e45FF13 <= CLK.ERROR_HOLD_A;
-  always_ff @(posedge ODD) e45FF14 <= ~CLK.ERROR_HOLD_B;
+  msff e45q4ff(.clk(ODD), .d(CLK.ERROR_HOLD_B), .q(e45FF4));
+  msff e45q13ff(.clk(ODD), .d(CLK.ERROR_HOLD_A), .q(e45FF13));
+  msff e45q14ff(.clk(ODD), .d(~CLK.ERROR_HOLD_B), .q(e45FF14));
 
   // From EK-EBOX-UD-006-OCR.pdf on PDF p.233:
   //   The clock phase sync detector compares the MBox clock counter
@@ -464,9 +465,6 @@ module clk(input bit CROBAR,
 
   assign CLK.SYNC_EN = EBOX_SS & ~EBOX_CLK_EN | (e31B | ~CLK.SYNC_HOLD) & ~EBOX_CLK_EN;
 
-  bit e10FF;                    // Merged into single FF
-  assign SYNC = e10FF;          // XXX slashed signals
-
   // Note CLK.EBOX_SYNC is described in EK-EBUS-UD-006 "3.2.4 EBox
   // Clock Control" p. 178. This signal is the "... MBOX Sync Point
   // (EBOX SYNC), which is always asserted one MBOX Clock prior to the
@@ -482,9 +480,9 @@ module clk(input bit CROBAR,
   //
   // NOTE: Actually EBOX CLOCK is clocked via CLK ODD which occurs
   // ~16ns earlier than MBOX CLK.
-  assign CLK.EBOX_SYNC = e10FF;
-
-  always_ff @(posedge MBOX_CLK) e10FF <= CLK.SYNC_EN;       // XXX slashed signals
+  bit e10FF;                    // Merged into single FF
+  msff e10(.clk(MBOX_CLK), .d(CLK.SYNC_EN), .q(SYNC));
+  assign CLK.EBOX_SYNC = SYNC;
 
   bit notHoldAB;
   bit [0:3] e12SR;
@@ -541,9 +539,10 @@ module clk(input bit CROBAR,
                         ~CLK.FORCE_1777) // E17q15
                       );
 
-  always_ff @(posedge MBOX_CLK) e32Q3 <= CON.MBOX_WAIT & MBOX_RESP_SIM & ~EBOX_CLK_EN & ~VMA.AC_REF;
-  always_ff @(posedge MBOX_CLK) e32Q13 <= CSH.MBOX_RESP_IN;
-  always_ff @(posedge MBOX_CLK) EBOX_CLK <= EBOX_CLK_EN;
+  msff e32q3ff(.clk(MBOX_CLK), .d(CON.MBOX_WAIT & MBOX_RESP_SIM & ~EBOX_CLK_EN & ~VMA.AC_REF),
+               .q(e32Q3));
+  msff e32q13ff(.clk(MBOX_CLK), .d(CSH.MBOX_RESP_IN), .q(e32Q13));
+  msff e32q14ff(.clk(MBOX_CLK), .d(EBOX_CLK_EN), .q(EBOX_CLK));
 
   // NOTE: Active-low schematic symbol
   USR4 e30(.S0(1'b0),
@@ -556,18 +555,18 @@ module clk(input bit CROBAR,
            .CLK(ODD),
            .Q(CLK.PF_DISP[7:10]));
 
-  always @(posedge ODD) CLK.PF_DLYD_A <= CLK.PAGE_FAIL;
-  always @(posedge ODD) CLK.PF_DLYD_B <= CLK.PF_DLYD_A;
+  msff e45q3ff(.clk(ODD), .d(CLK.PAGE_FAIL), .q(CLK.PF_DLYD_A));
+  msff e45q2ff(.clk(ODD), .d(CLK.PF_DLYD_A), .q(CLK.PF_DLYD_B));
 
   assign CLK.PAGE_ERROR = CLK.PAGE_FAIL_EN | CLK.INSTR_1777;
   assign CLK.u1777_EN = CLK.FORCE_1777 & CLK.SBR_CALL;
-  always @(posedge MBOX_CLK)
-    CLK.PAGE_FAIL_EN <= ~CLK.INSTR_1777 &
-                        (CSH.PAGE_FAIL_HOLD | (CLK.PAGE_FAIL_EN & ~CLK.RESET));
-
-  always @(posedge MBOX_CLK) CLK.INSTR_1777 <= CLK.u1777_EN | (~EBOX_CLK_EN & CLK.INSTR_1777);
-  always @(posedge MBOX_CLK) CLK.FORCE_1777 <= CLK.PF_DLYD_A;
-  always @(posedge MBOX_CLK) CLK.SBR_CALL <= CLK.PF_DLYD_B;
+  msff e8q3ff(.clk(MBOX_CLK), .d(~CLK.INSTR_1777 &
+                                 (CSH.PAGE_FAIL_HOLD | (CLK.PAGE_FAIL_EN & ~CLK.RESET))),
+              .q(CLK.PAGE_FAIL_EN));
+  msff e8q13ff(.clk(MBOX_CLK), .d(CLK.u1777_EN | (~EBOX_CLK_EN & CLK.INSTR_1777)),
+               .q(CLK.INSTR_1777));
+  msff e8q14ff(.clk(MBOX_CLK), .d(CLK.PF_DLYD_A), .q(CLK.FORCE_1777));
+  msff e8q15ff(.clk(MBOX_CLK), .d(CLK.PF_DLYD_B), .q(CLK.SBR_CALL));
 
   bit e7out7;                 // XXX slashed
   bit e38out7;                // XXX slashed

@@ -171,11 +171,12 @@ module con(iAPR APR,
   // CON2 p.159
   bit e34q3;
   bit e34q15;
-  always_ff @(posedge clk) MTR_INT_REQ <= MTR.INTERRUPT_REQ;
-  always_ff @(posedge clk) e34q3 <= PIC.READY;
-  always_ff @(posedge clk) CON.LONG_EN <= ~MCL.VMA_SECTION_0 & CON.COND_LONG_EN |
-                                          ~MCL.MBOX_CYC_REQ & CON.LONG_EN & ~CON.RESET;
-  always_ff @(posedge clk) e34q15 <= CRAM.MAGIC[3] & CON.IO_LEGAL & CTL.SPEC_FLAG_CTL;
+  msff e31q2ff(.*, .d(MTR.INTERRUPT_REQ), .q(MTR_INT_REQ));
+  msff e34q3ff(.*, .d(PIC.READY), .q(e34q3));
+  msff e34q14ff(.*, .d(~MCL.VMA_SECTION_0 & CON.COND_LONG_EN |
+                       ~MCL.MBOX_CYC_REQ & CON.LONG_EN & ~CON.RESET),
+                .q(CON.LONG_EN));
+  msff e34q15ff(.*, .d(CRAM.MAGIC[3] & CON.IO_LEGAL & CTL.SPEC_FLAG_CTL), .q(e34q15));
 
   assign INT_REQ = (MTR_INT_REQ | e34q3) & (~INT_DISABLE | CON.RESET);
 
@@ -191,21 +192,16 @@ module con(iAPR APR,
   bit start0, start1, start2;
   assign start0 = DIAG_CONTINUE |
                   start0 & ~CON.START & ~CON.RESET;
-
-  always_ff @(posedge clk) begin
-    start1 <= start0;
-    start2 = start1;
-    CON.START <= start2;
-  end
+  msff e16q2ff(.*, .d(start0), .q(start1));
+  msff e16q3ff(.*, .d(start1), .q(start2));
+  msff e16q4ff(.*, .d(start2), .q(CON.START));
 
   bit run0, run1, run2;
   assign run0 = DIAG_SET_RUN |
                 run0 & ~DIAG_CLR_RUN & ~CON.RESET;
-  always_ff @(posedge clk) begin
-    run1 <= run0;
-    run2 <= run1;
-    CON.RUN <= run2;
-  end
+  msff e16q13ff(.*, .d(run0), .q(run1));
+  msff e16q14ff(.*, .d(run1), .q(run2));
+  msff e16q15ff(.*, .d(run2), .q(CON.RUN));
 
 /*
   bit runStateNC1, runStateNC2, runStateNC3;
@@ -277,14 +273,16 @@ module con(iAPR APR,
                         .any(),
                         .q(e33Q));
 
-  always_ff @(posedge clk) CON.NICOND_TRAP_EN <= e33Q[0];
-  always_ff @(posedge clk) CON.NICOND[7:9] = e33Q[0:2];
-  always_ff @(posedge clk) CON.EBUS_GRANT <= PIC.EBUS_CP_GRANT;
-  always_ff @(posedge clk) PI_XFER <= PIC.EXT_TRAN_REC;
+  msff e18q2ff(.*, .d(e33Q[0]), .q(CON.NICOND_TRAP_EN));
+  msff e18q3ff(.*, .d(e33Q[0]), .q(CON.NICOND[7]));
+  msff e18q4ff(.*, .d(e33Q[1]), .q(CON.NICOND[8]));
+  msff e18q13ff(.*, .d(e33Q[2]), .q(CON.NICOND[9]));
+  msff e18q14ff(.*, .d(PIC.EBUS_CP_GRANT), .q(CON.EBUS_GRANT));
+  msff e18q15ff(.*, .d(PIC.EXT_TRAN_REC), .q(PI_XFER));
 
   bit e34q1, e34q13;
-  always_ff @(posedge clk) e34q1 <= NICOND;
-  always_ff @(posedge clk) e34q13 <= CON.COND_LOAD_IR;
+  msff e34q1ff(.*, .d(NICOND), .q(e34q1));
+  msff e34q13ff(.*, .d(CON.COND_LOAD_IR), .q(e34q13));
   
   assign NICOND_OR_LOAD_IR_DELAYED = e34q1 | e34q13;
   assign CON.LOAD_DRAM = DIAG_DRAM_STROBE | NICOND_OR_LOAD_IR_DELAYED;
@@ -292,7 +290,7 @@ module con(iAPR APR,
 
 
   // CON3 p. 160.
-  always_ff @(posedge clk) CON.CONO_200000 <= CONO_APR & EBUS.data[19];
+  msff e57q15ff(.*, .d(CONO_APR & EBUS.data[19]), .q(CON.CONO_200000));
 
   bit unusedE14;
   USR4 e14(.CLK(clk),
@@ -375,6 +373,7 @@ module con(iAPR APR,
            .SEL({2{~CON.COND_SR_MAGIC}}),
            .Q(CON.SR));
 
+
   // CON4 p.161.
   assign CON.PI_DISABLE = ~CON.RUN | CON.EBOX_HALTED;
   assign CON.AR_36 = (~WR_EVEN_PAR_DATA | CON.AR_LOADED) &
@@ -403,29 +402,35 @@ module con(iAPR APR,
                         (CON.UCODE_STATE7 | CRAM.MAGIC[7]);
   end
 
-  always_ff @(posedge clk) CSH_BIT_36 <= CSH.PAR_BIT_A | CSH.PAR_BIT_B;
-  always_ff @(posedge clk) FM_BIT_36 <= APR.FM_BIT_36;
-  always_ff @(posedge clk) EBUS_BIT_36 <= EBUS.parity;
-  always_ff @(posedge clk) MBOX_DATA <= CON.FM_XFER;
-  always_ff @(posedge clk) FM_DATA <= CLK.MB_XFER;
+  msff e64q2ff(.*, .d(CSH.PAR_BIT_A | CSH.PAR_BIT_B), .q(CSH_BIT_36));
+  msff e64q4ff(.*, .d(APR.FM_BIT_36), .q(FM_BIT_36));
+  msff e64q13ff(.*, .d(EBUS.parity), .q(EBUS_BIT_36));
+  msff e64q14ff(.*, .d(CON.FM_XFER), .q(MBOX_DATA));
+  msff e64q15ff(.*, .d(CLK.MB_XFER), .q(FM_DATA));
 
-  bit [3:5] e69Q3_5;
+  // Note slashed wire
+  msff e69q2ff(.*, .d(CTL.EBUS_XFER & EBUS.parity), .q(CON.AR_FROM_EBUS));
+  msff e69q4ff(.*, .d(XFER & ~CON.FM_XFER & ~CLK.PAGE_ERROR & MCL.LOAD_ARX),
+               .q(CON.ARX_LOADED));
+
+  bit e69q13, e69q14, e69q15;
+  msff e69q13ff(.*, .d(LOAD_AR_EN), .q(e69q13));
+  msff e69q14ff(.*, .d(XFER), .q(e69q14));
+  msff e69q15ff(.*, .d(~CLK.PAGE_ERROR), .q(e69q15));
+
   assign LOAD_AR_EN = ~MCL.LOAD_ARX | MCL.LOAD_AR;
-  assign AR_FROM_MEM = |e69Q3_5;
-  assign CON.AR_LOADED = AR_FROM_MEM;
+  assign AR_FROM_MEM = e69q13 | e69q14 | e69q15;
+  assign CON.AR_LOADED = AR_FROM_MEM | CON.AR_FROM_EBUS;
 
-  always_ff @(posedge clk) e69Q3_5 <= {LOAD_AR_EN, XFER, ~CLK.PAGE_ERROR};
-  always_ff @(posedge clk) CON.AR_FROM_EBUS <= CTL.EBUS_XFER & EBUS.parity;
-  always_ff @(posedge clk) CON.ARX_LOADED <= XFER & ~CON.FM_XFER & ~CLK.PAGE_ERROR & MCL.LOAD_ARX;
 
   // CON5 p.162
   bit CLR_PI_CYCLE;
 
   bit e57q3, e57q2, e57q13, e57q14;
-  always_ff @(posedge clk) e57q3 <= CON.COND_SPEC_INSTR & CRAM.MAGIC[0];
-  always_ff @(posedge clk) e57q2 <= CON.PI_CYCLE & ~MCL.SKIP_SATISFIED & ~CLR_PI_CYCLE & ~CON.RESET;
-  always_ff @(posedge clk) e57q13 <= MCL.MBOX_CYC_REQ;
-  always_ff @(posedge clk) e57q14 <= MEM_CYCLE & ~XFER & ~CLK.PAGE_ERROR & ~CON.RESET;
+  msff e57q3ff(.*, .d(CON.COND_SPEC_INSTR & CRAM.MAGIC[0]), .q(e57q3));
+  msff e57q2ff(.*, .d(CON.PI_CYCLE & ~MCL.SKIP_SATISFIED & ~CLR_PI_CYCLE & ~CON.RESET), .q(e57q2));
+  msff e57q13ff(.*, .d(MCL.MBOX_CYC_REQ), .q(e57q13));
+  msff e57q14ff(.*, .d(MEM_CYCLE & ~XFER & ~CLK.PAGE_ERROR & ~CON.RESET), .q(e57q14));
 
   assign CON.PI_CYCLE = e57q3 | e57q2;
   assign MEM_CYCLE = e57q13 | e57q14;

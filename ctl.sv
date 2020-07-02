@@ -290,12 +290,8 @@ module ctl(iAPR APR,
                               CTL.CONSOLE_CONTROL & ~CTL.EBUS_T_TO_E_EN;
   assign CTL.EBUS_PARITY_OUT = SHM.AR_PAR_ODD | CTL.AD_TO_EBUS_L;
 
-  // E37
-  always_ff @(negedge CTL.DIAG_LD_FUNC_076) begin
-    MBOX.DIAG_MEM_RESET <= EBUS.data[24];
-    CTL.DIAG_CHANNEL_CLK_STOP <= EBUS.data[25];
-    CTL.DIAG_LD_EBUS_REG <= EBUS.data[26];
-    CTL.DIAG_FORCE_EXTEND <= EBUS.data[27];
-//    CTL.DIAG_DIAG[4] <= EBUS.data[28];        // NOT USED ANYWHERE
-  end
+  bit [4:5] xE37;
+  msff6 e37ff(.clk(~CTL.DIAG_LD_FUNC_076), .d({EBUS.data[24:27], 2'b00}),
+              .q({MBOX.DIAG_MEM_RESET, CTL.DIAG_CHANNEL_CLK_STOP,
+                  CTL.DIAG_LD_EBUS_REG, CTL.DIAG_FORCE_EXTEND, xE37}));
 endmodule

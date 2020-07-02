@@ -70,12 +70,12 @@ module mbx(iAPR APR,
   assign MBX.CCA_ALL_PAGES_CYC = CSH.CCA_CYC & ~CSH_CCA_ONE_PAGE;
   assign MBX.CCA_REQ = e85q15 & ~RESET;
 
-  always_ff @(posedge clk) MBX.REFILL_ADR_EN <= MBX.REFILL_ADR_EN_NXT;
-  always_ff @(posedge clk) MBX.EBOX_LOAD_REG <= CSH.EBOX_LOAD_REG;
-  always_ff @(posedge clk) e85q2 <= ~CCA_CYC_DONE;
-  always_ff @(posedge clk) e85q15 <= (MBX.CCA_REQ | ~MBX.CCA_SEL[1]) &
-                                     (~CCA_CYC_DONE | ~PMA.CCA_CRY_OUT);
-  always_ff @(posedge clk) CCA_HOLD_ADR <= ~READY_TO_GO & (CSH.CCA_INVAL_T4 | CCA_HOLD_ADR);
+  msff e85q14ff(.*, .d(MBX.REFILL_ADR_EN_NXT), .q(MBX.REFILL_ADR_EN));
+  msff e75q13ff(.*, .d(CSH.EBOX_LOAD_REG), .q(MBX.EBOX_LOAD_REG));
+  msff e85q2ff(.*, .d(~CCA_CYC_DONE), .q(e85q2));
+  msff e85q15ff(.*, .d((MBX.CCA_REQ | ~MBX.CCA_SEL[1]) & (~CCA_CYC_DONE | ~PMA.CCA_CRY_OUT)),
+                .q(e85q15));
+  msff e85q3ff(.*, .d(~READY_TO_GO & (CSH.CCA_INVAL_T4 | CCA_HOLD_ADR)), .q(CCA_HOLD_ADR));
 
   USR4 e77(.S0(1'b0),
            .D(MBOX.CSH_WD_VAL),
@@ -129,10 +129,10 @@ module mbx(iAPR APR,
                             (MBOX.MEM_RD_RQ | ~CORE_DATA_VALID | ~CORE_BUSY);
   assign CHAN_READ = MBOX.CHAN_READ;
 
-  always_ff @(posedge clk) ANY_VAL_HOLD <= CSH.ANY_VAL_HOLD_IN;
-  always_ff @(posedge clk) MB_WR_RQ_CLR_FF_L <= ~CSH.MB_WR_RQ_CLR_NXT;
-  always_ff @(posedge clk) MBOX.MB_REQ_HOLD <= MB_WR_RQ_ANY | MB_SEL_HOLD_FF_IN;
-  always_ff @(posedge clk) MBX.MB_SEL_HOLD_FF <= MB_SEL_HOLD_FF_IN;
+  msff e75q2ff(.*, .d(CSH.ANY_VAL_HOLD_IN), .q(ANY_VAL_HOLD));
+  msff e85q13ff(.*, .d(~CSH.MB_WR_RQ_CLR_NXT), .q(MB_WR_RQ_CLR_FF_L));
+  msff e75q3ff(.*, .d(MB_WR_RQ_ANY | MB_SEL_HOLD_FF_IN), .q(MBOX.MB_REQ_HOLD));
+  msff e75q4ff(.*, .d(MB_SEL_HOLD_FF_IN), .q(MBX.MB_SEL_HOLD_FF));
   
   // MBX2 MB SEL 2{A,B} and MBX2 MB SEL 1{A,B} use MBOX.MB_SEL[0:1] respectively.
 
@@ -263,8 +263,8 @@ module mbx(iAPR APR,
 
   assign MBX.SBUS_DIAG_3 = SBUS_DIAG_3;
 
-  always_ff @(posedge clk) MB_REQ_ALLOW_FF <= MB_REQ_ALLOW;
-  always_ff @(posedge clk) SBUS_DIAG_CYC <= e70q14;
+  msff e71q3ff(.*, .d(MB_REQ_ALLOW), .q(MB_REQ_ALLOW_FF));
+  msff e71q14ff(.*, .d(e70q14), .q(SBUS_DIAG_CYC));
 
   USR4 e67(.S0(1'b0),
            .D(4'b0000),
@@ -291,14 +291,15 @@ module mbx(iAPR APR,
   assign MBX.WRITEBACK_T2 = MBOX.CSH_WR_OUT_EN;
   assign MBX.CACHE_TO_MB_DONE = CACHE_TO_MB_T1 & ~CACHE_TO_MB_CONT;
 
-  always_ff @(posedge clk) MBOX.CSH_WR_OUT_EN <= CSH.WRITEBACK_T1;
-  always_ff @(posedge clk) CACHE_TO_MB_T1 <= MBOX.CSH_WR_OUT_EN | MBOX.CACHE_TO_MB_T4;
-  always_ff @(posedge clk) MBX.CACHE_TO_MB_T2 <= CACHE_TO_MB_T1 & ~CACHE_TO_MB_DONE & ~RESET |
-                                                 CTOMB_LOAD & ~MBX.CHAN_WR_CYC |
-                                                 MBOX.PHASE_CHANGE_COMING & MBX.CACHE_TO_MB_T2 |
-                                                 CSH.ONE_WORD_WR_T0;
-  always_ff @(posedge clk) CACHE_TO_MB_T3 <= MBX.CACHE_TO_MB_T2 & MBOX.PHASE_CHANGE_COMING;
-  always_ff @(posedge clk) MBOX.CACHE_TO_MB_T4 <= CACHE_TO_MB_T3;
+  msff e61q4ff(.*, .d(CSH.WRITEBACK_T1), .q(MBOX.CSH_WR_OUT_EN));
+  msff e61q3ff(.*, .d(MBOX.CSH_WR_OUT_EN | MBOX.CACHE_TO_MB_T4), .q(CACHE_TO_MB_T1));
+  msff e61q2ff(.*, .d(CACHE_TO_MB_T1 & ~CACHE_TO_MB_DONE & ~RESET |
+                      CTOMB_LOAD & ~MBX.CHAN_WR_CYC |
+                      MBOX.PHASE_CHANGE_COMING & MBX.CACHE_TO_MB_T2 |
+                      CSH.ONE_WORD_WR_T0),
+               .q(MBX.CACHE_TO_MB_T2));
+  msff e61q15ff(.*, .d(MBX.CACHE_TO_MB_T2 & MBOX.PHASE_CHANGE_COMING), .q(CACHE_TO_MB_T3));
+  msff e61q13ff(.*, .d(CACHE_TO_MB_T3), .q(MBOX.CACHE_TO_MB_T4));
 
 
   // MBX5 p.182
@@ -330,11 +331,12 @@ module mbx(iAPR APR,
   // one of the global MBOX variables the MBOX modules use rather than
   // a CON interface export. But CON already exports it so I'm
   // unclenching and dismissing it without prejudice.
-  always_ff @(posedge clk) e71q13 <= CON.CACHE_LOOK_EN & ~CSH_CCA_CYC & CSH.ADR_READY & MBOX.CSH_ADR_PAR_BAD |
-                                     CSH.WRITEBACK_T1 & MBOX.CSH_ADR_PAR_BAD |
-                                     ~READY_TO_GO & ~RESET & e71q13;
-  always_ff @(posedge clk) e75q15 <= e71q13 & READY_TO_GO |
-                                     ~APR.C_DIR_P_ERR & MBX.CSH_ADR_PAR_ERR & ~RESET;
+  msff e71q13ff(.*, .d(CON.CACHE_LOOK_EN & ~CSH_CCA_CYC & CSH.ADR_READY & MBOX.CSH_ADR_PAR_BAD |
+                       CSH.WRITEBACK_T1 & MBOX.CSH_ADR_PAR_BAD |
+                       ~READY_TO_GO & ~RESET & e71q13),
+                .q(e71q13));
+  msff e75q15ff(.*, .d(e71q13 & READY_TO_GO | ~APR.C_DIR_P_ERR & MBX.CSH_ADR_PAR_ERR & ~RESET),
+                .q(e75q15));
 
 
   // MBX6 p.183
@@ -412,9 +414,9 @@ module mbx(iAPR APR,
               ~MBX.WRITEBACK_T2}),
           .q(MBX.EBUSdriver.data[35]));
 
-  always_ff @(posedge clk) CORE_DATA_VALIDminus1 <= MBC.CORE_DATA_VALminus2;
-  always_ff @(posedge clk) CORE_DATA_VALID <= CORE_DATA_VALIDminus1;
-  always_ff @(posedge clk) e61q14 <= e56Q;
+  msff e71q2ff(.*, .d(MBC.CORE_DATA_VALminus2), .q(CORE_DATA_VALIDminus1));
+  msff e71q15ff(.*, .d(CORE_DATA_VALIDminus1), .q(CORE_DATA_VALID));
+  msff e61q14ff(.*, .d(e56Q), .q(e61q14));
 
   mux e32(.en(1'b1),
           .sel(MBOX.MB_IN_SEL),

@@ -102,22 +102,18 @@ module mtr(iCHC CHC,
                  (INTERVAL_ON | RESET_INTERVAL) & MTR._1_MHZ;
   assign COUNT_TEN_USEC = e88Q[0] | e88Q[3];
 
-  always_ff @(posedge MBOX_CLK) CACHE_CNT_CLK <= CLR_CACHE_CNT |
-                                                 MBOX.CNT_MB_XFER & CACHE_CNT_EN;
-  always_ff @(posedge MBOX_CLK) EBOX_CNT_EN <= ~READ_MTR & ~EBOX_WAITING & CACHE_CNT_EN;
-  always_ff @(posedge MBOX_CLK) EBOX_HALF_COUNT <= ~((EBOX_CNT_EN ^ ~EBOX_HALF_COUNT) & ~RESET);
-  always_ff @(posedge MBOX_CLK) EBOX_CNT_CLK <= CLR_EBOX_CNT & ~EBOX_CNT_CLK |
-                                                EBOX_HALF_COUNT & EBOX_CNT_EN;
-
-  always_ff @(posedge MBOX_CLK) TIME_CLK <= ~READ_TIME & e5q2;
-  always_ff @(posedge MBOX_CLK) INTERVAL_CLK <= MTR._1_MHZ & RESET |
-                                                ~READ_INTERVAL & e5q15;
-
-  always_ff @(posedge MBOX_CLK) if ((CONO_MTR | RESET_PLSD) & (mtrEBUS[18] | RESET_PLSD)) begin
-    PI_ACCT_EN <= mtrEBUS[21];
-    EXEC_ACCT_EN <= mtrEBUS[22];
-    ACCT_ON <= mtrEBUS[23];      
-  end
+  msff e48q3ff(.clk(MBOX_CLK), .d(CLR_CACHE_CNT | MBOX.CNT_MB_XFER & CACHE_CNT_EN), .q(CACHE_CNT_CLK));
+  msff e39q4ff(.clk(MBOX_CLK), .d(~READ_MTR & ~EBOX_WAITING & CACHE_CNT_EN), .q(EBOX_CNT_EN));
+  msff e48q4ff(.clk(MBOX_CLK), .d(~(EBOX_CNT_EN ^ ~EBOX_HALF_COUNT) & ~RESET), .q(EBOX_HALF_COUNT));
+  msff e48q15ff(.clk(MBOX_CLK), .d(CLR_EBOX_CNT & ~EBOX_CNT_CLK | EBOX_HALF_COUNT & EBOX_CNT_EN),
+                .q(EBOX_CNT_CLK));
+  msff e48q14ff(.clk(MBOX_CLK), .d(~READ_TIME & e5q2), .q(TIME_CLK));
+  msff e48q13ff(.clk(MBOX_CLK), .d(MTR._1_MHZ & RESET | ~READ_INTERVAL & e5q15), .q(INTERVAL_CLK));
+  bit e16Clk;
+  assign e16Clk = (CONO_MTR | RESET_PLSD) & (mtrEBUS[18] | RESET_PLSD);
+  msff e16q3ff(.clk(e16Clk), .d(mtrEBUS[21]), .q(PI_ACCT_EN));
+  msff e16q4ff(.clk(e16Clk), .d(mtrEBUS[22]), .q(EXEC_ACCT_EN));
+  msff e16q13ff(.clk(e16Clk), .d(mtrEBUS[23]), .q(ACCT_ON));
 
   always_ff @(posedge CONO_MTR, posedge RESET) if (RESET) TIME_ON <= 0;
                                                else TIME_ON <= TIME_ON & ~mtrEBUS[24] | mtrEBUS[25];
@@ -172,10 +168,8 @@ module mtr(iCHC CHC,
               .sel(CRAM.MAGIC[6:8]),
               .q(e1Q));
 
-  always_ff @(posedge CONO_TIM, posedge RESET) PERIOD <= mtrEBUS[24:35];
-
-  always_ff @(posedge CONO_TIM, posedge RESET) if (RESET) INTERVAL_ON <= 0;
-                                               else INTERVAL_ON <= mtrEBUS[21];
+  msff6 e45ff(.clk(CONO_TIM), .d(mtrEBUS[24:29]), .q(PERIOD[6:11]));
+  msff6 e82ff(.clk(CONO_TIM), .d(mtrEBUS[30:35]), .q(PERIOD[12:17]));
 
   always_ff @(posedge INTERVAL_CLK) if (CONO_TIM) INTERVAL_MATCH_INH <= 1;
                                     else INTERVAL_MATCH_INH <= INTERVAL_OFF;
@@ -203,17 +197,25 @@ module mtr(iCHC CHC,
   // MTR4 p.327
   bit e39q14, e39q2;
   bit [0:3] e36Q;
-  always_ff @(posedge LOAD_PA_RIGHT) PI_PA_EN <= mtrEBUS[18:25];
-  always_ff @(posedge LOAD_PA_RIGHT) NO_PI_PA_EN <= mtrEBUS[26];
-  always_ff @(posedge LOAD_PA_RIGHT) USER_PA_EN <= mtrEBUS[27];
-  always_ff @(posedge LOAD_PA_RIGHT) MODE_PA_DONT_CARE <= mtrEBUS[28];
-  always_ff @(posedge LOAD_PA_RIGHT) PA_EVENT_MODE <= mtrEBUS[29];
+  bit ignoredE81;
+  msff6 e26ff(.clk(LOAD_PA_RIGHT), .d(mtrEBUS[18:23]), .q(PI_PA_EN[0:5]));
+  msff6 e44ff(.clk(LOAD_PA_RIGHT), .d(mtrEBUS[24:29]),
+              .q({PI_PA_EN[6:7], NO_PI_PA_EN, USER_PA_EN, MODE_PA_DONT_CARE, PA_EVENT_MODE}));
 
-  always_ff @(posedge LOAD_PA_RIGHT) CHAN_PA_EN <= mtrEBUS[18:25];
-  always_ff @(posedge LOAD_PA_RIGHT) CHAN_PA_DONT_CARE <= mtrEBUS[26];
-  always_ff @(posedge LOAD_PA_RIGHT) UCODE_PA_DONT_CARE <= mtrEBUS[27];
-  always_ff @(posedge LOAD_PA_RIGHT) PROBE_LOW_PA_EN <= mtrEBUS[28];
-  always_ff @(posedge LOAD_PA_RIGHT) PROBE_PA_DONT_CARE <= mtrEBUS[29];
+  msff6 e61ff(.clk(LOAD_PA_LEFT), .d(mtrEBUS[18:23]), .q(CHAN_PA_EN[0:5]));
+  msff6 e56ff(.clk(LOAD_PA_LEFT), .d(mtrEBUS[24:29]),
+              .q({CHAN_PA_EN[6:7], CHAN_PA_DONT_CARE, UCODE_PA_DONT_CARE,
+                  PROBE_LOW_PA_EN, PROBE_PA_DONT_CARE}));
+  msff6 e81ff(.clk(LOAD_PA_LEFT), .d({mtrEBUS[30:34], ignoredE81}),
+              .q({CACHE_REF_PA_EN, CACHE_FILL_PA_EN,
+                  CACHE_EWB_PA_EN, CACHE_SWB_PA_EN,
+                  CACHE_PA_DONT_CARE, 1'b0}));
+
+  msff e39q14ff(.clk(MBOX_CLK), .d(e36Q[0]), .q(e39q14));
+  msff e39q3ff(.clk(MBOX_CLK), .d(e36Q[1]), .q(PI_LEVEL[0]));
+  msff e39q15ff(.clk(MBOX_CLK), .d(e36Q[2]), .q(PI_LEVEL[1]));
+  msff e39q13ff(.clk(MBOX_CLK), .d(e36Q[3]), .q(PI_LEVEL[2]));
+  msff e39q2ff(.clk(MBOX_CLK), .d(MBOX.PROBE), .q(e39q2));
 
   mux e31(.en(1'b1),
           .sel(PI_LEVEL),
@@ -226,21 +228,12 @@ module mtr(iCHC CHC,
              .B(e36Q));
 
   bit e54q3;
-  always_ff @(posedge MBOX_CLK) e39q14 <= e36Q[0];
-  always_ff @(posedge MBOX_CLK) PI_LEVEL <= e36Q[1:3];
-  always_ff @(posedge MBOX_CLK) e39q2 <= MBOX.PROBE;
 
   // Note this is the ONLY place in all of KL10PV where I've found
   // XXX H and XXX L signals not logically identical except in
   // sense. I picked the PERF CNT CLK L logic and made PERF_CNT_CLK
   // be the inverse of it.
-  always_ff @(posedge MBOX_CLK) PERF_CNT_CLK <= ~((e54q3 ^ ~RESET) & ~RESET);
-
-  always_ff @(posedge LOAD_PA_LEFT) CACHE_REF_PA_EN <= mtrEBUS[30];
-  always_ff @(posedge LOAD_PA_LEFT) CACHE_FILL_PA_EN <= mtrEBUS[31];
-  always_ff @(posedge LOAD_PA_LEFT) CACHE_EWB_PA_EN <= mtrEBUS[32];
-  always_ff @(posedge LOAD_PA_LEFT) CACHE_SWB_PA_EN <= mtrEBUS[33];
-  always_ff @(posedge LOAD_PA_LEFT) CACHE_PA_DONT_CARE <= mtrEBUS[34];
+  msff e48q2ff(.clk(MBOX_CLK), .d(~((e54q3 ^ ~RESET) & ~RESET)), .q(PERF_CNT_CLK));
 
   bit e58q3, e72q3, e86q3;
   assign FILL_CACHE_RD = CSH.FILL_CACHE_RD;
@@ -286,10 +279,9 @@ module mtr(iCHC CHC,
   bit [0:7] e18D;
   assign DS = CTL.DIAG[4:6];
 
-  always_ff @(posedge MBOX_CLK) begin
-    mtrEBUS[18:19] = EBUS.data[18:19];
-    mtrEBUS[20:35] = mtrEBUS_IN;
-  end
+  msff6 e21ff(.clk(MBOX_CLK), .d(EBUS.data[18:23]), .q(mtrEBUS[18:23]));
+  msff6 e50ff(.clk(MBOX_CLK), .d(EBUS.data[24:29]), .q(mtrEBUS[24:29]));
+  msff6 e76ff(.clk(MBOX_CLK), .d(EBUS.data[30:35]), .q(mtrEBUS[30:35]));
 
   always_latch if (HOLD_INTERRUPT_SEL) e18D <= {TIME[2],
                                                 PERF_COUNT[2],

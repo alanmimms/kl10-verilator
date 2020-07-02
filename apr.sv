@@ -48,26 +48,41 @@ module apr(iAPR APR,
   bit SWEEP_DONE, SWEEP_DONE_IN, SWEEP_DONE_EN;
   bit F02_EN, REG_FUNC_EN;
 
-// I wanted to use nested modules for this but they broke xelab (SIGSEGV).
-// `m` is the EBUS.data[m] bit number.
-// `e` is the Q output of the flop (XXX_INT_EN).
-// `i` is the combinatorial output (XXX_EN_IN).
-`define APRInt(m, e, i) \
-  assign i = CON.SEL_EN & EBUS.data[m] | e & ~RESET & CON.SEL_DIS & EBUS.data[m]; \
-  always_ff @(posedge clk) e <= i
-
-// `m` is the EBUS.data[m] bit number.
-// `o` is the singleton OR condition at the bottom of the combinatorial junk.
-// `e` is the Q output of the flop (XXX_ERR).
-// `i` is the combinatorial output (XXX_IN).
-`define APREvent(m, o, e, i) \
-  assign i = CON.SEL_SET & EBUS.data[m] | \
-            ~CON.SEL_CLR & e & ~RESET | \
-             e & ~EBUS.data[m] & ~RESET | \
-             o; \
-  always_ff @(posedge clk) e <= i
-
   // APR1 p.382
+  APRhandler ebus6(.*, .ebusBit(EBUS.data[6]),
+                   .intEn(SBUS_ERR_INT_EN), .enIn(SBUS_ERR_EN_IN),
+                   .cond(MBOX.SBUS_ERR), .err(APR.SBUS_ERR), .in(SBUS_ERR_IN));
+
+  APRhandler ebus7(.*, .ebusBit(EBUS.data[7]),
+                   .intEn(NXM_ERR_INT_EN), .enIn(NXM_ERR_EN_IN),
+                   .cond(MBOX.NXM_ERR), .err(APR.NXM_ERR), .in(NXM_ERR_IN));
+
+  APRhandler ebus8(.*, .ebusBit(EBUS.data[8]),
+                   .intEn(IO_PF_ERR_INT_EN), .enIn(IO_PF_ERR_EN_IN),
+                   .cond(SET_IO_PF_ERR), .err(APR.IO_PF_ERR), .in(IO_PF_ERR_IN));
+
+  APRhandler ebus9(.*, .ebusBit(EBUS.data[9]),
+                   .intEn(MB_PAR_ERR_INT_EN), .enIn(MB_PAR_ERR_EN_IN),
+                   .cond(MBOX.MB_PAR_ERR), .err(APR.MB_PAR_ERR), .in(MB_PAR_ERR_IN));
+
+  // APR2 p.383
+  APRhandler ebus10(.*, .ebusBit(EBUS.data[10]),
+                    .intEn(C_DIR_P_ERR_INT_EN), .enIn(C_DIR_P_ERR_EN_IN),
+                    .cond(MBOX.CSH_ADR_PAR_ERR), .err(APR.C_DIR_P_ERR), .in(C_DIR_P_ERR_IN));
+
+  APRhandler ebus11(.*, .ebusBit(EBUS.data[11]),
+                    .intEn(S_ADR_P_ERR_INT_EN), .enIn(S_ADR_P_ERR_EN_IN),
+                    .cond(MBOX.MB_PAR_ERR), .err(APR.S_ADR_P_ERR), .in(S_ADR_P_ERR_IN));
+
+  APRhandler ebus12(.*, .ebusBit(EBUS.data[12]),
+                    .intEn(PWR_FAIL_INT_EN), .enIn(PWR_FAIL_EN_IN),
+                    .cond(PWR_WARN), .err(PWR_FAIL), .in(PWR_FAIL_IN));
+
+  APRhandler ebus13(.*, .ebusBit(EBUS.data[13]),
+                    .intEn(SWEEP_DONE_INT_EN), .enIn(SWEEP_DONE_EN_IN),
+                    .cond(~SWEEP_BUSY_EN & SWEEP_BUSY), .err(SWEEP_DONE), .in(SWEEP_DONE_IN));
+
+/*
   `APRInt(6, SBUS_ERR_INT_EN, SBUS_ERR_EN_IN);
   `APREvent(6, MBOX.SBUS_ERR, APR.SBUS_ERR, SBUS_ERR_IN);
 
@@ -92,7 +107,7 @@ module apr(iAPR APR,
 
   `APRInt(13, SWEEP_DONE_INT_EN, SWEEP_DONE_EN_IN);
   `APREvent(13, ~SWEEP_BUSY_EN & SWEEP_BUSY, SWEEP_DONE, SWEEP_DONE_IN);
-
+*/
   assign APR.APR_INTERRUPT = APR.SBUS_ERR & SBUS_ERR_INT_EN |
                              APR.NXM_ERR & NXM_ERR_INT_EN |
                              APR.IO_PF_ERR & IO_PF_ERR_INT_EN |
@@ -105,8 +120,7 @@ module apr(iAPR APR,
                               CON.WR_EVEN_PAR_ADR &
                               ~MBOX.MBOX_ADR_PAR_ERR;
 
-  always_ff @(posedge clk)
-    APR.ANY_EBOX_ERR_FLG <= NXM_ERR_IN | MB_PAR_ERR_IN | S_ADR_P_ERR_IN;
+  msff e25q13ff(.*, .d(NXM_ERR_IN | MB_PAR_ERR_IN | S_ADR_P_ERR_IN), .q(APR.ANY_EBOX_ERR_FLG));
 
   // APR3 p.384
   bit [0:3] e14SR;
@@ -387,3 +401,31 @@ module apr(iAPR APR,
   assign APR.EBOX_CCA = e7out[0] & e7out[1] & e7out[3] & REG_FUNC_EN;
   assign APR.EBOX_ERA = e7out[1] & e7out[2] & e7out[3] & REG_FUNC_EN;
 endmodule // apr
+
+
+module APRhandler(iCON CON,
+                  input bit clk,
+                  input bit RESET,
+                  input bit ebusBit,
+                  input bit cond,
+                  output bit intEn,
+                  output bit enIn,
+                  output bit err,
+                  output bit in);
+// I wanted to use nested modules for this but they broke xelab (SIGSEGV).
+// `m` is the EBUS.data[m] bit number.
+// `e` is the Q output of the flop (XXX_INT_EN).
+// `i` is the combinatorial output (XXX_EN_IN).
+  assign enIn = CON.SEL_EN & ebusBit | intEn & ~RESET & CON.SEL_DIS & ebusBit;
+  msff msff1(.clk(clk), .d(enIn), .q(intEn));
+
+// `m` is the EBUS.data[m] bit number.
+// `o` is the singleton OR condition at the bottom of the combinatorial junk.
+// `e` is the Q output of the flop (XXX_ERR).
+// `i` is the combinatorial output (XXX_IN).
+  assign in = CON.SEL_SET & ebusBit |
+            ~CON.SEL_CLR & err & ~RESET |
+             err & ~ebusBit & ~RESET |
+             cond;
+  msff msff2(.clk(clk), .d(in), .q(err));
+endmodule

@@ -149,10 +149,11 @@ module pi(iAPR APR,
            .CLK(clk),
            .Q({TIM[5:7], COMP}));
 
-  // e31, e44, e34
-  always_ff @(posedge TIM[3]) PHY_NO <= EBUS.data[0:15];
-  always_ff @(posedge TIM[3]) DK20_REQUESTING <= DK20_PHY_NO;
-  always_ff @(posedge TIM[3]) APR_REQUESTING <= APR_PHY_NO;
+  // e31, e44, e34 are hex MS FFs
+  msff6 e31ff(.clk(TIM[3]), .d(EBUS.data[0:5]), .q(PHY_NO[0:5]));
+  msff6 e44ff(.clk(TIM[3]), .d(EBUS.data[6:11]), .q(PHY_NO[6:11]));
+  msff6 e34ff(.clk(TIM[3]), .d({EBUS.data[12:15], DK20_PHY_NO, APR_PHY_NO}),
+              .q({PHY_NO[12:15], DK20_REQUESTING, APR_REQUESTING}));
 
   bit [1:3] ignoredE3;
   USR4  e3(.S0(1'b0),

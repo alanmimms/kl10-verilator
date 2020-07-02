@@ -226,33 +226,24 @@ module mbc(iAPR APR,
   assign ANY_SBUS_RQ_IN = |MBX.RQ_IN;
   assign MBC.CORE_BUSY = CORE_BUSY;
 
-  always_ff @(posedge clk) MBC.A_CHANGE_COMING <= MBOX.A_CHANGE_COMING_IN;
-  always_ff @(posedge clk) MBC.B_CHANGE_COMING <= ~MBOX.PHASE_CHANGE_COMING & ~CLK_A_PHASE_COMING;
-  always_ff @(posedge clk) e56q13 <= RESET;
-  always_ff @(posedge clk) e20q15 <= ~A_PHASE | e56q13 & ~RESET;
-  always_ff @(posedge clk) e25q15 <= (~A_PHASE | e56q13 & ~RESET) ^ CLK_A_PHASE_COMING;
-  always_ff @(posedge clk) A_PHASE <= MBC.A_PHASE_COMING;
-
-  always_ff @(posedge clk)
-    MBC.INH_1ST_MB_REQ <= CSH.E_CORE_RD_RQ | ~CSH_VAL_WR_PULSE & MBC.INH_1ST_MB_REQ & ~RESET;
-
-  always_ff @(posedge clk) FIRST_WD_ADR_SEL <= MBC.INH_1ST_MB_REQ;
-
-  always_ff @(posedge clk)
-    MBOX.DATA_VALID_A_OUT <= (MBOX.DATA_VALID_A_OUT | MBC.A_CHANGE_COMING) &
-                             (~MBC.A_CHANGE_COMING |
-                              MBX.CACHE_TO_MB_T2 & CSH.RD_PAUSE_2ND_HALF);
-  
-  always_ff @(posedge clk)
-    MBOX.DATA_VALID_B_OUT <= (MBOX.DATA_VALID_B_OUT | MBC.B_CHANGE_COMING) &
-                              (~MBC.B_CHANGE_COMING |
-                               MBX.CACHE_TO_MB_T2 & CSH.RD_PAUSE_2ND_HALF);
-  
-  always_ff @(posedge clk)
-    // This drives <EE1> CORE BUSY A H as well.
-    CORE_BUSY <= (CORE_BUSY & ~MBC.CORE_DATA_VALID |
-                  MBX.CACHE_TO_MB_T2 & CSH.RD_PAUSE_2ND_HALF) &
-                 ~RESET;
+  msff e25q3ff(.*, .d(MBOX.A_CHANGE_COMING_IN), .q(MBC.A_CHANGE_COMING));
+  msff e51q3ff(.*, .d(~MBOX.PHASE_CHANGE_COMING & ~CLK_A_PHASE_COMING), .q(MBC.B_CHANGE_COMING));
+  msff e20q15ff(.*, .d(~A_PHASE | e56q13 & ~RESET), .q(e20q15));
+  msff e25q15ff(.*, .d((~A_PHASE | e56q13 & ~RESET) ^ CLK_A_PHASE_COMING), .q(e25q15));
+  msff e51q14ff(.*, .d(MBC.A_PHASE_COMING), .q(A_PHASE));
+  msff e20q4ff(.*, .d(CSH.E_CORE_RD_RQ | ~CSH_VAL_WR_PULSE & MBC.INH_1ST_MB_REQ & ~RESET),
+               .q(MBC.INH_1ST_MB_REQ));
+  msff e20q13ff(.*, .d(MBC.INH_1ST_MB_REQ), .q(FIRST_WD_ADR_SEL));
+  msff e25q14ff(.*, .d((MBOX.DATA_VALID_A_OUT | MBC.A_CHANGE_COMING) &
+                       (~MBC.A_CHANGE_COMING | MBX.CACHE_TO_MB_T2 & CSH.RD_PAUSE_2ND_HALF)),
+                .q(MBOX.DATA_VALID_A_OUT));
+  msff e25q2ff(.*, .d((MBOX.DATA_VALID_B_OUT | MBC.B_CHANGE_COMING) &
+                      (~MBC.B_CHANGE_COMING | MBX.CACHE_TO_MB_T2 & CSH.RD_PAUSE_2ND_HALF)),
+               .q(MBOX.DATA_VALID_B_OUT));
+  // This drives <EE1> CORE BUSY A H as well.
+  msff e56q14ff(.*, .d((CORE_BUSY & ~MBC.CORE_DATA_VALID | MBX.CACHE_TO_MB_T2 & CSH.RD_PAUSE_2ND_HALF) &
+                 ~RESET),
+                .q(CORE_BUSY));
 
 
   // MBC4 p.192
@@ -280,18 +271,16 @@ module mbc(iAPR APR,
                      & ~MBC.CORE_ADR[34] & ~MBC.CORE_ADR[35] & MEM_START_RD;
   assign MEM_START_RD = (MBOX.MEM_START_A | MBOX.MEM_START_B) & MBOX.MEM_RD_RQ;
 
-  always_ff @(posedge clk)
-    MBOX.MEM_START_A <= MBOX.MEM_START_A & ~MEM_START_CLR |
-                       ~MBOX.MEM_START_B & MBC.A_CHANGE_COMING & MEM_START_SET;
-  
-  always_ff @(posedge clk)
-    MBOX.MEM_START_B <= MBOX.MEM_START_B & ~MEM_START_CLR |
-                       ~MBOX.MEM_START_A & MBC.B_CHANGE_COMING & MEM_START_SET;
-  
-  always_ff @(posedge clk) LAST_ACKN_SEEN <= LAST_ACKN | ~MBOX.PHASE_CHANGE_COMING & LAST_ACKN_SEEN;
-  always_ff @(posedge clk) MBC.CORE_DATA_VALminus1 <= CORE_DATA_VALIDminus2;
-  always_ff @(posedge clk) MBC.CORE_DATA_VALID <= MBC.CORE_DATA_VALminus1;
-  always_ff @(posedge clk) CORE_RD_IN_PROG <= INIT_COMP;
+  msff e51q4ff(.*, .d(MBOX.MEM_START_A & ~MEM_START_CLR |
+                      ~MBOX.MEM_START_B & MBC.A_CHANGE_COMING & MEM_START_SET),
+               .q(MBOX.MEM_START_A));
+  msff e51q2ff(.*, .d(MBOX.MEM_START_B & ~MEM_START_CLR |
+                      ~MBOX.MEM_START_A & MBC.B_CHANGE_COMING & MEM_START_SET),
+               .q(MBOX.MEM_START_B));
+  msff e56q2ff(.*, .d(LAST_ACKN | ~MBOX.PHASE_CHANGE_COMING & LAST_ACKN_SEEN), .q(LAST_ACKN_SEEN));
+  msff e61q3ff(.*, .d(CORE_DATA_VALIDminus2), .q(MBC.CORE_DATA_VALminus1));
+  msff e61q2ff(.*, .d(MBC.CORE_DATA_VALminus1), .q(MBC.CORE_DATA_VALID));
+  msff e51q13ff(.*, .d(INIT_COMP), .q(CORE_RD_IN_PROG));
 
   bit [0:1] ignoredE76;
   UCR4 e76(.CIN(1'b1),
@@ -349,9 +338,8 @@ module mbc(iAPR APR,
   assign MBOX.FORCE_VALID_MATCH[3] = MBOX.CSH_WR_EN[3] & CSH.DATA_CLR_DONE | MBX.FORCE_MATCH_EN |
                                      MBOX.PMA[34] &  MBOX.PMA[35] & MBX.CCA_ALL_PAGES_CYC;
 
-  always_ff @(posedge clk)
-    e56q4 <= MBC.CSH_DATA_CLR_T1 & CSH.E_CACHE_WR_CYC |
-             ~CSH.EBOX_WR_T4_IN & e56q4 & ~RESET;
+  msff e56q4ff(.*, .d(MBC.CSH_DATA_CLR_T1 & CSH.E_CACHE_WR_CYC | ~CSH.EBOX_WR_T4_IN & e56q4 & ~RESET),
+               .q(e56q4));
 
   mux e38(.en(CTL.DIAG_READ_FUNC_16x),
           .sel(CTL.DIAG[4:6]),

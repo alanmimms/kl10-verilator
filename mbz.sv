@@ -60,16 +60,18 @@ module mbz(iAPR APR,
   assign CORE_RD_IN_PROG = ~RESET & MBOX.CORE_RD_IN_PROG;
 
   bit e51q14;
-  always_ff @(posedge clk) CHAN_CORE_BUSY <= CHAN_CORE_BUSY_IN;
-  always_ff @(posedge clk) MBZ.RD_PSE_WR_REF <= MEM_RD_RQ & MEM_WR_RQ & MEM_START_C |
-                                                // -MBZ4 CORE BUSY A L on MBZ1 B8 p.303. XXX
-                                                ~MBOX.CORE_BUSY & MBZ.RD_PSE_WR_REF & ~RESET;
+  msff e30q4ff(.*, .d(CHAN_CORE_BUSY_IN), .q(CHAN_CORE_BUSY));
+  msff e51q15ff(.*, .d(MEM_RD_RQ & MEM_WR_RQ & MEM_START_C |
+                       // -MBZ4 CORE BUSY A L on MBZ1 B8 p.303. XXX
+                       ~MBOX.CORE_BUSY & MBZ.RD_PSE_WR_REF & ~RESET),
+                .q(MBZ.RD_PSE_WR_REF));
+
   // <DH2> CORE BUSY L and <DM2> CORE BUSY H latched and driven on MBZ1 D3.
-  always_ff @(posedge clk) MBOX.CORE_BUSY <= CHAN_CORE_BUSY | MEM_START_C |
-                                             CORE_BUSY_IN | CORE_RD_IN_PROG | MBOX.MB_REQ_HOLD;
-  always_ff @(posedge clk) CHAN_TO_MEM <= CCL.CHAN_TO_MEM & MBOX.CSH_CHAN_CYC |
-                                          ~MBOX.CSH_CHAN_CYC & CHAN_TO_MEM & ~RESET;
-  always_ff @(posedge clk) e51q14 <= CORE_RD_IN_PROG;
+  msff e30q14ff(.*, .d(CHAN_CORE_BUSY | MEM_START_C | CORE_BUSY_IN | CORE_RD_IN_PROG | MBOX.MB_REQ_HOLD),
+                .q(MBOX.CORE_BUSY));
+  msff e30q2ff(.*, .d(CCL.CHAN_TO_MEM & MBOX.CSH_CHAN_CYC | ~MBOX.CSH_CHAN_CYC & CHAN_TO_MEM & ~RESET),
+               .q(CHAN_TO_MEM));
+  msff e51q14ff(.*, .d(CORE_RD_IN_PROG), .q(e51q14));
 
   bit [0:2] e47Q;
   priority_encoder8 e47(.d({2'b00,
@@ -238,18 +240,16 @@ module mbz(iAPR APR,
   assign HOLD_ERR_REG = ERR_HOLD | NXM_FLG;
   assign e72q2 = e68q4 | RESET;
 
-  always_ff @(posedge clk) NXM_FLG <= NXM_CRY_A & NXM_CRY_B & MEM_START_C |
-                                      NXM_FLG & ~NXM_CLR_DONE & ~RESET;
+  msff e57q14ff(.*, .d(NXM_CRY_A & NXM_CRY_B & MEM_START_C | NXM_FLG & ~NXM_CLR_DONE & ~RESET), .q(NXM_FLG));
   // <DH2> CORE BUSY L on MBZ3 B7.
-  always_ff @(posedge clk) CHAN_MEM_REF <= MEM_START_C & CHAN_CORE_BUSY |
-                                           MBOX.CORE_BUSY & CHAN_MEM_REF & ~RESET;
-  always_ff @(posedge clk) A_CHANGE_COMING <= MBOX.A_CHANGE_COMING_IN;
-  always_ff @(posedge clk) MBOX.NXM_ERR <= NXM_CLR_DONE |
-                                           MBOX.NXM_ERR & ~MBOX_NXM_ERR_CLR & ~RESET;
-  always_ff @(posedge clk) e51q2 <= MBOX.NXM_ERR;
-  always_ff @(posedge clk) RQ_HOLD_DLY <= e71q7;
-  always_ff @(posedge clk) e68q4 <= MBOX.A_CHANGE_COMING_IN ^ e72q2;
-  always_ff @(posedge clk) e57q3 <= e72q2 & MBOX.A_CHANGE_COMING_IN;
+  msff e57q15ff(.*, .d(MEM_START_C & CHAN_CORE_BUSY | MBOX.CORE_BUSY & CHAN_MEM_REF & ~RESET),
+                .q(CHAN_MEM_REF));
+  msff e57q4ff(.*, .d(MBOX.A_CHANGE_COMING_IN), .q(A_CHANGE_COMING));
+  msff e51q3ff(.*, .d(NXM_CLR_DONE | MBOX.NXM_ERR & ~MBOX_NXM_ERR_CLR & ~RESET), .q(MBOX.NXM_ERR));
+  msff e51q2ff(.*, .d(MBOX.NXM_ERR), .q(e51q2));
+  msff e57q13ff(.*, .d(e71q7), .q(RQ_HOLD_DLY));
+  msff e68q4ff(.*, .d(MBOX.A_CHANGE_COMING_IN ^ e72q2), .q(e68q4));
+  msff e57q3ff(.*, .d(e72q2 & MBOX.A_CHANGE_COMING_IN), .q(e57q3));
 
   UCR4 e53(.SEL({MEM_START_C, 1'b0}),
            .D('0),
@@ -267,26 +267,28 @@ module mbz(iAPR APR,
 
   // MBZ4 p.306
   bit e57q2, e25q2, e25q15, e25q3, e30q13;
-  always_ff @(posedge clk) e57q2 <= e57q2 & MEM_START_C |
-                                    MBOX.ACKN_PULSE & MEM_START_C;
-  always_ff @(posedge clk) e25q2 <= NXM_FLG;
-  always_ff @(posedge clk) NXM_T2 <= NXM_FLG & ~e25q2 |
-                                     ~e57q2 & ~NXM_FLG & MEM_START_C & MBOX.ACKN_PULSE;
-  always_ff @(posedge clk) NXM_T3 <= NXM_T2;
-  always_ff @(posedge clk) NXM_T4 <= NXM_T3;
-  always_ff @(posedge clk) NXM_T5 <= NXM_T4;
-  always_ff @(posedge clk) NXM_T6 <= NXM_T4;
-  always_ff @(posedge clk) e25q15 <= NXM_T6 & MEM_RD_RQ;
-  always_ff @(posedge clk) SBUS_ERR_FLG <= MBOX.MEM_ERROR & A_CHANGE_COMING |
-                                           ~APR.SBUS_ERR & MBOX.SBUS_ERR & ~RESET;
-  always_ff @(posedge clk) MB_PAR_ERR <= ~MBOX.MB_PAR_ODD & MB_TEST_PAR_B_IN |
-                                         ~MBOX.MB_PAR_ODD & MB_TEST_PAR_A_IN & ~APR.MB_PAR_ERR |
-                                         MBOX.MB_PAR_ERR & ~RESET & ~APR.MB_PAR_ERR |
-                                         ~MBOX.MB_PAR_ODD & MBOX.ACKN_PULSE & ~MEM_RD_RQ;
-  always_ff @(posedge clk) ADR_PAR_ERR_FLG <= MBOX.MEM_ADR_PAR_ERR & A_CHANGE_COMING |
-                                              ~APR.S_ADR_P_ERR & MBOX.MBOX_ADR_PAR_ERR & ~RESET;
-  always_ff @(posedge clk) e25q3 <= ADR_PAR_ERR_FLG;
-  always_ff @(posedge clk) e30q13 <= MB_PAR_ERR;
+  msff e57q2ff(.*, .d(e57q2 & MEM_START_C | MBOX.ACKN_PULSE & MEM_START_C), .q(e57q2));
+  msff e25q2ff(.*, .d(NXM_FLG), .q(e25q2));
+  msff e25q15ff(.*, .d(NXM_T6 & MEM_RD_RQ), .q(e25q15));
+
+  msff e68q2ff(.*, .d(NXM_FLG & ~e25q2 | ~e57q2 & ~NXM_FLG & MEM_START_C & MBOX.ACKN_PULSE), .q(NXM_T2));
+  msff e68q3ff(.*, .d(NXM_T2), .q(NXM_T3));
+  msff e68q13ff(.*, .d(NXM_T3), .q(NXM_T4));
+  msff e68q14ff(.*, .d(NXM_T4), .q(NXM_T5));
+  msff e68q15ff(.*, .d(NXM_T5), .q(NXM_T6));
+
+  msff e25q14ff(.*, .d(MBOX.MEM_ERROR & A_CHANGE_COMING | ~APR.SBUS_ERR & MBOX.SBUS_ERR & ~RESET),
+                .q(SBUS_ERR_FLG));
+  msff e30q15ff(.*, .d(~MBOX.MB_PAR_ODD & MB_TEST_PAR_B_IN |
+                       ~MBOX.MB_PAR_ODD & MB_TEST_PAR_A_IN & ~APR.MB_PAR_ERR |
+                       MBOX.MB_PAR_ERR & ~RESET & ~APR.MB_PAR_ERR |
+                       ~MBOX.MB_PAR_ODD & MBOX.ACKN_PULSE & ~MEM_RD_RQ),
+                .q(MB_PAR_ERR));
+  msff e25q13ff(.*, .d(MBOX.MEM_ADR_PAR_ERR & A_CHANGE_COMING |
+                       ~APR.S_ADR_P_ERR & MBOX.MBOX_ADR_PAR_ERR & ~RESET),
+                .q(ADR_PAR_ERR_FLG));
+  msff e25q3ff(.*, .d(ADR_PAR_ERR_FLG), .q(e25q3));
+  msff e30q13ff(.*, .d(MB_PAR_ERR), .q(e30q13));
 
   assign MEM_RD_RQ = MBOX.MEM_RD_RQ;
   assign MEM_WR_RQ = MBOX.MEM_WR_RQ;
@@ -344,8 +346,10 @@ module mbz(iAPR APR,
 
   // e60,e55
   bit [0:1] chBufParRAM[0:127];
-  always_ff @(posedge clk) CH_BUF_ADR <= CRC.CH_BUF_ADR; // Combine E54 hexff and E51q4 dff section
-  always_ff @(posedge clk) CH_REG_HOLD <= ~MBOX.CH_T2;
+  msff6 e54(.*, .d(CRC.CH_BUF_ADR[0:5]), .q(CH_BUF_ADR[0:5]));
+  msff e51q4ff(.*, .d(CRC.CH_BUF_ADR[6]), .q(CH_BUF_ADR[6]));
+  msff e51q13ff(.*, .d(~MBOX.CH_T2), .q(CH_REG_HOLD));
+
   always_ff @(posedge clk) {CH_BUF_00to17_PAR, CH_BUF_18to35_PAR} = chBufParRAM[CH_BUF_ADR];
 
   always_ff @(posedge MBOX.CH_BUF_WR)
