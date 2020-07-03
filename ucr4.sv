@@ -7,25 +7,21 @@ module UCR4(input bit [0:3] D,
             output bit [0:3] Q,
             output bit COUT);
 
-  // Not LOAD or HOLD
-  bit incOrDec = SEL[0] ^ SEL[1];
-
   // CIN overrides CLK when in INC or DEC mode. This signal is the
-  // real clock we have to pay attention to as a result.
+  // real clock for Q.
   bit carryClk /*verilator clocker*/;
-  assign carryClk = incOrDec ? CIN : CLK;
 
   always_comb unique case (SEL)
-              2'b00: COUT = 1;            // LOAD
-              2'b01: COUT = Q == 4'b0000; // DEC
-              2'b10: COUT = Q == 4'b1111; // INC
-              2'b11: COUT = 0;            // HOLD
+              2'b00: begin COUT = 1;            carryClk = CLK; end // LOAD
+              2'b01: begin COUT = Q == 4'b0000; carryClk = CIN; end // DEC
+              2'b10: begin COUT = Q == 4'b1111; carryClk = CIN; end // INC
+              2'b11: begin COUT = 0;            carryClk = CLK; end // HOLD
               endcase
   
   always_ff @(posedge carryClk) unique case (SEL)
                                 2'b00: Q <= D;                    // LOAD
                                 2'b01: Q <= Q - {3'b000, CIN};    // DEC
                                 2'b10: Q <= Q + {3'b000, CIN};    // INC
-                                2'b11: ;                          // HOLD
+                                2'b11: Q <= Q;                    // HOLD
                                 endcase
 endmodule
