@@ -18,7 +18,7 @@ module vma(iAPR APR,
            iVMA VMA
 );
 
-  bit clk /*noverilator clocker*/;
+  bit clk /*verilator clocker*/;
   assign clk = CLK.VMA;
 
   // VMA1 p.354
