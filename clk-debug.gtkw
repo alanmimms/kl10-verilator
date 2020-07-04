@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.105 (w)1999-2020 BSI
-[*] Thu Jul  2 22:03:38 2020
+[*] Fri Jul  3 22:51:51 2020
 [*]
 [dumpfile] "/home/alan/kl10-verilator/kl10pv-trace.vcd"
-[dumpfile_mtime] "Thu Jul  2 01:44:38 2020"
-[dumpfile_size] 30477747
+[dumpfile_mtime] "Fri Jul  3 22:51:02 2020"
+[dumpfile_size] 86814718
 [savefile] "/home/alan/kl10-verilator/clk-debug.gtkw"
-[timestart] 747142
+[timestart] 750038
 [size] 1920 1051
-[pos] -1 -1
-*-7.800191 747875 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] -917 -452
+*-6.800235 750460 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [ruler] 8708 175
 [treeopen] TOP.
 [treeopen] TOP.top.
@@ -18,6 +18,7 @@
 [treeopen] TOP.top.ebox0.edp0.ADaluE1E2(18).
 [treeopen] TOP.top.ebox0.edp0.ADaluE1E2(24).
 [treeopen] TOP.top.ebox0.edp0.ADaluE1E2(30).
+[treeopen] TOP.top.ebox0.vma0.
 [treeopen] TOP.top.mbox0.mbx0.
 [treeopen] TOP.top.memory0.aPhase.
 [treeopen] TOP.top.memory0.bPhase.
@@ -26,6 +27,11 @@
 [signals_width] 337
 [sst_expanded] 1
 [sst_vpaned_height] 532
+@30
+[color] 2
++{TOP.top.CLK.CRA} TOP.top.CLK.CRA
+@31
++{CRADR} TOP.top.CRA.CRADR[0:10]
 @800200
 -start
 @28
@@ -96,10 +102,6 @@ TOP.top.CLK.MCL
 TOP.top.ebox0.CLK.EDP
 @1401200
 -all-clocks
-@30
-[color] 2
-+{TOP.top.CLK.CRA} TOP.top.CLK.CRA
-+{CRADR} TOP.top.CRA.CRADR[0:10]
 @c00200
 -CRAM
 @28
@@ -157,17 +159,46 @@ TOP.top.ebox0.CRAM.TIME[0:1]
 TOP.top.ebox0.CRAM.VMA[0:1]
 @1401200
 -CRAM
-@800200
+@c00200
 -VMA
+@28
+[color] 2
+TOP.top.ebox0.vma0.clk
+TOP.top.ebox0.MCL.VMAX_EN
+TOP.top.ebox0.MCL.VMAX_SEL[0:1]
+TOP.top.ebox0.MCL.VMA_AD
+TOP.top.ebox0.CON.VMA_SEL[0:1]
 @30
 TOP.top.ebox0.VMA.VMA[12:35]
 TOP.top.ebox0.vma0.VMA_AD[18:35]
 TOP.top.ebox0.vma0.VMA_IN[12:17]
+@c00030
 TOP.top.ebox0.vma0.vmaMux[18:35]
-@1000200
+@28
+(0)TOP.top.ebox0.vma0.vmaMux[18:35]
+(1)TOP.top.ebox0.vma0.vmaMux[18:35]
+(2)TOP.top.ebox0.vma0.vmaMux[18:35]
+(3)TOP.top.ebox0.vma0.vmaMux[18:35]
+(4)TOP.top.ebox0.vma0.vmaMux[18:35]
+(5)TOP.top.ebox0.vma0.vmaMux[18:35]
+(6)TOP.top.ebox0.vma0.vmaMux[18:35]
+(7)TOP.top.ebox0.vma0.vmaMux[18:35]
+(8)TOP.top.ebox0.vma0.vmaMux[18:35]
+(9)TOP.top.ebox0.vma0.vmaMux[18:35]
+(10)TOP.top.ebox0.vma0.vmaMux[18:35]
+(11)TOP.top.ebox0.vma0.vmaMux[18:35]
+(12)TOP.top.ebox0.vma0.vmaMux[18:35]
+(13)TOP.top.ebox0.vma0.vmaMux[18:35]
+(14)TOP.top.ebox0.vma0.vmaMux[18:35]
+(15)TOP.top.ebox0.vma0.vmaMux[18:35]
+(16)TOP.top.ebox0.vma0.vmaMux[18:35]
+(17)TOP.top.ebox0.vma0.vmaMux[18:35]
+@1401200
+-group_end
 -VMA
 @c00200
 -EDPstate
+@800200
 -EDPregs
 @30
 TOP.top.ebox0.CTL.AR00to08_LOAD
@@ -224,7 +255,7 @@ TOP.top.EDP.BRX[0:35]
 TOP.top.ebox0.EDP.FM[0:35]
 [color] 3
 TOP.top.ebox0.EDP.ADX[0:35]
-@1401200
+@1000200
 -EDPregs
 @30
 +{CRADR} TOP.top.CRA.CRADR[0:10]
@@ -309,17 +340,14 @@ TOP.top.ebox0.CON.NICOND[7:10]
 -CON-nicond
 @800200
 -MBOX
+@30
++{CRADR} TOP.top.CRA.CRADR[0:10]
 @28
 TOP.top.ebox0.CSH.MBOX_RESP_IN
 TOP.top.ebox0.clk0.CLK.RESP_MBOX
 TOP.top.ebox0.CON.FM_XFER
 TOP.top.ebox0.CLK.MB_XFER
 TOP.top.ebox0.MCL.MBOX_CYC_REQ
-@29
-TOP.top.ebox0.con0.clk
-@28
-TOP.top.ebox0.con0.e57q13
-TOP.top.ebox0.con0.e57q14
 TOP.top.ebox0.con0.MEM_CYCLE
 TOP.top.ebox0.clk0.CON.MBOX_WAIT
 @30
