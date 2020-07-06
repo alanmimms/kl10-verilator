@@ -111,6 +111,8 @@ static const W36 B35 = 1ull << (35 - 35);
 static int toDTE[2], toFE[2];
 static pid_t fePID;
 
+static W36 firstInsn;
+
 
 #include "dte.h"
 
@@ -299,7 +301,7 @@ static W36 fileWordToWord(unsigned char fw[]) {
 
 
 // Load the BOOT.EXE into memory and return the boot address.
-static W36 loadBootstrap() {
+static W36 loadBootstrap(W36 *firstInsnP) {
   LL startTicks = nextReqTicks;
   printf("\n");
   TLOG("[Loading BOOT.EXE]\n");
@@ -327,6 +329,7 @@ static W36 loadBootstrap() {
       w = fileWordToWord(fw);
       if (addr < minAddr) minAddr = addr;
       if (addr > maxAddr) maxAddr = addr;
+      if (addr == 040000ull) *firstInsnP = w;
       doWriteMemory(addr, w);
       ++addr;
     }
@@ -349,7 +352,7 @@ static void klReset() {
   FELOG("[clear RUN flop]\n");
   doDiagFunc(diagfCLR_RUN);
 
-  bootAddr = loadBootstrap();
+  bootAddr = loadBootstrap(&firstInsn);
 
   // This is the first phase of DMRMRT table operations.
   FELOG("[clear clock source rate]\n");
@@ -435,7 +438,8 @@ static void startKL(W36 bootAddr) {
   // clock, load AR with our starting PC, and let the HALT loop exit
   // process reset the CRADR to zero (the START entry point).
   // This differs from DTE20 FE but its end effect is the same.
-  TLOG("[load AR with %s]\n", octW(bootAddr));
+  char firstInsnBuf[64];
+  TLOG("[load AR with %s = %s]\n", octW(bootAddr), octW(firstInsn, firstInsnBuf));
   doMiscFunc(loadAR, LH(bootAddr), RH(bootAddr));
   waitFor(50);
 
