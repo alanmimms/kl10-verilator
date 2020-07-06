@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.105 (w)1999-2020 BSI
-[*] Mon Jul  6 16:14:30 2020
+[*] Mon Jul  6 23:06:40 2020
 [*]
 [dumpfile] "/home/alan/kl10-verilator/kl10pv-trace.vcd"
-[dumpfile_mtime] "Mon Jul  6 16:13:21 2020"
-[dumpfile_size] 86863778
+[dumpfile_mtime] "Mon Jul  6 23:06:18 2020"
+[dumpfile_size] 88142719
 [savefile] "/home/alan/kl10-verilator/clk-debug.gtkw"
-[timestart] 749306
+[timestart] 749393
 [size] 1920 1051
 [pos] -1 -1
-*-7.800235 750040 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-7.800235 750060 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [ruler] 8708 175
 [treeopen] TOP.
 [treeopen] TOP.top.
@@ -18,7 +18,7 @@
 [treeopen] TOP.top.ebox0.edp0.ADaluE1E2(18).
 [treeopen] TOP.top.ebox0.edp0.ADaluE1E2(24).
 [treeopen] TOP.top.ebox0.edp0.ADaluE1E2(30).
-[treeopen] TOP.top.ebox0.vma0.
+[treeopen] TOP.top.mbox0.
 [treeopen] TOP.top.mbox0.mbx0.
 [treeopen] TOP.top.memory0.aPhase.
 [treeopen] TOP.top.memory0.bPhase.
@@ -343,8 +343,18 @@ TOP.top.ebox0.clk0.CLK.RESP_MBOX
 TOP.top.ebox0.CON.FM_XFER
 TOP.top.ebox0.CLK.MB_XFER
 TOP.top.ebox0.MCL.MBOX_CYC_REQ
+@29
 TOP.top.ebox0.con0.MEM_CYCLE
+@28
 TOP.top.ebox0.clk0.CON.MBOX_WAIT
+TOP.top.mbox0.CSH.E_CORE_RD_RQ
+TOP.top.mbox0.mbc0.CORE_BUSY
+TOP.top.mbox0.mbc0.CORE_RD_IN_PROG
+TOP.top.mbox0.mbc0.MEM_START_SET
+TOP.top.mbox0.mbc0.MEM_START_CLR
+TOP.top.mbox0.MBC.MEM_START
+TOP.top.mbox0.MBOX.MEM_START_A
+TOP.top.mbox0.MBOX.MEM_START_B
 @30
 [color] 3
 TOP.top.mbox0.PMA.PA[14:35]
