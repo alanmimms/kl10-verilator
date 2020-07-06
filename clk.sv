@@ -161,7 +161,7 @@ module clk(input bit CROBAR,
   assign CLK_ON = (~CLK.ERROR_STOP | DESKEW_CLK) & (SOURCE_DELAYED | DESKEW_CLK);
   assign MBOX = ODD;
 
- `ifdef VERILATOR
+ `ifdef VERILATORnot_needed_because_10176_fix_qqq
     assign SOURCE_DELAYED = ~(ring60[0] | ring60[2]);
  `else
     assign SOURCE_DELAYED = ~GATED;
