@@ -3,10 +3,10 @@
 // MC10176. Latch data on negedge of clk and present on following
 // posedge.
 module msff(input bit clk,
-            input bit d,
-            output bit q);
+            output bit q,
+            input bit d);
 
   bit master;
-  always_comb if (~clk) master = d;
-  always @(posedge clk) q <= master;
+  always_ff @(negedge clk) master <= d;
+  always_ff @(posedge clk) q <= master;
 endmodule

@@ -7,6 +7,6 @@ module msff6(input bit clk,
             output bit [0:5] q);
 
   bit [0:5] master;
-  always @(negedge clk) master <= d;
-  always @(posedge clk) q <= master;
+  always_ff @(negedge clk) master <= d;
+  always_ff @(posedge clk) q <= master;
 endmodule
