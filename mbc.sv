@@ -166,24 +166,21 @@ module mbc(iAPR APR,
 
   assign MBC.DATA_CLR_DONE_IN = MBC.CSH_DATA_CLR_T3 | CSH.DATA_CLR_DONE;
 
-  always_ff @(posedge clk)
-    MBOX.RQ_HOLD_FF <= MBX.CHAN_WR_CYC & CSH.CHAN_T3 |
-                       ~MBC.MEM_START & MBOX.RQ_HOLD_FF & ~RESET;
+  msff e24q14(.*, .d(MBX.CHAN_WR_CYC & CSH.CHAN_T3 | ~MBC.MEM_START & MBOX.RQ_HOLD_FF & ~RESET),
+              .q(MBOX.RQ_HOLD_FF));
 
-  always_ff @(posedge clk)
-    FORCE_BAD_ADR_PAR <= APR.WR_BAD_ADR_PAR & ~MBC.MEM_START |
-                         MBC.MEM_START & FORCE_BAD_ADR_PAR & ~RESET;
+  msff e25q4(.*, .d(APR.WR_BAD_ADR_PAR & ~MBC.MEM_START | MBC.MEM_START & FORCE_BAD_ADR_PAR & ~RESET),
+             .q(FORCE_BAD_ADR_PAR));
 
-  always_ff @(posedge clk)
-    MBC.CSH_DATA_CLR_T1 <= CSH.CLEAR_WR_T0 & WRITE_OK |
-                           CSH.EBOX_T3 & CSH.E_CORE_RD_RQ;
+  msff e24q2(.*, .d(CSH.CLEAR_WR_T0 & WRITE_OK | CSH.EBOX_T3 & CSH.E_CORE_RD_RQ),
+             .q(MBC.CSH_DATA_CLR_T1));
 
-  always_ff @(posedge clk) MBC.CSH_DATA_CLR_T2 <= MBC.CSH_DATA_CLR_T1;
-  always_ff @(posedge clk) MBC.CSH_DATA_CLR_T3 <= MBC.CSH_DATA_CLR_T2;
+  msff e24q3(.*, .d(MBC.CSH_DATA_CLR_T1), .q(MBC.CSH_DATA_CLR_T2));
+  msff e24q15(.*, .d(MBC.CSH_DATA_CLR_T2), .q(MBC.CSH_DATA_CLR_T3));
 
-  always_ff @(posedge clk)
-    MBOX.CSH_SEL_LRU <= MBC.CSH_DATA_CLR_T1 & ~CSH.ANY_VAL_HOLD |
-                        MBC.CSH_DATA_CLR_T2 & ~CSH.ANY_VAL_HOLD;
+  msff e24q13(.*, .d(MBC.CSH_DATA_CLR_T1 & ~CSH.ANY_VAL_HOLD |
+                     MBC.CSH_DATA_CLR_T2 & ~CSH.ANY_VAL_HOLD),
+              .q(MBOX.CSH_SEL_LRU));
 
 
   // MBC3 p.191

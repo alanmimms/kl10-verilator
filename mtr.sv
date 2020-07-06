@@ -115,8 +115,8 @@ module mtr(iCHC CHC,
   msff e16q4ff(.clk(e16Clk), .d(mtrEBUS[22]), .q(EXEC_ACCT_EN));
   msff e16q13ff(.clk(e16Clk), .d(mtrEBUS[23]), .q(ACCT_ON));
 
-  always_ff @(posedge CONO_MTR, posedge RESET) if (RESET) TIME_ON <= 0;
-                                               else TIME_ON <= TIME_ON & ~mtrEBUS[24] | mtrEBUS[25];
+  msffAsyncSetClear e10q2ff(.clk(CONO_MTR), .set(0), .clear(RESET),
+                            .d(TIME_ON & ~mtrEBUS[24] | mtrEBUS[25]), .q(TIME_ON));
 
   UCR4 e88(.CIN(1'b1),
            .SEL({1'b0, COUNT_TEN_USEC}),
@@ -150,7 +150,6 @@ module mtr(iCHC CHC,
   assign NO_MATCH_14to17 = PERIOD[14:17] != INTERVAL[14:17];
   assign INTERVAL_MATCH = ~NO_MATCH_06to09 & ~NO_MATCH_10to13 & ~NO_MATCH_14to17 &
                           ~INTERVAL_MATCH_INH;
-  assign INTERVAL_OFF = ~INTERVAL_ON;
   assign CLR_INTERVAL = RESET_INTERVAL | INTERVAL_MATCH;
   assign e42q6 = ~RESET_INTERVAL & ~INTERVAL_MATCH & INTERVAL_CRY;
   assign MTR.VECTOR_INTERRUPT = ~INTERVAL_DONE;
@@ -171,27 +170,24 @@ module mtr(iCHC CHC,
   msff6 e45ff(.clk(CONO_TIM), .d(mtrEBUS[24:29]), .q(PERIOD[6:11]));
   msff6 e82ff(.clk(CONO_TIM), .d(mtrEBUS[30:35]), .q(PERIOD[12:17]));
 
-  always_ff @(posedge INTERVAL_CLK) if (CONO_TIM) INTERVAL_MATCH_INH <= 1;
-                                    else INTERVAL_MATCH_INH <= INTERVAL_OFF;
+  msffAsyncSetClear e9q15ff(.clk(CONO_TIM), .set(0), .clear(RESET), .d(mtrEBUS[21]), .q(INTERVAL_ON));
+  assign INTERVAL_OFF = ~INTERVAL_ON;
 
-  always_ff @(posedge INTERVAL_CLK) if (CONO_TIM & mtrEBUS[18]) RESET_INTERVAL <= 1;
-                                    else RESET_INTERVAL <= RESET;
+  msffAsyncSetClear e10q15ff(.clk(INTERVAL_CLK), .set(0), .clear(RESET),
+                             .d(INTERVAL_OFF), .q(INTERVAL_MATCH_INH));
+  msffAsyncSetClear e9q2ff(.clk(INTERVAL_CLK), .set(CONO_TIM | mtrEBUS[18]), .clear(RESET),
+                             .d(RESET), .q(RESET_INTERVAL));
+  bit e6q2;
+  assign e6q2 = (CONO_TIM | RESET) & (mtrEBUS[22] | RESET);
+  msffAsyncSetClear e3q2ff(.clk(INTERVAL_CLK), .set(0), .clear(e6q2),
+                             .d(e42q6 | INTERVAL_OVRFLO), .q(INTERVAL_OVRFLO));
 
-  always_ff @(posedge INTERVAL_CLK) if ((CONO_TIM | RESET) & (mtrEBUS[22] & RESET)) INTERVAL_OVRFLO <= 0;
-                                    else INTERVAL_OVRFLO <= e42q6 | INTERVAL_OVRFLO;
+  msffAsyncSetClear e3q15ff(.clk(INTERVAL_CLK), .set(0), .clear(e6q2),
+                             .d(e42q6 | INTERVAL_DONE | INTERVAL_MATCH), .q(INTERVAL_DONE));
 
-  always_ff @(posedge INTERVAL_CLK) if ((CONO_TIM | RESET) & (mtrEBUS[22] & RESET)) INTERVAL_DONE <= 0;
-                                    else INTERVAL_DONE <= INTERVAL_DONE | e42q6 | INTERVAL_MATCH;
-
-  bit clk1;
-  assign clk1 = TIME_CLK | RESET_PLSD;
-  always @(posedge clk1, posedge RESET_TIME) if (RESET_TIME) CLR_TIME <= 1;
-                                             else CLR_TIME <= RESET;
-
-  bit clk2;
-  assign clk2 = PERF_CNT_CLK | RESET_PLSD;
-  always @(posedge clk2, posedge RESET_PERF) if (RESET_PERF) CLR_PERF_CNT <= 1;
-                                             else CLR_PERF_CNT <= RESET;
+  msffAsyncSetClear e14q2ff(.clk(TIME_CLK | RESET_PLSD), .set(RESET_TIME), .clear(0), .d(RESET), .q(CLR_TIME));
+  msffAsyncSetClear e14q15ff(.clk(PERF_CNT_CLK | RESET_PLSD), .set(RESET_PERF), .clear(0), .d(RESET),
+                             .q(CLR_PERF_CNT));
 
 
   // MTR4 p.327

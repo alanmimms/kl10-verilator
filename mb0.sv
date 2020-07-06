@@ -160,9 +160,10 @@ module mb0(iCCL CCL,
   assign MB_CH_BUF_LOAD = MBOX.CH_T0;
 
   // e74, e48, e10
-  always_ff @(posedge clk) CH_BUF_ADR[0:6] <= CRC.CH_BUF_ADR[0:6];
-  always_ff @(posedge clk) CH_BUF_EN <= CCL.CH_BUF_EN;
-  always_ff @(posedge clk) CH_REG_HOLD <= ~MBOX.CH_T2;
+  msff6 e7448ff(.*, .d(CRC.CH_BUF_ADR[0:5]), .q(CH_BUF_ADR[0:5]));
+  msff e10ffa(.*, .d(CRC.CH_BUF_ADR[6]), .q(CH_BUF_ADR[6]));
+  msff e10ffb(.*, .d(CCL.CH_BUF_EN), .q(CH_BUF_EN));
+  msff e10ffc(.*, .d(~MBOX.CH_T2), .q(CH_REG_HOLD));
 
   // e58, e43, e14
   always_ff @(posedge clk) if (MB_CH_BUF_LOAD) MB_CH_BUF <= CH_BUF;

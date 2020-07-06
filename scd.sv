@@ -160,17 +160,10 @@ module scd(iAPR APR,
   assign clk = CLK.SCD;
 
   bit [0:9] SCM;
-  bit [0:9] scMaster;
+  bit e78X;
+  msff6 e78(.clk(clk), .d({1'b0, {2{SCM[0]}}, SCM[1:3]}), .q({e78X, SCD.SC_SIGN, SCD.SC[0:3]}));
+  msff6 e70(.clk(clk), .d(SCM[4:9]), .q(SCD.SC[4:9]));
 
-
-  // 10176 is MS FF which means data it latched on negedge then
-  // presented on posedge.
-  always_ff @(negedge clk) scMaster <= SCM;
-
-  always_ff @(posedge clk) begin
-    SCD.SC_SIGN <= scMaster[0];
-    SCD.SC <= scMaster;
-  end
 
   // FE shift register
   bit RESET, ignoreE68;
@@ -377,30 +370,24 @@ module scd(iAPR APR,
 
   assign CON.NICOND[10] = (TRAP_REQ_1 | TRAP_REQ_2) & CON.TRAP_EN & CON.NICOND_TRAP_EN;
 
-  always_ff @(posedge clk) begin
-    SCD.OV <= EDP.AD_OVERFLOW[0] & SET_AD_FLAGS |
-              (LOAD_FLAGS ?
-               (SCD.OV | SCAD[1] & EXP_TEST | CRAM.MAGIC[0] & PCF_MAGIC) :
-                EDP.AR[0]);
-
-    SCD.CRY0 <= EDP.AD_CRY[-2] & SET_AD_FLAGS | (LOAD_FLAGS ? SCD.CRY0 : EDP.AR[1]);
-    SCD.CRY1 <= EDP.AD_CRY[1] & SET_AD_FLAGS | (LOAD_FLAGS ? SCD.CRY1 : EDP.AR[2]);
-
-    SCD.FOV <= (LOAD_FLAGS | SCD.FOV | (SCAD[1] & EXP_TEST | CRAM.MAGIC[0] & PCF_MAGIC)) &
-               (~LOAD_FLAGS | EDP.AR[3]);
-
-    SCD.FXU <= (LOAD_FLAGS | SCD.FXU | (SCAD[0] & EXP_TEST | CRAM.MAGIC[5] & PCF_MAGIC)) &
-               (~LOAD_FLAGS | EDP.AR[11]);
-
-    SCD.DIV_CHK <= (LOAD_FLAGS | SCD.DIV_CHK | CRAM.MAGIC[6] & PCF_MAGIC) & (~LOAD_FLAGS | EDP.AR[12]);
-    SCD.TRAP_CYC_2 <= SCD.TRAP_CYC_2 & ~TRAP_CLEAR | TRAP_REQ_2 & e22p15;
-    SCD.TRAP_CYC_1 <= SCD.TRAP_CYC_1 & TRAP_CLEAR | TRAP_REQ_1 & e22p15;
-    SCD.FPD <= CLR_FPD & SCD.FPD | EDP.AR[4] & LOAD_FLAGS | CRAM.MAGIC[2] & PCF_MAGIC;
-    SCD.PCP <= (LOAD_PCP | SCD.PCP) & (~LOAD_FLAGS | EDP.AR[0] | JFCL);
-  end
+  msff e25q2(.*, .d(EDP.AD_OVERFLOW[0] & SET_AD_FLAGS |
+                    (LOAD_FLAGS ? (SCD.OV | SCAD[1] & EXP_TEST | CRAM.MAGIC[0] & PCF_MAGIC) : EDP.AR[0])),
+             .q(SCD.OV));
+  msff e25q3(.*, .d(EDP.AD_CRY[-2] & SET_AD_FLAGS | (LOAD_FLAGS ? SCD.CRY0 : EDP.AR[1])), .q(SCD.CRY0));
+  msff e25q4(.*, .d(EDP.AD_CRY[1] & SET_AD_FLAGS | (LOAD_FLAGS ? SCD.CRY1 : EDP.AR[2])), .q(SCD.CRY1));
+  msff e25q13(.*, .d((LOAD_FLAGS | SCD.FOV | (SCAD[1] & EXP_TEST | CRAM.MAGIC[0] & PCF_MAGIC)) &
+                     (~LOAD_FLAGS | EDP.AR[3])), .q(SCD.FOV));
+  msff e25q14(.*, .d((LOAD_FLAGS | SCD.FXU | (SCAD[0] & EXP_TEST | CRAM.MAGIC[5] & PCF_MAGIC)) &
+                     (~LOAD_FLAGS | EDP.AR[11])), .q(SCD.FXU));
+  msff e25q15(.*, .d((LOAD_FLAGS | SCD.DIV_CHK | CRAM.MAGIC[6] & PCF_MAGIC) & (~LOAD_FLAGS | EDP.AR[12])),
+              .q(SCD.DIV_CHK));
+  msff e9q2(.*, .d(TRAP_REQ_2_EN), .q(TRAP_REQ_2));
+  msff e9q3(.*, .d(SCD.TRAP_CYC_2 & ~TRAP_CLEAR | TRAP_REQ_2 & e22p15), .q(SCD.TRAP_CYC_2));
+  msff e9q4(.*, .d(TRAP_REQ_1_EN), .q(TRAP_REQ_1));
+  msff e9q13(.*, .d(SCD.TRAP_CYC_1 & TRAP_CLEAR | TRAP_REQ_1 & e22p15), .q(SCD.TRAP_CYC_1));
+  msff e9q14(.*, .d(CLR_FPD & SCD.FPD | EDP.AR[4] & LOAD_FLAGS | CRAM.MAGIC[2] & PCF_MAGIC), .q(SCD.FPD));
+  msff e9q15(.*, .d((LOAD_PCP | SCD.PCP) & (~LOAD_FLAGS | EDP.AR[0] | JFCL)), .q(SCD.PCP));
   
-  always_ff @(posedge clk) TRAP_REQ_2 <= TRAP_REQ_2_EN;
-  always_ff @(posedge clk) TRAP_REQ_1 <= TRAP_REQ_1_EN;
 
   bit e5out;
   assign e5out = SCD.USER | JFCL;
@@ -436,14 +423,14 @@ module scd(iAPR APR,
                             CON.CLR_PRIVATE_INSTR & e6pin14 |
                             INSTR_FETCH & CLK.MB_XFER & ~PUBLIC_PAGE;
 
-  always_ff @(posedge clk) SCD.USER <= USER_EN;
-  always_ff @(posedge clk) SCD.USER_IOT <= USER_IOT_EN;
-  always_ff @(posedge clk) SCD.PUBLIC <= PUBLIC_EN;
-  always_ff @(posedge clk) SCD.ADR_BRK_INH <= SCD.ADR_BRK_INH & TRAP_CLEAR |
-                                              LOAD_FLAGS & EDP.AR[8] |
-                                              CON.COND_INSTR_ABORT & SCD.ADR_BRK_CYC;
-  always_ff @(posedge clk) SCD.ADR_BRK_CYC <= SCD.ADR_BRK_CYC & TRAP_CLEAR |
-                                              SCD.ADR_BRK_INH & CTL.DISP_NICOND;
+  msff e11q2(.*, .d(USER_EN), .q(SCD.USER));
+  msff e11q3(.*, .d(USER_IOT_EN), .q(SCD.USER_IOT));
+  msff e11e4(.*, .d(PUBLIC_EN), .q(SCD.PUBLIC));
+  msff e11q13(.*, .d(SCD.ADR_BRK_INH & TRAP_CLEAR | LOAD_FLAGS & EDP.AR[8] |
+                     CON.COND_INSTR_ABORT & SCD.ADR_BRK_CYC), .q(SCD.ADR_BRK_INH));
+  msff e11q14(.*, .d(~TRAP_CLEAR & SCD.ADR_BRK_INH | LOAD_FLAGS & EDP.AR[8] |
+                     CON.COND_INSTR_ABORT & SCD.ADR_BRK_CYC), .q(SCD.ADR_BRK_INH));
+  msff e11q15(.*, .d(SCD.ADR_BRK_CYC & TRAP_CLEAR | SCD.ADR_BRK_INH & CTL.DISP_NICOND), .q(SCD.ADR_BRK_CYC));
 
   assign SCD.ADR_BRK_PREVENT = SCD.ADR_BRK_INH | SCD.ADR_BRK_CYC;
   assign SCD.KERNEL_USER_IOT = SCD.USER & SCD.USER_IOT | ~SCD.PUBLIC & ~SCD.USER;

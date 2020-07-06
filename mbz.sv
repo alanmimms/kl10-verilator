@@ -350,7 +350,7 @@ module mbz(iAPR APR,
   msff e51q4ff(.*, .d(CRC.CH_BUF_ADR[6]), .q(CH_BUF_ADR[6]));
   msff e51q13ff(.*, .d(~MBOX.CH_T2), .q(CH_REG_HOLD));
 
-  always_ff @(posedge clk) {CH_BUF_00to17_PAR, CH_BUF_18to35_PAR} = chBufParRAM[CH_BUF_ADR];
+  always_latch if (~clk) {CH_BUF_00to17_PAR, CH_BUF_18to35_PAR} = chBufParRAM[CH_BUF_ADR];
 
   always_ff @(posedge MBOX.CH_BUF_WR)
     chBufParRAM[CH_BUF_ADR] <= {CH_BUF_IN_00to17_PAR, CH_BUF_IN_18to35_PAR};

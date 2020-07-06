@@ -50,9 +50,7 @@ module pi(iAPR APR,
       assign PIR_EN[n] = GEN[n] & ACTIVE |
                          ON[n] & IO_REQ[n] & ACTIVE;
       assign PI_REQ_SET[n] = PIH[n] & ~PI_CLR[n] | e88Q[n];
-
-      always_ff @(posedge clk) if (SYS_CLR) PIH[n] <= '0;
-                               else PIH[n] <= PI_REQ_SET[n];
+      msffAsyncSetClear ff(.clk(clk), .set(0), .clear(SYS_CLR), .d(PI_REQ_SET[n]), .q(PIH[n]));
     end
   endgenerate
 
@@ -242,8 +240,7 @@ module pi(iAPR APR,
   // But I cannot find any evidence of this....
 
   assign MR_RESET = CLK.MR_RESET;
-
-  always_ff @(posedge clk) CONO_DLY <= CON.CONO_PI;
+  msffAsyncSetClear e85q3ff(.clk(clk), .set(0), .clear(0), .d(CON.CONO_PI), .q(CONO_DLY));
 
   mux2x4 e32(.EN(BUS_EN),
              .SEL(DIAG),
@@ -281,7 +278,7 @@ module pi(iAPR APR,
 
 
   // PIC5 p.213
-  bit e6q14, e6SET;
+  bit e6q14;
   bit [0:3] e1Q;
   assign INHIBIT_REQ = EBUS_PI_GRANT | CON.PI_CYCLE;
   assign CP_BUS_EN = ~CON.EBUS_REL & EBUS_CP_GRANT |
@@ -289,7 +286,6 @@ module pi(iAPR APR,
   assign EBUS_REQ = (PI_ON[0] | ~PI_DISABLE & ACTIVE) &
                     TEST & REQ & ~CONO_DLY;
   assign XFER_FORCE = ~e6q14 | HONOR_INTERNAL & EBUS_PI_GRANT;
-  assign e6SET = ~EBUS_CP_GRANT & ~TIM_5comma6;
 
   // e25
   always_comb if (~EBUS_RETURN & TIM[6]) PIC.EBUSdriver.data[7:10] = SEL_PHY;
@@ -297,10 +293,7 @@ module pi(iAPR APR,
 
   assign GEN_INT = {PIC5_GEN ^ PIC2_PI, ~GEN_ON} != 4'b0000;
   assign PIC.GATE_TTL_TO_ECL = EBUS_PI_GRANT & ~EBUS_RETURN;
-
-  // Modeling a SR DFF with D=0, async set, no clear
-  always_ff @(posedge e1Q[0] or posedge e6SET) if (e6SET) e6q14 <= 1;
-                                               else e6q14 <= 0;
+  msffAsyncSetClear e6q15ff(.clk(e1Q[0]), .set(~EBUS_CP_GRANT & ~TIM_5comma6), .clear(0), .d(0), .q(e6q14));
 
   UCR4  e1(.CIN(~TIM[2]),
            .SEL({EBUS.demand & ~TRAN_REC, 1'b0}),
@@ -309,19 +302,12 @@ module pi(iAPR APR,
            .COUT(),
            .Q(e1Q));
 
-  always_ff @(posedge clk) if (RESET) begin
-      EBUS_CP_GRANT <= 0;
-      EBUS_PI_GRANT <= 0;
-    end else begin
-      EBUS_CP_GRANT <= CP_BUS_EN;
-      EBUS_PI_GRANT <= ~COMP & EBUS_PI_GRANT |
-                       ~CP_BUS_EN & ~EBUS_PI_GRANT & EBUS_REQ;
-    end
-
-  always_ff @(posedge clk) PI_DISABLE <= CON.PI_DISABLE;
-
-  always_ff @(posedge EBUS_PI_GRANT or posedge TIM[1]) if (TIM[1]) CYC_START <= 1;
-                                                       else CYC_START <= 0;
+  msffAsyncSetClear e11q2ff(.clk(clk), .set(0), .clear(RESET), .d(CP_BUS_EN), .q(EBUS_CP_GRANT));
+  msffAsyncSetClear e11q15ff(.clk(clk), .set(0), .clear(RESET),
+                             .d(~COMP & EBUS_PI_GRANT | ~CP_BUS_EN & ~EBUS_PI_GRANT & EBUS_REQ),
+                             .q(EBUS_PI_GRANT));
+  msffAsyncSetClear e42q15ff(.clk(clk), .set(0), .clear(0), .d(CON.PI_DISABLE), .q(PI_DISABLE));
+  msffAsyncSetClear e6q2ff(.clk(EBUS_PI_GRANT), .set(TIM[1]), .clear(0), .d(0), .q(CYC_START));
 
   USR4 e30(.S0(~LOAD & ~WAIT1 & ~WAIT2),
            .D(4'b0000),

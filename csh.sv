@@ -148,26 +148,29 @@ module csh(iAPR APR,
                               ~RD_FOUND & E_RD_T2_OK & MBOX.CORE_BUSY; // <FV2> CORE BUSY L CSH2 B3.
   assign WR_TEST = CSH.CLEAR_WR_T0 | EBOX_WR_T3;
 
-  always_ff @(posedge clk) MBOX_RESP <= CSH.MBOX_RESP_IN;
+  msff e8q3(.*, .d(CSH.MBOX_RESP_IN), .q(MBOX_RESP));
+  msff e14q14(.*, .d(E_RD_T2_CORE_OK & ~ANY_VALID_MATCH & ~MBX.CACHE_BIT |
+                     CSH.ONE_WORD_RD & ~EBOX_RESTART & ~CSH.READY_TO_GO),
+              .q(CSH.ONE_WORD_RD));
+  msff e74q15(.*, .d(CSH.ONE_WORD_RD & EBOX_RESTART & EBOX_PAUSE |
+                     RD_PAUSE_2ND_HALF & ~CSH.READY_TO_GO),
+              .q(RD_PAUSE_2ND_HALF));
+  msff e53q4(.*, .d(DATA_DLY_2 & RD_PAUSE_2ND_HALF | RD_PSE_2ND_REQ_EN & ~CLK.EBOX_REQ & ~RESET),
+             .q(RD_PSE_2ND_REQ_EN));
+  msff e52q2(.*, .d(E_RD_T2_CORE_OK &  ANY_VALID_MATCH & ~RD_FOUND |
+                    E_RD_T2_CORE_OK & ~ANY_VALID_MATCH & ~LRU_ANY_WR |
+                    E_RD_T2_CORE_OK & ~ANY_VALID_MATCH & ~MBX.CACHE_BIT |
+                    ~MBC.CORE_DATA_VALID & ~RESET & CSH.E_CORE_RD_RQ),
+             .q(CSH.E_CORE_RD_RQ));
 
-  always_ff @(posedge clk) CSH.ONE_WORD_RD <= E_RD_T2_CORE_OK & ~ANY_VALID_MATCH & ~MBX.CACHE_BIT |
-                                              CSH.ONE_WORD_RD & ~EBOX_RESTART & ~CSH.READY_TO_GO;
-  always_ff @(posedge clk) RD_PAUSE_2ND_HALF <= CSH.ONE_WORD_RD & EBOX_RESTART & EBOX_PAUSE |
-                                                RD_PAUSE_2ND_HALF & ~CSH.READY_TO_GO;
-  always_ff @(posedge clk) RD_PSE_2ND_REQ_EN <= DATA_DLY_2 & RD_PAUSE_2ND_HALF |
-                                                RD_PSE_2ND_REQ_EN & ~CLK.EBOX_REQ & ~RESET;
+  msff e53q3(.*, .d(EBOX_RETRY_NEXT_IN), .q(EBOX_RETRY_NEXT));
 
-  always_ff @(posedge clk) CSH.E_CORE_RD_RQ <= E_RD_T2_CORE_OK &  ANY_VALID_MATCH & ~RD_FOUND |
-                                               E_RD_T2_CORE_OK & ~ANY_VALID_MATCH & ~LRU_ANY_WR |
-                                               E_RD_T2_CORE_OK & ~ANY_VALID_MATCH & ~MBX.CACHE_BIT |
-                                               ~MBC.CORE_DATA_VALID & ~RESET & CSH.E_CORE_RD_RQ;
-
-  always_ff @(posedge clk) EBOX_RETRY_NEXT <= EBOX_RETRY_NEXT_IN;
   // <EC1> -CORE BUSY L on CSH2 A3.
-  always_ff @(posedge clk) EBOX_REQ_EN <= ~MBOX.CORE_BUSY & ~E_REQ_EN_CLR & ~PAGE_REFILL_T4_IN |
-                                          MB_CYC & MCL.VMA_READ |
-                                          RESET |
-                                          ~E_REQ_EN_CLR & EBOX_REQ_EN & ~EBOX_RETRY_NEXT;
+  msff e52q4(.*, .d(~MBOX.CORE_BUSY & ~E_REQ_EN_CLR & ~PAGE_REFILL_T4_IN |
+                    MB_CYC & MCL.VMA_READ |
+                    RESET |
+                    ~E_REQ_EN_CLR & EBOX_REQ_EN & ~EBOX_RETRY_NEXT),
+             .q(EBOX_REQ_EN));
 
 
   // CSH3 p.26

@@ -86,10 +86,10 @@ module clk(input bit CROBAR,
   //
   // To try to find out why I changed several sites from DIAG to
   //EBUS.ds[4:6] and NOW the module WORKS.
-/*
-  bit [4:6] DIAG;
-  assign DIAG[4:6] = EBUS.ds[4:6];
-*/
+  /*
+   bit [4:6] DIAG;
+   assign DIAG[4:6] = EBUS.ds[4:6];
+   */
   
   bit DIAG_READ;
   assign DIAG_READ = EDP.DIAG_READ_FUNC_10x;
@@ -100,14 +100,14 @@ module clk(input bit CROBAR,
               3'b011: MAIN_SOURCE = clk31;
               3'b010: MAIN_SOURCE = EXTERNAL_CLK;
               default: MAIN_SOURCE = clk30;
-                endcase
+              endcase
 
   assign CLK.ERROR_STOP = ~CLK_ON & CLK.ERR_STOP_EN & CLK.FS_ERROR |
                           EBOX_CLK_ERROR & EBOX_SOURCE & ~CLK_ON & CLK.ERR_STOP_EN;
 
   // XXX ignoring the delay lines
   bit e56q2;
-  always_ff @(posedge MAIN_SOURCE) e56q2 <= GATED_EN;
+  msff e56q2ff(.clk(MAIN_SOURCE), .d(GATED_EN), .q(e56q2));
 
 `ifdef TB
   assign delaysLocked = 1;
@@ -123,37 +123,37 @@ module clk(input bit CROBAR,
    (GD == Gate Delay)
 
    MAIN_SOURCE
-     | [PCB-DL 5ns]
-     +--- GATED
-            | [DL1 2ns..20ns] - assume 50% = 10ns
-            +===+===+--- EBUS_CLK_SOURCE = GATED + 20ns
-                | [10101 E73q3 2.6ns]
-                | [DL2 10ns..50ns] - assume 50% = 25ns
-                | [10101 E73q15 2.6ns]  XXX NOTE INVERTING GATE
-                | [DL3 50ns]
-                | [10101 E73q5 2.6ns]
-                | [PCB-DL 2.5ns]
-                +--- SOURCE_DELAYED (~GATED+10+2.6+25+2.6+50+2.6+2.5ns)
-                       | [10117 E63q15 3ns]
-                       +--- CLK_ON
-                              | [10210 E59q2 ~2.25ns]
-                              +--- ODD
-                              | [PCB-DL 2.65ns]
-                              | [10210 E49q14 ~2.25ns]
-                              +--- MBOX
-                                     | [PCB-DL 3ns]
-                                     | [GD ~2.25ns]
-                                     +--- CCL, CRC, CHC
-                                     | [PCB-DL 3ns]
-                                     | [GD ~2.25ns]
-                                     +--- MB 06, MB 12, CCW
-                                     | [PCB-DL 3ns]
-                                     | [GD ~2.25ns]
-                                     +--- MBC, MBX, MBZ
-                                     +--- MBOX 13, MBOX 14, MB 00
-                                     | [PCB-DL 3ns]
-                                     | [GD ~2.25ns]
-                                     +--- MTR, CLK_OUT, PIC, PMA, CHX, CSH
+   | [PCB-DL 5ns]
+   +--- GATED
+   | [DL1 2ns..20ns] - assume 50% = 10ns
+   +===+===+--- EBUS_CLK_SOURCE = GATED + 20ns
+   | [10101 E73q3 2.6ns]
+   | [DL2 10ns..50ns] - assume 50% = 25ns
+   | [10101 E73q15 2.6ns]  XXX NOTE INVERTING GATE
+   | [DL3 50ns]
+   | [10101 E73q5 2.6ns]
+   | [PCB-DL 2.5ns]
+   +--- SOURCE_DELAYED (~GATED+10+2.6+25+2.6+50+2.6+2.5ns)
+   | [10117 E63q15 3ns]
+   +--- CLK_ON
+   | [10210 E59q2 ~2.25ns]
+   +--- ODD
+   | [PCB-DL 2.65ns]
+   | [10210 E49q14 ~2.25ns]
+   +--- MBOX
+   | [PCB-DL 3ns]
+   | [GD ~2.25ns]
+   +--- CCL, CRC, CHC
+   | [PCB-DL 3ns]
+   | [GD ~2.25ns]
+   +--- MB 06, MB 12, CCW
+   | [PCB-DL 3ns]
+   | [GD ~2.25ns]
+   +--- MBC, MBX, MBZ
+   +--- MBOX 13, MBOX 14, MB 00
+   | [PCB-DL 3ns]
+   | [GD ~2.25ns]
+   +--- MTR, CLK_OUT, PIC, PMA, CHX, CSH
    */
 
   assign GATED = e56q2 & MAIN_SOURCE;
@@ -162,11 +162,11 @@ module clk(input bit CROBAR,
   assign MBOX = ODD;
 
  `ifdef VERILATORnot_needed_because_10176_fix_qqq
-    assign SOURCE_DELAYED = ~(ring60[0] | ring60[2]);
+  assign SOURCE_DELAYED = ~(ring60[0] | ring60[2]);
  `else
-    assign SOURCE_DELAYED = ~GATED;
+  assign SOURCE_DELAYED = ~GATED;
  `endif
-    
+  
   assign ODD = CLK_ON;
   assign CLK_OUT = MBOX;
 
@@ -229,27 +229,15 @@ module clk(input bit CROBAR,
 
   bit e70q15, e70q2;
   assign CLK.SBUS_CLK = e70q2;
-  always @(posedge GATED, posedge CLK.FUNC_CLR_RESET) begin
-
-    if (CLK.FUNC_CLR_RESET) begin
-      e70q15 <= 0;
-      e70q2 <= 0;
-    end else begin
-      e70q15 <= ~e70q2; // XXX slashed wire in schematics
-      e70q2 <= e70q15;
-    end
-  end
+  msffAsyncSetClear e70q15ff(.clk(GATED), .set(0), .clear(CLK.FUNC_CLR_RESET),
+                             .d(~e70q2), .q(e70q15));
+  msffAsyncSetClear  e70q2ff(.clk(GATED), .set(0), .clear(CLK.FUNC_CLR_RESET),
+                             .d(e70q15), .q(e70q2));
 
   bit e66q2;
   assign CLK.EBUS_CLK = e66q2;
-  always @(posedge EBUS_CLK_SOURCE, posedge CLK.FUNC_CLR_RESET) begin
-
-    if (CLK.FUNC_CLR_RESET) begin
-      e66q2 <= 0;
-    end else begin
-      e66q2 <= e70q15;
-    end
-  end
+  msffAsyncSetClear e66q2ff(.clk(EBUS_CLK_SOURCE), .set(0), .clear(CLK.FUNC_CLR_RESET),
+                            .d(e70q15), .q(e66q2));
 
   bit [0:3] e42SR;
   // NOTE: Active-low schematic symbol
@@ -291,26 +279,12 @@ module clk(input bit CROBAR,
   msff e60q4ff(.clk(MAIN_SOURCE), .d(e64SR[2]), .q(e60Q[2]));
   msff e60q13ff(.clk(MAIN_SOURCE), .d(e64SR[3]), .q(e60Q[3]));
 
-  bit e66SRFF;
-  always_ff @(negedge CLK.FUNC_SET_RESET,
-              posedge CLK.FUNC_CLR_RESET,
-              posedge CROBAR)
-  begin
-
-    // NOTE: Schematic symbol is active-low. To simplify this view the
-    // output of e66SRFF as it would be on Q and /Q outputs (set makes
-    // Q=1, clear makes Q=0) and then invert to drive MR_RESET which
-    // is wired to /Q.
-    if (CROBAR) begin                           // CLEAR
-      e66SRFF <= 0;
-    end else if (CLK.FUNC_CLR_RESET) begin      // SET
-      e66SRFF <= 1;
-    end else if (~CLK.FUNC_SET_RESET) begin     // LOAD
-      e66SRFF <= 0;
-    end
-  end
-
-  assign CLK.RESET = ~e66SRFF;
+  bit e66q15;
+  // I decided to keep this generating active-low output as designed
+  // and invert in `assign` below.
+  msffAsyncSetClear e66q15ff(.clk(~CLK.FUNC_SET_RESET), .set(CLK.FUNC_CLR_RESET), .clear(CROBAR),
+                             .d(0), .q(e66q15));
+  assign CLK.RESET = ~e66q15;
   assign CLK.MR_RESET = CLK.RESET;
   assign CLK.SYNC_HOLD = CLK.MR_RESET | SYNC;
 
@@ -318,14 +292,14 @@ module clk(input bit CROBAR,
   // CLK1 CLK DELAYED according to EBOX-UD Logical Delays and Skew,
   // Figure 3-25. In KL10B this signal is called CLK_OUT when it
   // leaves the CLK board (see CLK1 A1 E72 pin 3 <FR2>).
-//  assign CLK_OUT = MBOX;
+  //  assign CLK_OUT = MBOX;
 
   // 125ns is a guess for round trip delay of clock signal across backplane.
   assign CLK_DELAYED = CLK_OUT;
   assign MBOX_CLK = CLK_DELAYED;
 
   bit e32q2;
-  always_ff @(posedge MBOX_CLK) e32q2 <= EBOX_CLK;
+  msff e32q2ff(.clk(MBOX_CLK), .d(EBOX_CLK), .q(e32q2));
   assign CLK.PT_DIR_WR = e32q2 & APR.PT_DIR_WR;
   assign CLK.PT_WR = e32q2 & APR.PT_WR;
 
@@ -354,17 +328,17 @@ module clk(input bit CROBAR,
            .CLK(MAIN_SOURCE),
            .Q({CLK.GO, BURST, EBOX_SS, ncE37}));
   
-/*
-  bit e47Ignore;
-  decoder e47Decoder(.en(CLK.FUNC_GATE & CTL.DIAG_CTL_FUNC_00x),
-                     .sel(DIAG),
-                     .trace(1),
-                     .traceName("clk.e47decoder"),
-                     .q({e47Ignore, CLK.FUNC_START,
-                         CLK.FUNC_SINGLE_STEP, CLK.FUNC_EBOX_SS,
-                         CLK.FUNC_COND_SS, CLK.FUNC_BURST,
-                         CLK.FUNC_CLR_RESET, CLK.FUNC_SET_RESET}));
-*/
+  /*
+   bit e47Ignore;
+   decoder e47Decoder(.en(CLK.FUNC_GATE & CTL.DIAG_CTL_FUNC_00x),
+   .sel(DIAG),
+   .trace(1),
+   .traceName("clk.e47decoder"),
+   .q({e47Ignore, CLK.FUNC_START,
+   CLK.FUNC_SINGLE_STEP, CLK.FUNC_EBOX_SS,
+   CLK.FUNC_COND_SS, CLK.FUNC_BURST,
+   CLK.FUNC_CLR_RESET, CLK.FUNC_SET_RESET}));
+   */
   always_comb begin
 
     if (CLK.FUNC_GATE & CTL.DIAG_CTL_FUNC_00x) begin
@@ -379,16 +353,6 @@ module clk(input bit CROBAR,
       3'b110: CLK.FUNC_CLR_RESET = 1'b1;
       3'b111: CLK.FUNC_SET_RESET = 1'b1;
       endcase
-
-      // This is WEIRD. I display DIAG here and it is zero while
-      // EBUS.ds is 7'b0000001 and EBUS.ds[4:6] is 3'b001. WHY WOULD
-      // THAT BE?
-/*
-      $display($time, " @@@@@@CLK FUNC DECODER TRACE@@@@@@ DIAG=%03b EBUS.ds=%07b EBUS.ds[4:6]=%03b new=%07b",
-               DIAG, EBUS.ds, EBUS.ds[4:6],
-               {CLK.FUNC_START, CLK.FUNC_SINGLE_STEP, CLK.FUNC_EBOX_SS, CLK.FUNC_COND_SS,
-                CLK.FUNC_BURST, CLK.FUNC_CLR_RESET, CLK.FUNC_SET_RESET});
-*/
     end else begin
       {CLK.FUNC_START, CLK.FUNC_SINGLE_STEP, CLK.FUNC_EBOX_SS, CLK.FUNC_COND_SS,
        CLK.FUNC_BURST, CLK.FUNC_CLR_RESET, CLK.FUNC_SET_RESET} = '0;
@@ -523,21 +487,18 @@ module clk(input bit CROBAR,
   assign CLK.RESP_MBOX = e32Q3 | e32Q13;
 
   // Negative logic Wire AND
-  always_ff @(posedge MBOX_CLK)
-    // NOTE: Wire AND
-    CLK.EBOX_REQ <= ~(
-                      ~(
-                        CLK.EBOX_REQ & ~VMA.AC_REF |
-                        CSH.EBOX_RETRY_REQ & ~VMA.AC_REF |
-                        CLK.SYNC_EN & MCL.MBOX_CYC_REQ |
-                        SYNC & MCL.MBOX_CYC_REQ) // E1q2
-                      |
-                      ~(~CLK.PAGE_FAIL_EN &
-                        ~CSH.EBOX_T0_IN &
-                        ~CLK.MBOX_CYCLE_DIS &
-                        ~CLK.MR_RESET &
-                        ~CLK.FORCE_1777) // E17q15
-                      );
+  msff e3q14ff(.clk(MBOX_CLK), .d(~(~(CLK.EBOX_REQ & ~VMA.AC_REF |
+                                      CSH.EBOX_RETRY_REQ & ~VMA.AC_REF |
+                                      CLK.SYNC_EN & MCL.MBOX_CYC_REQ |
+                                      SYNC & MCL.MBOX_CYC_REQ) // E1q2
+                                    |
+                                    ~(~CLK.PAGE_FAIL_EN &
+                                      ~CSH.EBOX_T0_IN &
+                                      ~CLK.MBOX_CYCLE_DIS &
+                                      ~CLK.MR_RESET &
+                                      ~CLK.FORCE_1777) // E17q15
+                                    )),
+               .q(CLK.EBOX_REQ));
 
   msff e32q3ff(.clk(MBOX_CLK), .d(CON.MBOX_WAIT & MBOX_RESP_SIM & ~EBOX_CLK_EN & ~VMA.AC_REF),
                .q(e32Q3));
