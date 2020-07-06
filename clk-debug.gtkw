@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.105 (w)1999-2020 BSI
-[*] Fri Jul  3 22:51:51 2020
+[*] Mon Jul  6 16:14:30 2020
 [*]
 [dumpfile] "/home/alan/kl10-verilator/kl10pv-trace.vcd"
-[dumpfile_mtime] "Fri Jul  3 22:51:02 2020"
-[dumpfile_size] 86814718
+[dumpfile_mtime] "Mon Jul  6 16:13:21 2020"
+[dumpfile_size] 86863778
 [savefile] "/home/alan/kl10-verilator/clk-debug.gtkw"
-[timestart] 750038
+[timestart] 749306
 [size] 1920 1051
-[pos] -917 -452
-*-6.800235 750460 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] -1 -1
+*-7.800235 750040 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [ruler] 8708 175
 [treeopen] TOP.
 [treeopen] TOP.top.
@@ -30,15 +30,10 @@
 @30
 [color] 2
 +{TOP.top.CLK.CRA} TOP.top.CLK.CRA
-@31
 +{CRADR} TOP.top.CRA.CRADR[0:10]
 @800200
 -start
 @28
-TOP.top.ebox0.cra0.CON.SKIP_EN_40_47
-TOP.top.ebox0.cra0.CON.SKIP_EN_50_57
-[color] 7
-TOP.top.ebox0.CRAM.COND[0:5]
 TOP.top.ebox0.DTE.resetCRA
 TOP.top.ebox0.DTE.overrideAR
 TOP.top.ebox0.CON.RUN
