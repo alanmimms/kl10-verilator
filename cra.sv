@@ -127,7 +127,7 @@ module cra(iAPR APR,
   // CRA.CRADR
   always @(posedge clk) if (RESET | DTE.resetCRA) begin
     CRA.CRADR <= '0;
-    DTE.resetCRA = 0;
+    DTE.resetCRA = 0;           // Blocking assignment because DTE
   end else CRA.CRADR <= CRAM.J |
                         {1'b0, {9{CLK.FORCE_1777}}, 1'b0} |
                         dispMux |
