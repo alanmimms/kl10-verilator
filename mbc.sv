@@ -30,11 +30,11 @@ module mbc(iAPR APR,
   bit ANY_RQS_LEFT, HOLD_MATCH;
   bit [27:33] EBUS_REG;
   bit [27:35] PMA_HOLD;
+  bit [34:35] mbcPMA;
 
   // MBC1 p.189
   assign clk = CLK.MBC;
   assign RESET = CLK.MR_RESET;
-    // NOTE use MBOX.PMA for local references to PMA.
 
   USR4  e6(.S0(1'b0),
            .D(MBOX.CACHE_ADR[27:30]),
@@ -108,13 +108,13 @@ module mbc(iAPR APR,
 
   mux2x4 e23(.EN(1'b1),
              .SEL({MBX.REFILL_ADR_EN, ~MBC.FIRST_WD_ADR_SEL}),
-             .D0({{2{MBOX.PMA[34]}}, PMA_HOLD[34], MBOX.MB_SEL[2]}),
-             .D1({{2{MBOX.PMA[35]}}, PMA_HOLD[35], MBOX.MB_SEL[1]}),
+             .D0({{2{mbcPMA[34]}}, PMA_HOLD[34], MBOX.MB_SEL[2]}),
+             .D1({{2{mbcPMA[35]}}, PMA_HOLD[35], MBOX.MB_SEL[1]}),
              .B0(MBOX.CACHE_ADR[34]),
              .B1(MBOX.CACHE_ADR[35]));
 
   USR4 e18(.S0(1'b0),
-           .D({CSH.MATCH_HOLD_IN, MBOX.PMA[34:35]}),
+           .D({CSH.MATCH_HOLD_IN, mbcPMA[34:35]}),
            .S3(1'b0),
            .SEL({2{MBX.REFILL_HOLD}}),
            .CLK(clk),
@@ -327,13 +327,13 @@ module mbc(iAPR APR,
   assign HOLD_MATCH = e56q4 |
                       CSH.DATA_CLR_DONE & CSH.E_CACHE_WR_CYC & ~RESET;
   assign MBOX.FORCE_VALID_MATCH[0] = MBOX.CSH_WR_EN[0] & CSH.DATA_CLR_DONE | MBX.FORCE_MATCH_EN |
-                                     ~MBOX.PMA[34] & ~MBOX.PMA[35] & MBX.CCA_ALL_PAGES_CYC;
+                                     ~mbcPMA[34] & ~mbcPMA[35] & MBX.CCA_ALL_PAGES_CYC;
   assign MBOX.FORCE_VALID_MATCH[1] = MBOX.CSH_WR_EN[1] & CSH.DATA_CLR_DONE | MBX.FORCE_MATCH_EN |
-                                     ~MBOX.PMA[34] &  MBOX.PMA[35] & MBX.CCA_ALL_PAGES_CYC;
+                                     ~mbcPMA[34] &  mbcPMA[35] & MBX.CCA_ALL_PAGES_CYC;
   assign MBOX.FORCE_VALID_MATCH[2] = MBOX.CSH_WR_EN[2] & CSH.DATA_CLR_DONE | MBX.FORCE_MATCH_EN |
-                                     MBOX.PMA[34] & ~MBOX.PMA[35] & MBX.CCA_ALL_PAGES_CYC;
+                                     mbcPMA[34] & ~mbcPMA[35] & MBX.CCA_ALL_PAGES_CYC;
   assign MBOX.FORCE_VALID_MATCH[3] = MBOX.CSH_WR_EN[3] & CSH.DATA_CLR_DONE | MBX.FORCE_MATCH_EN |
-                                     MBOX.PMA[34] &  MBOX.PMA[35] & MBX.CCA_ALL_PAGES_CYC;
+                                     mbcPMA[34] &  mbcPMA[35] & MBX.CCA_ALL_PAGES_CYC;
 
   msff e56q4ff(.*, .d(MBC.CSH_DATA_CLR_T1 & CSH.E_CACHE_WR_CYC | ~CSH.EBOX_WR_T4_IN & e56q4 & ~RESET),
                .q(e56q4));
