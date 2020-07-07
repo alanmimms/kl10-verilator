@@ -186,7 +186,7 @@ module csh(iAPR APR,
                                ~CSH.READY_TO_GO & CSH.ANY_VAL_HOLD;
   assign ANY_WRITTEN_MATCH = |(CSH.VALID_MATCH & CSH.ANY_WR);
   assign RD_FOUND = |(MBOX.CSH_WD_VAL & CSH.VALID_MATCH);
-  assign ANY_VALID_MATCH = |(CSH.VALID_MATCH);
+  assign ANY_VALID_MATCH = |CSH.VALID_MATCH;
   assign MB_TEST_PAR_A_IN = DATA_DLY_2 | CSH.PAGE_REFILL_T12 | CACHE_WR_FROM_MEM;
   assign CSH.MATCH_HOLD_IN[0] = (~ANY_VALID_MATCH | CSH.VALID_MATCH[3] | CSH.VALID_MATCH[2]) &
                                 (CSH.VALID_MATCH[2] | CSH.LRU_2 | CSH.VALID_MATCH[3]);
@@ -279,7 +279,7 @@ module csh(iAPR APR,
   msff e35q2ff(.*, .d(MBOX.MB_SEL_HOLD), .q(e35q2));
 
   // Note: "Wire AND"
-  assign PAGE_REFILL_T11 = e35q14 | e35q2;
+  assign PAGE_REFILL_T11 = e35q14 & e35q2;
 
   msff e35q15ff(.*, .d(PAGE_REFILL_T11), .q(CSH.PAGE_REFILL_T12));
 
