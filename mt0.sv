@@ -38,9 +38,17 @@ module mt0(input bit CROBAR,
   always_comb if (DATA_TO_MEM_EN) begin
     SBUS.DATA_VALID_A = MBOX.DATA_VALID_A_OUT;
     SBUS.DATA_VALID_B = MBOX.DATA_VALID_B_OUT;
+    // MT02 p.97
+    SBUS.D = MBOX.MB;
+    // MT05
+    SBUS.DATA_PAR = MBOX.MEM_PAR; // XXX MEM_PAR is not driven anywhere
   end else begin
     MBOX.MEM_DATA_VALID_A = SBUS.DATA_VALID_A;
     MBOX.MEM_DATA_VALID_B = SBUS.DATA_VALID_B;
+    // MT02 p.97
+    MBOX.MEM_DATA_IN = SBUS.D;
+    // MT05
+    MBOX.MEM_PAR_IN = SBUS.DATA_PAR;
   end
   
   assign SBUS.START_A = MBOX.MEM_START_A;
@@ -52,11 +60,6 @@ module mt0(input bit CROBAR,
   assign SBUS.ADR_PAR = MBOX.MEM_ADR_PAR;
 
 
-  // MT02 p.97
-  always_comb if (DATA_TO_MEM_EN) SBUS.D = MBOX.MB;
-              else MBOX.MEM_DATA_IN = SBUS.D;
-
-
   // MT03-MT04 p.98-99
   always_latch if (MBOX.SBUS_ADR_HOLD) SBUS.ADR <= PMA.PA;
 
@@ -64,8 +67,4 @@ module mt0(input bit CROBAR,
   // MT05 p.100
   assign SBUS.MEM_RESET = MBOX.DIAG_MEM_RESET;
   assign DATA_TO_MEM_EN = MBOX.MEM_DATA_TO_MEM;
-
-  always_comb if (DATA_TO_MEM_EN) SBUS.DATA_PAR = MBOX.MEM_PAR; // XXX MEM_PAR is not driven anywhere
-              else MBOX.MEM_PAR_IN = SBUS.DATA_PAR;
-
 endmodule
