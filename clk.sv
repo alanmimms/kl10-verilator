@@ -480,11 +480,12 @@ module clk(input bit CROBAR,
   assign EBOX_SOURCE = e12SR[3];
 
   // CLK4 p.171
-  bit e32Q3, e32Q13;
-  assign CLK.MBOX_RESP = e32Q3 | e32Q13;
-  assign CLK.MB_XFER = e32Q3 | e32Q13;
+  bit e32q3, e32q13;
+  msff e32q3ff(.clk(MBOX_CLK), .d(CON.MBOX_WAIT & MBOX_RESP_SIM & ~EBOX_CLK_EN & ~VMA.AC_REF), .q(e32q3));
+  msff e32q13ff(.clk(MBOX_CLK), .d(CSH.MBOX_RESP_IN), .q(e32q13));
+  assign CLK.MB_XFER = e32q3 | e32q13;
+  assign CLK.RESP_MBOX = CLK.MB_XFER;
   assign CLK.RESP_SIM = CSH.MBOX_RESP_IN & CLK.SYNC_EN;
-  assign CLK.RESP_MBOX = e32Q3 | e32Q13;
 
   // Negative logic Wire AND
   msff e3q14ff(.clk(MBOX_CLK), .d(~(~(CLK.EBOX_REQ & ~VMA.AC_REF |
@@ -500,9 +501,6 @@ module clk(input bit CROBAR,
                                     )),
                .q(CLK.EBOX_REQ));
 
-  msff e32q3ff(.clk(MBOX_CLK), .d(CON.MBOX_WAIT & MBOX_RESP_SIM & ~EBOX_CLK_EN & ~VMA.AC_REF),
-               .q(e32Q3));
-  msff e32q13ff(.clk(MBOX_CLK), .d(CSH.MBOX_RESP_IN), .q(e32Q13));
   msff e32q14ff(.clk(MBOX_CLK), .d(EBOX_CLK_EN), .q(EBOX_CLK));
 
   // NOTE: Active-low schematic symbol
