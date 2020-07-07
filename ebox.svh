@@ -1449,7 +1449,6 @@ interface iMBOX;
   bit [0:3] FORCE_VALID_MATCH;
   bit [0:3] MEM_RQ;
   bit [0:6] CCW_BUF_ADR;
-  bit [14:35] PMA;
   bit [27:35] CACHE_ADR;
   bit [27:35] MBOX_GATE_VMA;
   bit [2:1] MB_SEL;

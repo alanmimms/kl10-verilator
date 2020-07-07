@@ -17,6 +17,7 @@ module mt0(input bit CROBAR,
            iCLK CLK,
            iMBOX MBOX,
            iMBX MBX,
+           iPMA PMA,
            iSBUS.mbox SBUS);
 
   bit DATA_TO_MEM_EN;
@@ -57,7 +58,7 @@ module mt0(input bit CROBAR,
 
 
   // MT03-MT04 p.98-99
-  always_latch if (MBOX.SBUS_ADR_HOLD) SBUS.ADR <= MBOX.PMA;
+  always_latch if (MBOX.SBUS_ADR_HOLD) SBUS.ADR <= PMA.PA;
 
 
   // MT05 p.100

@@ -103,28 +103,28 @@ module mbz(iAPR APR,
            .Q(EBUS_REG[4:7]));
 
   USR4 e16(.S0(1'b0),
-           .D({MBOX.PAGED_REF, MBOX.PMA[14:16]}),
+           .D({MBOX.PAGED_REF, PMA.PA[14:16]}),
            .S3(1'b0),
            .SEL({2{MBOX.LOAD_EBUS_REG}}),
            .CLK(clk),
            .Q({EBUS_REG[8], EBUS_REG[14:16]}));
 
   USR4 e26(.S0(1'b0),
-           .D(MBOX.PMA[17:20]),
+           .D(PMA.PA[17:20]),
            .S3(1'b0),
            .SEL({2{MBOX.LOAD_EBUS_REG}}),
            .CLK(clk),
            .Q(EBUS_REG[17:20]));
 
   USR4 e13(.S0(1'b0),
-           .D(MBOX.PMA[21:24]),
+           .D(PMA.PA[21:24]),
            .S3(1'b0),
            .SEL({2{MBOX.LOAD_EBUS_REG}}),
            .CLK(clk),
            .Q(EBUS_REG[21:24]));
 
   USR4 e11(.S0(1'b0),
-           .D({MBOX.PMA[25:26], MBOX.PMA[34:35]}),
+           .D({PMA.PA[25:26], PMA.PA[34:35]}),
            .S3(1'b0),
            .SEL({2{MBOX.LOAD_EBUS_REG}}),
            .CLK(clk),
