@@ -117,15 +117,15 @@ module csh(iAPR APR,
 
 
   // CSH2 p.25
-  bit e23out2;
-  assign e23out2 = CSH.E_CACHE_WR_CYC & MBOX.CACHE_TO_MB_T4 |
-                   ~EBOX_SYNC_HOLD & DATA_DLY_1 |
-                   MBC.CORE_DATA_VALminus1 & CSH.E_CORE_RD_RQ |
-                   ~E_CORE_RD_COMP & MBOX_RESP & ~EBOX_RESTART;
+  bit e23q2;
+  assign e23q2 = CSH.E_CACHE_WR_CYC & MBOX.CACHE_TO_MB_T4 |
+                 ~EBOX_SYNC_HOLD & DATA_DLY_1 |
+                 MBC.CORE_DATA_VALminus1 & CSH.E_CORE_RD_RQ |
+                 ~E_CORE_RD_COMP & MBOX_RESP & ~EBOX_RESTART;
 
   assign CSH.MBOX_RESP_IN = E_RD_T2_OK & RD_FOUND |
                             MBOX.A_CHANGE_COMING_IN & SBUS_DIAG_3 |
-                            ~RESET & e23out2 |
+                            ~RESET & e23q2 |
                             CACHE_IDLE_IN & CSH.EBOX_CYC;
 
   assign EBOX_RESTART = MBOX_RESP & CLK.EBOX_SYNC;
