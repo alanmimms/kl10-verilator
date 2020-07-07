@@ -938,7 +938,6 @@ interface iCON;
   bit PI_CYCLE;
   bit PI_DISABLE;
   bit PI_DISMISS;
-  bit RESET;
   bit RUN;
   bit SEL_CLR;
   bit SEL_DIS;

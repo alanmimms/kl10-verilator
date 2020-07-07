@@ -30,14 +30,14 @@ module con(iAPR APR,
   bit SPEC8, MBOX_DATA, FM_DATA, FM_BIT_36, CSH_BIT_36, EBUS_BIT_36;
   bit AR_FROM_MEM, LOAD_AR_EN;
   bit DIAG_CLR_RUN, DIAG_SET_RUN, DIAG_CONTINUE, MAGIC_FUNC_02x;
-  bit LOAD_AC_BLOCKS, LOAD_PREV_CONTEXT;
+  bit LOAD_AC_BLOCKS, LOAD_PREV_CONTEXT, RESET;
   bit MAGIC_FUNC_01x, MAGIC_FUNC_04x, MAGIC_FUNC_05x, MAGIC_FUNC_010, MAGIC_FUNC_011;
 
   assign clk = CLK.CON;
-  assign CON.RESET = CLK.MR_RESET;
+  assign RESET = CLK.MR_RESET;
 
   // COND decoder CON1 p.158
-  decoder e8(.en(~CON.RESET),
+  decoder e8(.en(~RESET),
              .sel(CRAM.COND[0:2]),
              .q({CON.COND_EN_00_07, 
                  CON.COND_EN_10_17,
@@ -163,7 +163,7 @@ module con(iAPR APR,
 
   // CON1 miscellaneous controls
   assign DIAG_READ = CTL.DIAG_READ_FUNC_13x;
-  assign CON.LOAD_SPEC_INSTR = NICOND | CON.COND_SPEC_INSTR | CON.RESET;
+  assign CON.LOAD_SPEC_INSTR = NICOND | CON.COND_SPEC_INSTR | RESET;
   assign CON.VMA_SEL[1] = CON.COND_VMA_DEC | MCL.LOAD_VMA;
   assign CON.VMA_SEL[0] = CON.COND_VMA_INC | MCL.LOAD_VMA;
   assign NICOND = CTL.DISP_NICOND;
@@ -174,31 +174,31 @@ module con(iAPR APR,
   msff e31q2ff(.*, .d(MTR.INTERRUPT_REQ), .q(MTR_INT_REQ));
   msff e34q3ff(.*, .d(PIC.READY), .q(e34q3));
   msff e34q14ff(.*, .d(~MCL.VMA_SECTION_0 & CON.COND_LONG_EN |
-                       ~MCL.MBOX_CYC_REQ & CON.LONG_EN & ~CON.RESET),
+                       ~MCL.MBOX_CYC_REQ & CON.LONG_EN & ~RESET),
                 .q(CON.LONG_EN));
   msff e34q15ff(.*, .d(CRAM.MAGIC[3] & CON.IO_LEGAL & CTL.SPEC_FLAG_CTL), .q(e34q15));
 
-  assign INT_REQ = (MTR_INT_REQ | e34q3) & (~INT_DISABLE | CON.RESET);
+  assign INT_REQ = (MTR_INT_REQ | e34q3) & (~INT_DISABLE | RESET);
 
   assign CON.LOAD_IR = FETCH_CYCLE | CON.COND_LOAD_IR | DIAG_IR_STROBE;
   assign CON.COND_INSTR_ABORT = CON.COND_SPEC_INSTR & CRAM.MAGIC[6];
   assign CON.CLR_PRIVATE_INSTR = CLK.PAGE_ERROR | CON.COND_INSTR_ABORT;
   assign CON.LOAD_ACCESS_COND = CON.COND_LOAD_IR | CON.COND_SR_MAGIC;
 
-  assign INSTR_GO = DIAG_CONTINUE | e34q15 & INSTR_GO & ~CON.RESET;
+  assign INSTR_GO = DIAG_CONTINUE | e34q15 & INSTR_GO & ~RESET;
   assign CON.IO_LEGAL = IR.IO_LEGAL | KERNEL_MODE | KERNEL_CYCLE |
                         SCD.USER & SCD.USER_IOT;
 
   bit start0, start1, start2;
   assign start0 = DIAG_CONTINUE |
-                  start0 & ~CON.START & ~CON.RESET;
+                  start0 & ~CON.START & ~RESET;
   msff e16q2ff(.*, .d(start0), .q(start1));
   msff e16q3ff(.*, .d(start1), .q(start2));
   msff e16q4ff(.*, .d(start2), .q(CON.START));
 
   bit run0, run1, run2;
   assign run0 = DIAG_SET_RUN |
-                run0 & ~DIAG_CLR_RUN & ~CON.RESET;
+                run0 & ~DIAG_CLR_RUN & ~RESET;
   msff e16q13ff(.*, .d(run0), .q(run1));
   msff e16q14ff(.*, .d(run1), .q(run2));
   msff e16q15ff(.*, .d(run2), .q(CON.RUN));
@@ -259,7 +259,7 @@ module con(iAPR APR,
               ~MTR_INT_REQ}));
 
   assign CON.COND_ADR_10 = CON.SKIP_EN_60_67 & e19Q |
-                           CON.SKIP_EN_70_77 & e27Q & ~CON.RESET;
+                           CON.SKIP_EN_70_77 & e27Q & ~RESET;
   
   bit [0:2] e33Q;
   priority_encoder8 e33(.d({CON.PI_CYCLE,
@@ -316,7 +316,7 @@ module con(iAPR APR,
   assign CON.KI10_PAGING_MODE = ~KL10_PAGING_EN;
 
   bit e43aQ, e43bQ;
-  mux #(.N(4)) e43a(.en(~CON.RESET),
+  mux #(.N(4)) e43a(.en(~RESET),
                    .sel({MAGIC_FUNC_02x, CRAM.MAGIC[6]}),
                    .d({~EBUS.data[18],
                        CRAM.MAGIC[7],
@@ -324,7 +324,7 @@ module con(iAPR APR,
                    .q(e43aQ));
   assign LOAD_AC_BLOCKS = ~e43aQ;
 
-  mux #(.N(4)) e43b(.en(~CON.RESET),
+  mux #(.N(4)) e43b(.en(~RESET),
                     .sel({MAGIC_FUNC_02x, CRAM.MAGIC[6]}),
                     .d({~EBUS.data[19],
                         CRAM.MAGIC[8],
@@ -351,11 +351,11 @@ module con(iAPR APR,
               .sel(CRAM.MAGIC[6:8]),
               .q(e15Q));
 
-  assign CONO_APR = CON.RESET | e15Q[4];
+  assign CONO_APR = RESET | e15Q[4];
   assign CON.CONO_APR = CLK.EBOX_SYNC & CONO_APR;
-  assign CON.CONO_PI = CLK.EBOX_SYNC & (CON.RESET | e15Q[5]);
-  assign CON.CONO_PAG = CON.RESET | e15Q[6];
-  assign CON.DATAO_APR = CON.RESET | e15Q[7];
+  assign CON.CONO_PI = CLK.EBOX_SYNC & (RESET | e15Q[5]);
+  assign CON.CONO_PAG = RESET | e15Q[6];
+  assign CON.DATAO_APR = RESET | e15Q[7];
 
   assign CON.SEL_EN = EBUS.data[20] & CONO_APR;
   assign CON.SEL_DIS = EBUS.data[21] & CONO_APR;
@@ -391,7 +391,7 @@ module con(iAPR APR,
            .CLK(clk),
            .Q({CON.EBOX_HALTED, unusedE49, CON.PCplus1_INH, SPEC8}));
 
-  always_ff @(posedge clk) if (CON.COND_EBUS_STATE | CON.RESET) begin
+  always_ff @(posedge clk) if (CON.COND_EBUS_STATE | RESET) begin
     CON.UCODE_STATE1 <= (CRAM.MAGIC[2] | CRAM.MAGIC[1]) &
                         (CON.UCODE_STATE1 | CRAM.MAGIC[1]);
     CON.UCODE_STATE3 <= (CRAM.MAGIC[4] | CRAM.MAGIC[3]) &
@@ -428,9 +428,9 @@ module con(iAPR APR,
 
   bit e57q3, e57q2, e57q13, e57q14;
   msff e57q3ff(.*, .d(CON.COND_SPEC_INSTR & CRAM.MAGIC[0]), .q(e57q3));
-  msff e57q2ff(.*, .d(CON.PI_CYCLE & ~MCL.SKIP_SATISFIED & ~CLR_PI_CYCLE & ~CON.RESET), .q(e57q2));
+  msff e57q2ff(.*, .d(CON.PI_CYCLE & ~MCL.SKIP_SATISFIED & ~CLR_PI_CYCLE & ~RESET), .q(e57q2));
   msff e57q13ff(.*, .d(MCL.MBOX_CYC_REQ), .q(e57q13));
-  msff e57q14ff(.*, .d(MEM_CYCLE & ~XFER & ~CLK.PAGE_ERROR & ~CON.RESET), .q(e57q14));
+  msff e57q14ff(.*, .d(MEM_CYCLE & ~XFER & ~CLK.PAGE_ERROR & ~RESET), .q(e57q14));
 
   assign CON.PI_CYCLE = e57q3 | e57q2;
   assign MEM_CYCLE = e57q13 | e57q14;
