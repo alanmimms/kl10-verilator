@@ -17,7 +17,7 @@ module mcl(iAPR APR,
            iVMA VMA
 );
 
-  bit clk /*noverilator clocker*/;
+  bit clk /*verilator clocker*/;
   assign clk = CLK.MCL;
 
   // MCL1 p.371
@@ -126,13 +126,16 @@ module mcl(iAPR APR,
   assign MCL.VMA_WRITE = e13SR[3];
   assign MCL.STORE_AR = e13SR[2] & ~MCL.LOAD_AR & ~MCL.LOAD_ARX & MCL.VMA_WRITE;
 
-  always_ff @(posedge clk) if (MCL.REQ_EN) begin
-    e13SR[0] <= gatedMagic[0] | gatedAD[1] | AREAD_1xx   | MEM_LOAD_AR | RW_OR_RPW_CYCLE;
-    e13SR[1] <= gatedMagic[1] | gatedAD[2] | FETCH_EN    | MEM_LOAD_ARX;
-    e13SR[2] <= gatedMagic[2] | gatedAD[3] | AREAD_x11   | MEM_RPW_CYCLE;
-    e13SR[3] <= gatedMagic[3] | gatedAD[4] | AREAD_3_6_7 | MEM_B_WRITE |
-                RW_OR_RPW_CYCLE | MEM_WRITE;
-  end
+  USR4 e13SR0(.CLK(clk),
+              .S0(0),
+              .D(gatedMagic[0:3] | gatedAD[1:4] |
+                 {AREAD_1xx   | MEM_LOAD_AR | RW_OR_RPW_CYCLE,
+                  FETCH_EN    | MEM_LOAD_ARX,
+                  AREAD_x11   | MEM_RPW_CYCLE,
+                  AREAD_3_6_7 | MEM_B_WRITE | RW_OR_RPW_CYCLE | MEM_WRITE}),
+              .S3(0),
+              .SEL({2{~MCL.REQ_EN}}),
+              .Q(e13SR));
 
   assign USER_EN = MCL.VMA_PREV_EN & USER_IOT |
                    USER & (KERNEL_CYCLE | FETCH_EN) & ~SPEC_EXEC |
