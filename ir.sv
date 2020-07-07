@@ -97,7 +97,7 @@ module ir(iIR IR,
   assign IR.ACeq0 = IR.IR[9:12] == 4'b0;
 
   // The actual IR register is built out of 10173 latch-muxes.
-  always_latch if (HOLD_IR) IR.IR[0:12] <= CLK.MB_XFER ? MBOX.CACHE_DATA[0:12] : EDP.AD[0:12];
+  always_latch if (~HOLD_IR) IR.IR[0:12] = CLK.MB_XFER ? MBOX.CACHE_DATA[0:12] : EDP.AD[0:12];
 
 
   // IR2 p.129
