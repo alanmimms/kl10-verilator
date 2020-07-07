@@ -26,6 +26,9 @@ module mb0(iCCL CCL,
   bit [0:35] MBN[0:3];
   bit MB_HOLD[0:3];
 
+  // TEMPORARY? XXX It appears this is backplane wiring
+  assign MBOX.CACHE_DATA = MBOX.MEM_TO_CACHE;
+
   // MB01 p.74
   // e61, e55, e27, e50, e41, e22, e21, e16
   always_comb if (MBOX.MEM_TO_C_EN) unique case (MBOX.MEM_TO_C_SEL)
