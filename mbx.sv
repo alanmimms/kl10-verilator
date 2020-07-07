@@ -256,7 +256,7 @@ module mbx(iAPR APR,
 
   // e48
   bit [0:3] e48SR;
-  always_ff @(posedge CTL.DIAG_LOAD_FUNC_071) e48SR[0:3] <= EBUS.data[30:33];
+  always_ff @(negedge CTL.DIAG_LOAD_FUNC_071) e48SR[0:3] <= EBUS.data[30:33];
   assign MBOX.MEM_TO_C_SEL[0] = ~e48SR[0] & ~e48SR[2] |  (E_CORE_RD_RQ | EBOX_DIAG_CYC) & ~e48SR[3];
   assign MBOX.MEM_TO_C_SEL[1] = ~e48SR[1] & ~e48SR[2] | ~(E_CORE_RD_RQ | EBOX_DIAG_CYC) & ~e48SR[3] &
                                 ~CSH.E_CACHE_WR_CYC;
