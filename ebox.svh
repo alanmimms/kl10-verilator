@@ -835,7 +835,6 @@ interface iCLK;
   bit MBOX_13;
   bit MBOX_14;
   bit MBOX_CYCLE_DIS;
-  bit MBOX_RESP;
   bit MBX;
   bit MBZ;
   bit MB_XFER;
