@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.105 (w)1999-2020 BSI
-[*] Tue Jul  7 22:20:56 2020
+[*] Wed Jul  8 02:56:55 2020
 [*]
 [dumpfile] "/home/alan/kl10-verilator/kl10pv-trace.vcd"
-[dumpfile_mtime] "Tue Jul  7 21:46:53 2020"
-[dumpfile_size] 85443229
+[dumpfile_mtime] "Wed Jul  8 00:47:48 2020"
+[dumpfile_size] 85442889
 [savefile] "/home/alan/kl10-verilator/clk-debug.gtkw"
-[timestart] 750321
+[timestart] 747544
 [size] 1920 1051
 [pos] -1 -1
-*-6.800100 750585 750585 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-6.800100 747895 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [ruler] 8708 175
 [treeopen] TOP.
 [treeopen] TOP.top.
@@ -349,17 +349,47 @@ TOP.top.mbox0.PMA.PA[14:35]
 TOP.top.mbox0.SBUS.CLK_INT
 [color] 2
 TOP.top.ebox0.clk0.MBOX_CLK
+[color] 2
+TOP.top.mbox0.CLK.IR
+[color] 2
+TOP.top.mbox0.CLK.MCL
 @30
 TOP.top.mbox0.IR.AC[9:12]
 TOP.top.mbox0.IR.IR[0:12]
 @28
+TOP.top.mbox0.MCL.MBOX_CYC_REQ
+TOP.top.ebox0.con0.MEM_CYCLE
+@68
+[color] 1
+TOP.top.ebox0.con0.XFER
+@29
+[color] 3
+TOP.top.mbox0.CLK.MB_XFER
+@68
+[color] 1
+TOP.top.mbox0.CLK.PAGE_ERROR
+[color] 1
+TOP.top.ebox0.con0.RESET
+@800028
+[color] 3
+TOP.top.ebox0.CRAM.MEM[0:3]
+@28
+[color] 3
+(2)TOP.top.ebox0.CRAM.MEM[0:3]
+@1001200
+-group_end
+@28
+[color] 3
+TOP.top.ebox0.VMA.AC_REF
+[color] 3
+TOP.top.ebox0.con0.MEM_CYCLE
+TOP.top.ebox0.con0.FETCH_CYCLE
+TOP.top.mbox0.MCL.VMA_FETCH
+TOP.top.mbox0.CON.LOAD_IR
 TOP.top.ebox0.ir0.HOLD_IR
 TOP.top.mbox0.CLK.MB_XFER
 TOP.top.ebox0.csh0.E_RD_T2_OK
-@29
 TOP.top.ebox0.csh0.RD_FOUND
-@28
-TOP.top.ebox0.csh0.e23out2
 TOP.top.mbox0.CSH.MBOX_RESP_IN
 @30
 TOP.top.mbox0.EDP.AD[-2:35]
