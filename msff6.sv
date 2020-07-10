@@ -6,7 +6,8 @@ module msff6(input bit clk,
              input bit [0:5] d,
             output bit [0:5] q);
 
-  bit [0:5] master;
-  always_ff @(negedge clk) master <= d;
-  always_ff @(posedge clk) q <= master;
+  genvar k;
+  for (k = 0; k < 6; ++k) begin: g
+    msff ff(.clk(clk), .d(d[k]), .q(q[k]));
+  end
 endmodule
