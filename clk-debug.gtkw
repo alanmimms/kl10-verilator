@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.105 (w)1999-2020 BSI
-[*] Fri Jul 10 21:51:17 2020
+[*] Sat Jul 11 01:18:37 2020
 [*]
 [dumpfile] "/home/alan/kl10-verilator/kl10pv-trace.vcd"
-[dumpfile_mtime] "Fri Jul 10 21:50:17 2020"
-[dumpfile_size] 85093970
+[dumpfile_mtime] "Sat Jul 11 01:18:30 2020"
+[dumpfile_size] 85093661
 [savefile] "/home/alan/kl10-verilator/clk-debug.gtkw"
 [timestart] 750034
 [size] 1920 1051
 [pos] -1 -1
-*-5.800624 750205 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-5.800624 750123 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [ruler] 8708 175
 [treeopen] TOP.
 [treeopen] TOP.top.
