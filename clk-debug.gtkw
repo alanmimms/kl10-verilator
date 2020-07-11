@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.105 (w)1999-2020 BSI
-[*] Wed Jul  8 02:56:55 2020
+[*] Fri Jul 10 21:51:17 2020
 [*]
 [dumpfile] "/home/alan/kl10-verilator/kl10pv-trace.vcd"
-[dumpfile_mtime] "Wed Jul  8 00:47:48 2020"
-[dumpfile_size] 85442889
+[dumpfile_mtime] "Fri Jul 10 21:50:17 2020"
+[dumpfile_size] 85093970
 [savefile] "/home/alan/kl10-verilator/clk-debug.gtkw"
-[timestart] 747544
+[timestart] 750034
 [size] 1920 1051
 [pos] -1 -1
-*-6.800100 747895 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-5.800624 750205 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [ruler] 8708 175
 [treeopen] TOP.
 [treeopen] TOP.top.
@@ -332,74 +332,52 @@ TOP.top.ebox0.CON.NICOND_TRAP_EN
 TOP.top.ebox0.CON.NICOND[7:10]
 @1401200
 -CON-nicond
+@28
+[color] 2
+TOP.top.mbox0.CLK.IR
+@30
+TOP.top.mbox0.IR.IR[0:12]
+TOP.top.mbox0.IR.AC[9:12]
 @800200
 -MBOX
 @30
 +{CRADR} TOP.top.CRA.CRADR[0:10]
 @28
-TOP.top.ebox0.CSH.MBOX_RESP_IN
-TOP.top.ebox0.clk0.CLK.RESP_MBOX
+TOP.top.ebox0.clk0.EBOX_CLK_EN
+TOP.top.ebox0.CLK.SYNC_EN
+TOP.top.ebox0.clk0.SYNC
+@29
 TOP.top.ebox0.con0.MEM_CYCLE
+@c00200
+-MemCycleDebug
+@28
+[color] 2
+TOP.top.ebox0.con0.clk
+[color] 2
+TOP.top.ebox0.clk0.MBOX_CLK
+TOP.top.mbox0.CSH.MBOX_RESP_IN
+TOP.top.mbox0.CON.FM_XFER
+TOP.top.ebox0.CLK.MB_XFER
+TOP.top.ebox0.clk0.e32q3
+TOP.top.ebox0.clk0.e32q13
+TOP.top.ebox0.con0.XFER
+TOP.top.ebox0.con0.e57q13
+TOP.top.ebox0.con0.e57q14
+TOP.top.ebox0.con0.MEM_CYCLE
+@68
+[color] 1
+TOP.top.ebox0.con0.XFER
+@28
+TOP.top.MCL.MBOX_CYC_REQ
 TOP.top.ebox0.clk0.CON.MBOX_WAIT
+@1401200
+-MemCycleDebug
 @30
 [color] 3
 TOP.top.mbox0.PMA.PA[14:35]
 @28
 [color] 2
 TOP.top.mbox0.SBUS.CLK_INT
-[color] 2
-TOP.top.ebox0.clk0.MBOX_CLK
-[color] 2
-TOP.top.mbox0.CLK.IR
-[color] 2
-TOP.top.mbox0.CLK.MCL
-@30
-TOP.top.mbox0.IR.AC[9:12]
-TOP.top.mbox0.IR.IR[0:12]
-@28
-TOP.top.mbox0.MCL.MBOX_CYC_REQ
-TOP.top.ebox0.con0.MEM_CYCLE
-@68
-[color] 1
-TOP.top.ebox0.con0.XFER
-@29
-[color] 3
-TOP.top.mbox0.CLK.MB_XFER
-@68
-[color] 1
-TOP.top.mbox0.CLK.PAGE_ERROR
-[color] 1
-TOP.top.ebox0.con0.RESET
-@800028
-[color] 3
-TOP.top.ebox0.CRAM.MEM[0:3]
-@28
-[color] 3
-(2)TOP.top.ebox0.CRAM.MEM[0:3]
-@1001200
--group_end
-@28
-[color] 3
-TOP.top.ebox0.VMA.AC_REF
-[color] 3
-TOP.top.ebox0.con0.MEM_CYCLE
-TOP.top.ebox0.con0.FETCH_CYCLE
-TOP.top.mbox0.MCL.VMA_FETCH
-TOP.top.mbox0.CON.LOAD_IR
-TOP.top.ebox0.ir0.HOLD_IR
-TOP.top.mbox0.CLK.MB_XFER
-TOP.top.ebox0.csh0.E_RD_T2_OK
-TOP.top.ebox0.csh0.RD_FOUND
-TOP.top.mbox0.CSH.MBOX_RESP_IN
-@30
-TOP.top.mbox0.EDP.AD[-2:35]
-TOP.top.mbox0.MBOX.CACHE_DATA[0:35]
-TOP.top.mbox0.MBOX.MEM_TO_CACHE[0:35]
-@28
-TOP.top.mbox0.MBOX.MEM_TO_C_EN
-TOP.top.mbox0.MBOX.MEM_TO_C_SEL[0:1]
-@22
-TOP.top.mbox0.mbx0.e48SR[0:3]
 @30
 +{SBUS_D} TOP.top.memory0.SBUS.D[0:35]
 [color] 3
