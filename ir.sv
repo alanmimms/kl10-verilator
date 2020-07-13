@@ -80,8 +80,14 @@ module ir(iIR IR,
   // Latch-mux es
   bit EN_AC, EN_IO_JRST;
   bit [1:10] DRAM_J;
-  always_latch if (HOLD_DRAM) IR.DRAM_J[1:4] <= ~JRST ? DRAM_J[1:4] : {DRAM_J[1:3], 1'b0};
-  always_latch if (HOLD_DRAM) IR.DRAM_J[7:10] <= ~JRST ? IR.IR[9:12] : DRAM_PAR_J[7:10];
+
+// XXX come back to this to separate the "bold new 21st Centure way"
+// from the "original recipe" in schematics. Why didn't assign of
+// IR.DRAM_J conflict with these non-blocking assignments? Because
+// they are conditional?
+//
+//  always_latch if (HOLD_DRAM) IR.DRAM_J[1:4] <= ~JRST ? DRAM_J[1:4] : {DRAM_J[1:3], 1'b0};
+//  always_latch if (HOLD_DRAM) IR.DRAM_J[7:10] <= ~JRST ? IR.IR[9:12] : DRAM_PAR_J[7:10];
   always_latch if (HOLD_DRAM) IR.AC[9:12] <= ~EN_AC ? 4'b0000 : IR.IR[9:12];
 
   bit INSTR_7xx, e75q2;
