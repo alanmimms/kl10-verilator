@@ -1,9 +1,9 @@
 [*]
 [*] GTKWave Analyzer v3.3.105 (w)1999-2020 BSI
-[*] Sat Jul 11 01:18:37 2020
+[*] Mon Jul 13 16:40:17 2020
 [*]
 [dumpfile] "/home/alan/kl10-verilator/kl10pv-trace.vcd"
-[dumpfile_mtime] "Sat Jul 11 01:18:30 2020"
+[dumpfile_mtime] "Mon Jul 13 16:12:32 2020"
 [dumpfile_size] 85093661
 [savefile] "/home/alan/kl10-verilator/clk-debug.gtkw"
 [timestart] 750034
@@ -338,6 +338,12 @@ TOP.top.mbox0.CLK.IR
 @30
 TOP.top.mbox0.IR.IR[0:12]
 TOP.top.mbox0.IR.AC[9:12]
+@28
+TOP.top.mbox0.MBOX.MEM_TO_C_EN
+TOP.top.mbox0.mt00.DATA_TO_MEM_EN
+@30
+TOP.top.mbox0.MBOX.MEM_TO_CACHE[0:35]
+TOP.top.mbox0.MBOX.MEM_DATA_IN[0:35]
 @800200
 -MBOX
 @30
@@ -346,7 +352,6 @@ TOP.top.mbox0.IR.AC[9:12]
 TOP.top.ebox0.clk0.EBOX_CLK_EN
 TOP.top.ebox0.CLK.SYNC_EN
 TOP.top.ebox0.clk0.SYNC
-@29
 TOP.top.ebox0.con0.MEM_CYCLE
 @c00200
 -MemCycleDebug
@@ -378,6 +383,8 @@ TOP.top.mbox0.PMA.PA[14:35]
 @28
 [color] 2
 TOP.top.mbox0.SBUS.CLK_INT
+@29
+TOP.top.memory0.aClk
 @30
 +{SBUS_D} TOP.top.memory0.SBUS.D[0:35]
 [color] 3
