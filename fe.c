@@ -325,7 +325,7 @@ static W36 loadBootstrap(W36 *firstInsnP) {
 
     for (int wn = nWords; wn; --wn) {
       len = fread(fw, 1, sizeof(fw), f);
-      if (len < sizeof(fw)) fatalError("reading images/boot/boot.exe");
+      if (len < sizeof(fw)) fatalError("reading images/aboot/boot.exe");
       w = fileWordToWord(fw);
       if (addr < minAddr) minAddr = addr;
       if (addr > maxAddr) maxAddr = addr;
