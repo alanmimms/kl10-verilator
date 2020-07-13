@@ -49,7 +49,7 @@ module clk(input bit CROBAR,
   bit EBOX_CLK_EN, EBOX_CLK_ERROR, EBOX_EDP_DIS, EBOX_CRM_DIS, EBOX_CTL_DIS;
   bit BURST;
   bit CLK_DELAYED /*noverilator clocker*/;
-  bit MBOX_CLK /*noverilator clocker*/;
+  bit MBOX_CLK /*verilator clocker*/;
   bit MAIN_SOURCE /*noverilator clocker*/;
   bit GATED /*noverilator clocker*/;
   bit GATED_EN;

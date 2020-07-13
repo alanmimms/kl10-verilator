@@ -26,7 +26,7 @@
 // The design is simplified by "wasting" a small amount of RAM. Sue
 // me. It's the fucking 21st Century and we stand SO TALL on the
 // shoulders of giants that we don't have to dick around to save a few
-// kilobits.
+// measly kilobits.
 `timescale 1ns/1ps
 `include "ebox.svh"
 
