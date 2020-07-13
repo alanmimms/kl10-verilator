@@ -301,13 +301,14 @@ static W36 fileWordToWord(unsigned char fw[]) {
 
 
 // Load the BOOT.EXE into memory and return the boot address.
+#define IMAGE "./images/aboot/boot.exe"
 static W36 loadBootstrap(W36 *firstInsnP) {
   LL startTicks = nextReqTicks;
   printf("\n");
   TLOG("[Loading BOOT.EXE]\n");
 
-  FILE *f = fopen("./images/boot/boot.exe", "rb");
-  if (!f) fatalError("opening images/boot/boot.exe");
+  FILE *f = fopen(IMAGE, "rb");
+  if (!f) fatalError("opening " IMAGE);
   W36 minAddr = (1ull << 36) - 1;
   W36 maxAddr = 0;
   W36 w;
@@ -315,7 +316,7 @@ static W36 loadBootstrap(W36 *firstInsnP) {
   for (;;) {
     unsigned char fw[5];
     size_t len = fread(&fw, 1, sizeof(fw), f);
-    if (len < sizeof(fw)) fatalError("reading images/boot/boot.exe");
+    if (len < sizeof(fw)) fatalError("reading " IMAGE);
     w = fileWordToWord(fw);
     unsigned nww = LH(w);
     unsigned addr = RH(w);
@@ -325,7 +326,7 @@ static W36 loadBootstrap(W36 *firstInsnP) {
 
     for (int wn = nWords; wn; --wn) {
       len = fread(fw, 1, sizeof(fw), f);
-      if (len < sizeof(fw)) fatalError("reading images/aboot/boot.exe");
+      if (len < sizeof(fw)) fatalError("reading " IMAGE);
       w = fileWordToWord(fw);
       if (addr < minAddr) minAddr = addr;
       if (addr > maxAddr) maxAddr = addr;
