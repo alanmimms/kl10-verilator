@@ -85,10 +85,11 @@ module ir(iIR IR,
   always_latch if (HOLD_DRAM) IR.AC[9:12] <= ~EN_AC ? 4'b0000 : IR.IR[9:12];
 
   bit INSTR_7xx, e75q2;
-  assign INSTR_7xx = |IR.IR[0:2] | EN_IO_JRST;
-  assign e75q2 = ~&(~IR.IR[3:6]);
-  always_comb DR_ADR[3:5] = INSTR_7xx ? {3{e75q2}} | IR.IR[7:9] : IR.IR[3:5];
-  always_comb DR_ADR[6:8] = INSTR_7xx ? IR.IR[10:12] : IR.IR[6:8];
+  assign INSTR_7xx = &IR.IR[0:2] & EN_IO_JRST;
+  assign e75q2 = IR.IR[3:6] !== 4'b0000;
+  assign DR_ADR[0:2] = IR.IR[0:2];
+  assign DR_ADR[3:5] = INSTR_7xx ? {3{e75q2}} | IR.IR[7:9] : IR.IR[3:5];
+  assign DR_ADR[6:8] = INSTR_7xx ? IR.IR[10:12] : IR.IR[6:8];
 
   // XXX In addition to the below, this has two mystery OR-term
   // signals on each input to the AND that are unlabeled except for
