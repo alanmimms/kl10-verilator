@@ -296,7 +296,7 @@ static W36 fileWordToWord(unsigned char fw[]) {
     ((W36) fw[1] << 20) |
     ((W36) fw[2] << 12) |
     ((W36) fw[3] <<  4) |
-    ((W36) fw[4] >> 4);
+    (W36) fw[4];
 }
 
 
@@ -306,6 +306,8 @@ static W36 loadBootstrap(W36 *firstInsnP) {
   LL startTicks = nextReqTicks;
   printf("\n");
   TLOG("[Loading BOOT.EXE]\n");
+
+  FILE *memLogF = fopen("mem.log", "w");
 
   FILE *f = fopen(IMAGE, "rb");
   if (!f) fatalError("opening " IMAGE);
@@ -325,14 +327,15 @@ static W36 loadBootstrap(W36 *firstInsnP) {
     int nWords = B17 - nww;     /* Negate RH */
 
     for (int wn = nWords; wn; --wn) {
+      ++addr;                   /* CSAV format provides addr-1, so preincrement */
       len = fread(fw, 1, sizeof(fw), f);
       if (len < sizeof(fw)) fatalError("reading " IMAGE);
       w = fileWordToWord(fw);
       if (addr < minAddr) minAddr = addr;
       if (addr > maxAddr) maxAddr = addr;
-      if (addr == 040000ull) *firstInsnP = w;
+      if (addr == 040000ull) *firstInsnP = w; /* HACK XXX */
       doWriteMemory(addr, w);
-      ++addr;
+      fprintf(memLogF, "%06o: %s\n", addr, octW(w));
     }
   }
 
@@ -341,7 +344,10 @@ static W36 loadBootstrap(W36 *firstInsnP) {
   printf("          [boot image maxAddr: %6llo]\n", maxAddr);
 
   doWriteMemory(0ull, w);
+  fprintf(memLogF, "%06o: %s\n", 0u, octW(w));
   TLOG("[start instruction %s deposited in mem[0]]\n", octW(w));
+  fclose(f);
+  fclose(memLogF);
   return w;
 }
 
