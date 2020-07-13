@@ -2,7 +2,7 @@
 module sim_mem 
   #(parameter SIZE=0,
     parameter WIDTH=0,
-    parameter NBYTES=0)
+    parameter NBYTES=1)
   (input bit clk /*verilator clocker*/,
    input bit [0:WIDTH-1] din,
    output bit [0:WIDTH-1] dout,
