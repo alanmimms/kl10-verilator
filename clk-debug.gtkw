@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.105 (w)1999-2020 BSI
-[*] Mon Jul 13 16:40:17 2020
+[*] Mon Jul 13 18:33:32 2020
 [*]
 [dumpfile] "/home/alan/kl10-verilator/kl10pv-trace.vcd"
-[dumpfile_mtime] "Mon Jul 13 16:12:32 2020"
-[dumpfile_size] 85093661
+[dumpfile_mtime] "Mon Jul 13 18:32:12 2020"
+[dumpfile_size] 36228776
 [savefile] "/home/alan/kl10-verilator/clk-debug.gtkw"
-[timestart] 750034
+[timestart] 750036
 [size] 1920 1051
 [pos] -1 -1
-*-5.800624 750123 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-6.800624 750166 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [ruler] 8708 175
 [treeopen] TOP.
 [treeopen] TOP.top.
@@ -332,18 +332,28 @@ TOP.top.ebox0.CON.NICOND_TRAP_EN
 TOP.top.ebox0.CON.NICOND[7:10]
 @1401200
 -CON-nicond
+@800200
+-IR
 @28
 [color] 2
 TOP.top.mbox0.CLK.IR
 @30
 TOP.top.mbox0.IR.IR[0:12]
-TOP.top.mbox0.IR.AC[9:12]
 @28
-TOP.top.mbox0.MBOX.MEM_TO_C_EN
-TOP.top.mbox0.mt00.DATA_TO_MEM_EN
+TOP.top.ebox0.ir0.INSTR_7xx
+TOP.top.ebox0.ir0.e75q2
 @30
-TOP.top.mbox0.MBOX.MEM_TO_CACHE[0:35]
-TOP.top.mbox0.MBOX.MEM_DATA_IN[0:35]
+TOP.top.ebox0.ir0.DR_ADR[0:8]
+TOP.top.ebox0.ir0.DRAMdata[0:14]
+TOP.top.mbox0.IR.DRAM_A[0:2]
+TOP.top.mbox0.IR.DRAM_B[0:2]
+TOP.top.mbox0.IR.DRAM_J[0:10]
+@29
+TOP.top.ebox0.ir0.HOLD_DRAM
+@30
+TOP.top.mbox0.IR.AC[9:12]
+@1000200
+-IR
 @800200
 -MBOX
 @30
@@ -383,7 +393,6 @@ TOP.top.mbox0.PMA.PA[14:35]
 @28
 [color] 2
 TOP.top.mbox0.SBUS.CLK_INT
-@29
 TOP.top.memory0.aClk
 @30
 +{SBUS_D} TOP.top.memory0.SBUS.D[0:35]
