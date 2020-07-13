@@ -25,7 +25,7 @@ module memory(input bit CROBAR,
   assign aClk = ~SBUS.CLK_INT;
   assign bClk =  SBUS.CLK_INT;
 
-  assign SBUS.D = aClk ? aData : bData;
+  assign SBUS.D = SBUS.DATA_VALID_A ? aData : (SBUS.DATA_VALID_B ? bData : '0);
   assign SBUS.DATA_PAR = aClk ? aParity : bParity;
 
   iRAM ramIntf();
