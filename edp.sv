@@ -49,24 +49,38 @@ module edp(iAPR APR,
     ARM = '0;
 
     if (DTE.overrideAR) ARM = DTE.ARvalue;
-    else unique case (CTL.ARL_SEL)
+    else begin
+      unique case (CTL.ARL_SEL)
          // These hwOptions bits are wirewrapped
          // onto the backplane for each machine's
          // serial number and hardware options.
          // This is listed in schematics as ARMM
          // but ARMM is only [0:8] and [13:17]
          // (driven by SCD and VMA, respectively).
-         // The low half comes from this
-         // wirewrapped strapping.
-         3'b000: ARM = {EDP.ARMM_SCD, 4'b0, EDP.ARMM_VMA, hwOptions};
-         3'b001: ARM = MBOX.CACHE_DATA[0:35];
-         3'b010: ARM = EDP.AD[0:35];
-         3'b011: ARM = EBUS.data[0:35];
-         3'b100: ARM = SHM.SH[0:35];
-         3'b101: ARM = {EDP.AD[1:35], EDP.ADX[0]};
-         3'b110: ARM = EDP.ADX[0:35];
-         3'b111: ARM = {AD_EX[-2:-1], EDP.AD[0:33]};
+         3'b000: ARM[0:17] = {EDP.ARMM_SCD, 4'b0, EDP.ARMM_VMA};
+         3'b001: ARM[0:17] = MBOX.CACHE_DATA[0:17];
+         3'b010: ARM[0:17] = EDP.AD[0:17];
+         3'b011: ARM[0:17] = EBUS.data[0:17];
+         3'b100: ARM[0:17] = SHM.SH[0:17];
+         3'b101: ARM[0:17] = EDP.AD[1:18];
+         3'b110: ARM[0:17] = EDP.ADX[0:17];
+         3'b111: ARM[0:17] = {AD_EX[-2:-1], EDP.AD[0:15]};
          endcase
+
+      unique case ({CRAM.AR[0], CTL.ARR_SEL[0:1]})
+         // These hwOptions bits are wirewrapped
+         // onto the backplane for each machine's
+         // serial number and hardware options.
+         3'b000: ARM[18:35] = hwOptions;
+         3'b001: ARM[18:35] = MBOX.CACHE_DATA[18:35];
+         3'b010: ARM[18:35] = EDP.AD[18:35];
+         3'b011: ARM[18:35] = EBUS.data[18:35];
+         3'b100: ARM[18:35] = SHM.SH[18:35];
+         3'b101: ARM[18:35] = {EDP.AD[19:35], EDP.ADX[0]};
+         3'b110: ARM[18:35] = EDP.ADX[18:35];
+         3'b111: ARM[18:35] = EDP.AD[16:33];
+         endcase
+    end
 
     if (CTL.AR00to11_CLR) ARM[0:11] = '0;
     if (CTL.AR12to17_CLR) ARM[12:17] = '0;
