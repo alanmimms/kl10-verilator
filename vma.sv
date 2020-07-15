@@ -22,29 +22,28 @@ module vma(iAPR APR,
   assign clk = CLK.VMA;
 
   // VMA1 p.354
+  bit VMA28_31eq0;
+  assign VMA28_31eq0 = VMA.VMA[28:31] == '0;
+
   bit MISCeq0;
-  assign MISCeq0 = ~VMA.VMA[18] & ~VMA.VMA[19] & ~VMA.VMA[12] & ~MCL.ADR_ERR;
+  // Note wire-AND
+  assign MISCeq0 = ~VMA.VMA[18] & ~VMA.VMA[19] & ~VMA.VMA[12] & ~MCL.ADR_ERR & VMA28_31eq0;
 
   bit VMA20_27eq0;
   assign VMA20_27eq0 = VMA.VMA[20:27] == '0;
 
-  bit VMA28_31eq0;
-  assign VMA28_31eq0 = VMA.VMA[28:31] == 0;
-
   bit LOCAL;
-  bit VMA_SECTION_0, VMA_SECTION_01, LOCAL_AC_ADDRESS;
+  bit VMA_SECTION_0, VMA_SECTION_01;
   bit PC_SECTION_0;
-  assign VMA_SECTION_0 = VMA.VMA[13:16] == 0;
+  assign VMA_SECTION_0 = VMA.VMA[13:17] == 0;
   assign VMA_SECTION_01 = VMA.VMA[13:16] == 0;
   assign LOCAL = ~MCL.VMA_EXTENDED | MCL.VMA_FETCH | VMA_SECTION_01;
-  assign LOCAL_AC_ADDRESS = ~VMA_SECTION_01 & LOCAL & MISCeq0 & VMA20_27eq0;
-
+  assign VMA.LOCAL_AC_ADDRESS = ~VMA_SECTION_01 & LOCAL & MISCeq0 & VMA20_27eq0;
   assign VMA.AC_REF = VMA20_27eq0 &
-                      (MISCeq0 | VMA28_31eq0) &
+                      MISCeq0 &
                       MCL.PAGE_UEBR_REF &
                       MCL.VMA_READ_OR_WRITE &
                       LOCAL;
-
 
   bit SPEC_VMA_MAGIC;
   assign SPEC_VMA_MAGIC = CON.COND_VMA_MAGIC;
@@ -301,7 +300,7 @@ module vma(iAPR APR,
 
   mux e38(.en(READ_VMA),
           .sel(diag[4:6]),
-          .d({rev3(VMA.ADR_BRK[13:15]), ~LOCAL_AC_ADDRESS,
+          .d({rev3(VMA.ADR_BRK[13:15]), ~VMA.LOCAL_AC_ADDRESS,
               rev3(VMA.VMA[13:15]), ~VMA.MATCH_13_35}),
           .q(VMA.EBUSdriver.data[15]));
 
