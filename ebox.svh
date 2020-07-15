@@ -1261,70 +1261,70 @@ endinterface
 
 
 interface iSCD;
-  bit SC_GE_36;
+  bit ADR_BRK_CYC;
+  bit ADR_BRK_INH;
+  bit ADR_BRK_PREVENT;
+  bit CRY0;
+  bit CRY1;
+  bit DIV_CHK;
+  bit FE_SIGN;
+  bit FOV;
+  bit FPD;
+  bit FXU;
+  bit KERNEL_MODE;
+  bit KERNEL_USER_IOT;
+  bit OV;
+  bit PCP;
+  bit PRIVATE;
+  bit PRIVATE_INSTR;
+  bit PUBLIC;
+  bit PUBLIC_EN;
+  bit SCAD_SIGN;
+  bit SCADeq0;
   bit SC_36_TO_63;
+  bit SC_GE_36;
+  bit SC_SIGN;
+  bit TRAP_CYC_1;
+  bit TRAP_CYC_2;
+  bit TRAP_REQ_1;
+  bit TRAP_REQ_2;
+  bit USER;
+  bit USER_IOT;
   bit [0:9] FE;
   bit [0:9] SC;
   bit [0:9] SCADA;
   bit [0:9] SCADB;
-  bit SCADeq0;
-  bit SCAD_SIGN;
-  bit SC_SIGN;
-  bit FE_SIGN;
-  bit OV;
-  bit CRY0;
-  bit CRY1;
-  bit FOV;
-  bit FXU;
-  bit FPD;
-  bit PCP;
-  bit DIV_CHK;
-  bit TRAP_REQ_1;
-  bit TRAP_REQ_2;
-  bit TRAP_CYC_1;
-  bit TRAP_CYC_2;
   bit [32:35] TRAP_MIX;
-  bit KERNEL_MODE;
-  bit USER;
-  bit USER_IOT;
-  bit KERNEL_USER_IOT;
-  bit PUBLIC;
-  bit PUBLIC_EN;
-  bit PRIVATE;
-  bit PRIVATE_INSTR;
-  bit ADR_BRK_PREVENT;
-  bit ADR_BRK_INH;
-  bit ADR_BRK_CYC;
   tEBUSdriver EBUSdriver;
 endinterface
 
 
 interface iSHM;
-  bit [0:35] SH;
-  bit [0:3] XR;
+  bit ARX_PAR_ODD;
+  bit AR_EXTENDED;
   bit AR_PAR_ODD;
   bit INDEXED;
-  bit AR_EXTENDED;
-  bit ARX_PAR_ODD;
+  bit [0:35] SH;
+  bit [0:3] XR;
   tEBUSdriver EBUSdriver;
 endinterface
 
 
 interface iVMA;
-  bit LOCAL_AC_ADDRESS;
   bit AC_REF;
-  bit [12:35] PC;
-  bit [12:35] VMA;
-  bit [12:35] ADR_BRK;
-  bit [12:17] PREV_SEC;
-  bit [12:35] HELD;
-  bit [0:35] HELD_OR_PC;
-  bit PC_SECTION_0;
-  bit PCS_SECTION_0;
-  bit VMA_SECTION_0;
   bit LOAD_PC;
   bit LOAD_VMA_HELD;
+  bit LOCAL_AC_ADDRESS;
   bit MATCH_13_35;
+  bit PCS_SECTION_0;
+  bit PC_SECTION_0;
+  bit VMA_SECTION_0;
+  bit [0:35] HELD_OR_PC;
+  bit [12:17] PREV_SEC;
+  bit [12:35] ADR_BRK;
+  bit [12:35] HELD;
+  bit [12:35] PC;
+  bit [12:35] VMA;
   tEBUSdriver EBUSdriver;
 endinterface
 
