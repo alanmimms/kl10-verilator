@@ -159,6 +159,7 @@ module vma(iAPR APR,
            .COUT(CRY_32));
 
   // VMA3 p.356
+  bit LOAD_PC;
   assign VMA.MATCH_13_35 = VMA.ADR_BRK[13:35] == VMA.VMA[13:35];
 
   genvar k;
@@ -189,7 +190,7 @@ module vma(iAPR APR,
                  .D(VMA.VMA[k:k+3]),
                  .S3(1'b0),
                  .Q(VMA.PC[k:k+3]),
-                 .SEL({2{~VMA.LOAD_PC}}),
+                 .SEL({2{~LOAD_PC}}),
                  .CLK(clk));
     end
   endgenerate
@@ -291,6 +292,7 @@ module vma(iAPR APR,
 
   bit [4:6] diag;
   bit READ_VMA;
+  assign LOAD_PC = CTL.LOAD_PC;
   assign diag = CTL.DIAG[4:6];
   assign READ_VMA = CTL.DIAG_READ_FUNC_15x;
   mux e33(.en(READ_VMA),

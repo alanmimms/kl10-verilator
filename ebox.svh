@@ -1312,7 +1312,6 @@ endinterface
 
 interface iVMA;
   bit AC_REF;
-  bit LOAD_PC;
   bit LOAD_VMA_HELD;
   bit LOCAL_AC_ADDRESS;
   bit MATCH_13_35;
