@@ -41,7 +41,7 @@ module vma(iAPR APR,
   assign VMA.LOCAL_AC_ADDRESS = ~VMA_SECTION_01 & LOCAL & MISCeq0 & VMA20_27eq0;
   assign VMA.AC_REF = VMA20_27eq0 &
                       MISCeq0 &
-                      MCL.PAGE_UEBR_REF &
+                      MCL.PAGE_UEBR_REF_A &
                       MCL.VMA_READ_OR_WRITE &
                       LOCAL;
 
