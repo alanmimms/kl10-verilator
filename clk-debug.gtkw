@@ -1,6 +1,6 @@
 [*]
 [*] GTKWave Analyzer v3.3.105 (w)1999-2020 BSI
-[*] Thu Jul 16 00:56:37 2020
+[*] Thu Jul 16 01:00:25 2020
 [*]
 [dumpfile] "/home/alan/kl10-verilator/kl10pv-trace.vcd"
 [dumpfile_mtime] "Thu Jul 16 00:56:19 2020"
@@ -9,7 +9,7 @@
 [timestart] 750219
 [size] 1920 1051
 [pos] -1 -1
-*-6.800624 750357 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-6.800624 750424 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [ruler] 8708 175
 [treeopen] TOP.
 [treeopen] TOP.top.
@@ -190,10 +190,11 @@ TOP.top.ebox0.VMA.AC_REF
 [color] 2
 +{TOP.top.CLK.CRA} TOP.top.CLK.CRA
 +{CRADR} TOP.top.CRA.CRADR[0:10]
-@800200
+@c00200
 -EDPstate
+@800200
 -EDPregs
-@c00201
+@c00200
 -regctl
 @30
 TOP.top.ebox0.CTL.AR00to08_LOAD
@@ -205,7 +206,7 @@ TOP.top.ebox0.CTL.ARR_CLR
 @28
 TOP.top.ebox0.CTL.ARX_CLR
 TOP.top.ebox0.CTL.ARX_LOAD
-@1401201
+@1401200
 -regctl
 @c00200
 -AD
@@ -253,7 +254,7 @@ TOP.top.CTL.ARL_SEL[0:2]
 TOP.top.ebox0.CTL.ARR_SEL[0:1]
 @1401200
 -ARM
-@800200
+@c00200
 -ADX
 @30
 [color] 7
@@ -264,7 +265,7 @@ TOP.top.ebox0.edp0.ADXA[0:35]
 TOP.top.ebox0.edp0.ADXB[0:35]
 [color] 3
 TOP.top.ebox0.EDP.ADX[0:35]
-@1000200
+@1401200
 -ADX
 @c00200
 -ARXM
@@ -347,7 +348,6 @@ TOP.top.ebox0.CON.FM_WRITE18_35
 TOP.top.ebox0.edp0.FM_WRITE
 @1401200
 -FM
-@1000200
 -EDPstate
 @c00200
 -CON-nicond
@@ -427,30 +427,6 @@ TOP.top.EDP.AR[0:35]
 TOP.top.EDP.ARX[0:35]
 @28
 TOP.top.ebox0.con0.MEM_CYCLE
-@c00200
--MemCycleDebug
-@28
-[color] 2
-TOP.top.ebox0.con0.clk
-[color] 2
-TOP.top.ebox0.clk0.MBOX_CLK
-TOP.top.mbox0.CSH.MBOX_RESP_IN
-TOP.top.mbox0.CON.FM_XFER
-TOP.top.ebox0.CLK.MB_XFER
-TOP.top.ebox0.clk0.e32q3
-TOP.top.ebox0.clk0.e32q13
-TOP.top.ebox0.con0.XFER
-TOP.top.ebox0.con0.e57q13
-TOP.top.ebox0.con0.e57q14
-TOP.top.ebox0.con0.MEM_CYCLE
-@68
-[color] 1
-TOP.top.ebox0.con0.XFER
-@28
-TOP.top.MCL.MBOX_CYC_REQ
-TOP.top.ebox0.clk0.CON.MBOX_WAIT
-@1401200
--MemCycleDebug
 @30
 [color] 3
 TOP.top.mbox0.PMA.PA[14:35]
