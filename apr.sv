@@ -26,6 +26,7 @@ module apr(iAPR APR,
   bit [6:7] magic;
 
   assign clk = CLK.APR;
+  assign APR.CLK = clk;
   assign RESET = CLK.MR_RESET;
   assign DIAG = CTL.DIAG[4:6];
   assign DS = ~DIAG & {3{CTL.DIAG_READ_FUNC_11x}};
