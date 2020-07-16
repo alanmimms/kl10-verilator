@@ -171,7 +171,7 @@ module ctl(iAPR APR,
   assign CTL.AR00to11_CLR = CTL.AR12to17_CLR | MCL._23_BIT_EA;
   assign CTL.AR12to17_CLR = RESET | MCL._18_BIT_EA |
                             (ARL_IND ? CRAM.MAGIC[4] : COND_AR_CLR) |
-                            DISP_EA_MOD & EDP.ARX[18];
+                            DISP_EA_MOD & ~EDP.ARX[18];
   assign CTL.ARR_CLR = ARL_IND ? CRAM.MAGIC[5] : COND_AR_CLR;
 
   assign CTL.SPEC_CALL = CLK.SBR_CALL | (ARL_IND ? CRAM.MAGIC[0] : SPEC_SBR_CALL);
