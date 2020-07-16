@@ -316,6 +316,7 @@ module mcl(iAPR APR,
                         IR.DRAM_A == 3'b110 ||
                         IR.DRAM_A == 3'b111) &
                        MEM_AREAD;
+  assign AREAD_1xx = IR.DRAM_A[0] & MEM_AREAD;
 
   always_ff @(posedge clk) if (MEM_AREAD) begin
     EA_PREVIOUS <= MCL.VMA_PREV_EN;
