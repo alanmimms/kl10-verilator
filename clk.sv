@@ -67,6 +67,7 @@ module clk(input bit CROBAR,
 `ifdef VERILATOR
   bit [3:0] ring60;
   initial ring60 = 4'b1000;     // First tick provides ring60[0] posedge
+  assign CLK.ring60[3:0] = ring60[3:0];
 
   // Infinitely left-recirculating ring
   always_ff @(negedge clk60) ring60 <= {ring60[2:0], ring60[3]};

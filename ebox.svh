@@ -864,6 +864,7 @@ interface iCLK;
   bit VMA;
   bit [0:1] RATE_SEL;
   bit [0:1] SOURCE_SEL;
+  bit [3:0] ring60;
   bit [7:10] PF_DISP;
   bit u1777_EN;
   tEBUSdriver EBUSdriver;
