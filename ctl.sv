@@ -129,7 +129,7 @@ module ctl(iAPR APR,
   assign REG_CTL[7:8]    = CRAM.MAGIC[7:8] & {2{COND_REG_CTL}};
 
   bit e12q15;
-  assign e12q15 = (~APR.CLK & e12q15) |
+  assign e12q15 = ~APR.CLK & e12q15 |
                   (SPEC_LOAD_PC | CTL.DISP_NICOND) & ~CLK.SBR_CALL;
   assign CTL.LOAD_PC = ~CON.PI_CYCLE & e12q15;
 
