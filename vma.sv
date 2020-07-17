@@ -162,38 +162,39 @@ module vma(iAPR APR,
   bit LOAD_PC;
   assign VMA.MATCH_13_35 = VMA.ADR_BRK[13:35] == VMA.VMA[13:35];
 
+  bit ignoredE47;
+  USR4 e47(.S0(1'b0),
+           .D({1'b0, EDP.AD[13:15]}),
+           .S3(1'b0),
+           .Q({ignoredE47, VMA.ADR_BRK[13:15]}),
+           .SEL({2{~CON.DATAO_APR}}),
+           .CLK(clk));
+
   genvar k;
-  generate
-    bit ignored2;
+  generate for (k = 12; k < 36; k += 6) begin: adrBrkR
+    USR4 r(.S0(1'b0),
+           .D(k == 12 ? {1'b0, EDP.AD[k+1:k+3]} : {EDP.AD[k:k+3]}),
+           .S3(1'b0),
+           .Q(VMA.ADR_BRK[k:k+3]),
+           .SEL({2{~CON.DATAO_APR}}),
+           .CLK(clk));
+  end endgenerate
 
-    for (k = 12; k < 36; k += 6) begin: adrBrkR
-      USR4 r(.S0(1'b0),
-             .D(k == 12 ? {1'b0, EDP.AD[k+1:k+3]} : {EDP.AD[k:k+3]}),
-             .S3(1'b0),
-             .Q(VMA.ADR_BRK[k:k+3]),
-             .SEL({2{~CON.DATAO_APR}}),
-             .CLK(clk));
-    end
-  endgenerate
+  USR4 e8(.S0(1'b0),
+          .D({VMA_SECTION_0, VMA.VMA[13:15]}),
+          .S3(1'b0),
+          .Q({PC_SECTION_0, VMA.PC[13:15]}),
+          .SEL({2{~CON.DATAO_APR}}),
+          .CLK(clk));
 
-  generate
-
-    USR4 VMA3r12(.S0(1'b0),
-                 .D({VMA_SECTION_0, VMA.VMA[13:15]}),
-                 .S3(1'b0),
-                 .Q({PC_SECTION_0, VMA.PC[13:15]}),
-                 .SEL({2{~CON.DATAO_APR}}),
-                 .CLK(clk));
-
-    for (k = 12; k < 36; k += 6) begin: fullPC
-      USR4 VMA3r(.S0(1'b0),
-                 .D(VMA.VMA[k:k+3]),
-                 .S3(1'b0),
-                 .Q(VMA.PC[k:k+3]),
-                 .SEL({2{~LOAD_PC}}),
-                 .CLK(clk));
-    end
-  endgenerate
+  generate for (k = 12; k < 36; k += 6) begin: fullPC
+    USR4 r(.S0(1'b0),
+           .D(VMA.VMA[k:k+3]),
+           .S3(1'b0),
+           .Q(VMA.PC[k:k+3]),
+           .SEL({2{~LOAD_PC}}),
+           .CLK(clk));
+  end endgenerate
 
 
   // VMA4 p.357
