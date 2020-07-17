@@ -62,9 +62,6 @@ module top(input clk60 /*noverilator clocker*/);
 
   bit masterClk;
 
-  var string indent = "";
-  var int nSteps;
-
   bit [0:5] ucodeMajor;
   bit [6:8] ucodeMinor;
   bit [0:8] ucodeEdit;
