@@ -4,7 +4,7 @@ module USR4(input bit S0,
             input bit [0:3] D,
             input bit S3,
             input bit [0:1] SEL,
-            input bit CLK /*noverilator clocker*/,
+            input bit CLK /*verilator clocker*/,
             output bit [0:3] Q);
 
   always_ff @(posedge CLK) unique case (SEL)
