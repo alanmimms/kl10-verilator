@@ -23,7 +23,8 @@ TBOBJS = $(foreach F,$(CFILES:.c=.o) $(CXXFILES:.cc=.o),$(VOBJDIR)/$F)
 EXE = $(VOBJDIR)/kl10pvtb
 MC10181EXE = $(VOBJDIR)/mc10181tb
 EDPEXE = $(VOBJDIR)/edptb
-EXEs = $(EXE) $(MC10181EXE) $(EDPEXE)
+USR4EXE = $(VOBJDIR)/usr4tb
+EXEs = $(EXE) $(MC10181EXE) $(EDPEXE) $(USR4EXE)
 
 KILLWARNINGS = \
 	-Wno-LITENDIAN \
@@ -56,6 +57,7 @@ all:	$(EXEs)
 ### Default rules...
 # Include list of all generated classes
 -include $(VOBJDIR)/Vedptb_classes.mk
+-include $(VOBJDIR)/Vusr4tb_classes.mk
 -include $(VOBJDIR)/Vtop_classes.mk
 -include $(VOBJDIR)/Vmc10181tb_classes.mk
 -include $(VOBJDIR)/*.d
@@ -74,6 +76,9 @@ $(MC10181EXE): mc10181.sv tb/mc10181tb.sv tb/mc10181-main.cc $(SVHFILES)
 
 $(EDPEXE): edp.sv tb/edptb.sv tb/edp-main.cc tb/sim-mem.sv usr4.sv mc10181.sv mc10179.sv $(SVHFILES)
 	$(VERILATOR) $(VFLAGS) $(filter-out %.h, $^) --top-module edptb -o $(@F)
+
+$(USR4EXE): usr4.sv tb/usr4tb.sv tb/usr4-main.cc $(SVHFILES)
+	$(VERILATOR) $(VFLAGS) $(filter-out %.h, $^) --top-module usr4tb -o $(@F)
 
 .PHONY:	clean
 clean:
