@@ -31,7 +31,7 @@ module usr4tb(input bit clk);
     'h001: begin
       $display($time, " load 1010");
       sb <= 4'b1010;
-      D <= sb;
+      D <= 4'b1010;
     end
     'h002: $display($time, " Q=%04b sb=%04b", Q, sb);
     'h003: $display($time, " Q=%04b sb=%04b", Q, sb);

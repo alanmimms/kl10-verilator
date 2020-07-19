@@ -5,11 +5,11 @@
 
 
 static unsigned long long ticks;
-static const double nsPerClock = 10.0;
+static const double psPerClock = 1000.0;
 
 
 double sc_time_stamp () {       // Called by $time in Verilog
-  return ticks * nsPerClock;
+  return (double) ticks * psPerClock;
 }
 
 
@@ -31,7 +31,7 @@ int main(int argc, char** argv, char** env) {
 
     top->clk = 0;
     top->eval();
-    trace->dump(sc_time_stamp() + nsPerClock/2.0);
+    trace->dump(sc_time_stamp() + 0.5*psPerClock);
     ++ticks;
   }
 
