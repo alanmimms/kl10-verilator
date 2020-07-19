@@ -308,6 +308,7 @@ module mcl(iAPR APR,
   assign SP_MEM_CYCLE = CTL.SPEC_SP_MEM_CYCLE;
   assign RESET = CLK.MR_RESET;
 
+  // E79 decoder
   assign Aeq0x0 = IR.DRAM_A == 3'b000 || IR.DRAM_A == 3'b010;
   assign Aeq001 = IR.DRAM_A == 3'b001;
   assign AREAD_001 = Aeq001 && MEM_AREAD;
